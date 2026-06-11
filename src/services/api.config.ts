@@ -1,0 +1,58 @@
+import { FILE } from "dns";
+import { connect } from "http2";
+
+export interface ApiConfig {
+  baseUrl: string;
+  timeout?: number;
+}
+
+export const defaultConfig: ApiConfig = {
+  baseUrl: 'http://122.163.121.176:3019',
+  // baseUrl: 'http://localhost:3019/',
+  // baseUrl: 'http://157.173.221.226:3004',
+  timeout: 10000,
+};
+
+export const API_ENDPOINTS = {
+  AUTH: {
+    LOGIN: '/login',
+  },
+  DATA_SOURCE: {
+    CONNECTION_HISTORY: '/connection_history',
+    CREATE_CONNECTORS: '/create_connectors',
+    WEB_SEARCH: '/search',
+  },
+  IMPORT: {
+    AGENT: '/agents',
+    SESSION_SOURCES: '/session-sources',
+    SESSION_ANALYSIS: '/session-analysis',
+    SAVE_RESULT_SEARCH: '/save-result',
+    CONTINUE_TO_IMPORT: '/connect-external-db',
+    CSV_IMPORT: '/csv-import',
+    GET_SAVED_RESULTS: '/saved-results',
+    DELETE_SAVED_RESULT: '/saved-results',
+    DESCRIBE_CONTENT: '/saved-content/describe',
+  },
+  CHAT: {
+    CHAT: '/session-chat',
+  },
+  WORKSPACE: {
+    CREATE: '/create_workspace',
+    GET_WORKSPACES: '/workspaces',
+    GET_ADMIN_WORKSPACES: '/get-workspace',
+    SET_ACTIVE_WORKSPACE: '/set-active-workspace',
+    ASSIGN_WORKSPACE_USERS: '/assign_workspace_users',
+    WORKSPACE_USERS: '/workspace_users',
+  },
+  FILE_UPLOAD: {
+    CSV_UPLOAD: '/upload_csv',
+    CHUNK_UPLOAD: '/upload_chunk',
+  },
+  COMMON: {
+    SESSION_CHAT_HISTORY: '/session-chat-history',
+  },
+  USERS: {
+    GET_USERS: '/users',
+    CREATE_USER: '/create_user',
+  }
+};

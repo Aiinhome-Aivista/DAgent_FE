@@ -1,0 +1,202 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { Message } from '../types';
+import { connectorService } from '@/src/services/connector.service';
+import { chatHistoryService } from '@/src/services/chatHistory.service';
+import { useAuthContext } from '@/src/context/AuthContext';
+
+export type ChatMode = 'landing' | 'workflow' | 'chat';
+
+export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: string, sessionId?: string) => {
+  const { userId } = useAuthContext();
+  const [mode, setMode] = useState<ChatMode>(initialMode);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [processingSteps, setProcessingSteps] = useState<string[]>([]);
+  const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, mode, processingSteps, scrollToBottom]);
+
+  const startWorkflow = useCallback(() => {
+    setMode('workflow');
+  }, []);
+
+  const startChat = useCallback(() => {
+    setMode('chat');
+    setMessages([
+      {
+        id: 'init-1',
+        role: 'assistant',
+        content: `Great! I've successfully connected to your data and synchronized the environment. How can I help you analyze this information today?`,
+        timestamp: new Date(),
+      },
+    ]);
+  }, []);
+
+  const completeWorkflow = useCallback(() => {
+    startChat();
+  }, [startChat]);
+
+  const sendMessage = useCallback(async (content: string) => {
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setFollowUpQuestions([]);
+    setProcessingSteps(['Analyzing query...']);
+
+    try {
+      const chatSessionId = sessionId
+        || localStorage.getItem('DAgent_session_id')
+
+      const currentVisitNumber = localStorage.getItem('current_visit_number');
+
+      const response: any = await connectorService.sendSessionChat({
+        session_id: chatSessionId,
+        question: content,
+        user_id: userId,
+        ...(currentVisitNumber ? { visit_number: parseInt(currentVisitNumber, 10) } : {})
+      });
+
+      if (response?.visit_number) {
+        localStorage.setItem('current_visit_number', response.visit_number.toString());
+      }
+
+      /*   console.log('Session Chat Response:', response); */
+
+      const answerText = response?.answer || '';
+      const followUps: string[] = response?.follow_up_questions || response?.suggested_questions || [];
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: answerText,
+        timestamp: new Date(),
+        visualizations: response?.visualizations || []
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      setFollowUpQuestions(followUps);
+    } catch (error) {
+      console.error('Session Chat Error:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Sorry, something went wrong while processing your request.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+      setProcessingSteps([]);
+    }
+  }, [sessionId]);
+
+  const fetchChatHistory = useCallback(async () => {
+    try {
+      const storedSession = localStorage.getItem('selected_query_session');
+      if (storedSession) {
+        const querySessionHistory = JSON.parse(storedSession);
+        localStorage.removeItem('selected_query_session'); // Clear it so refresh = new chat
+
+        const historyMessages: Message[] = [];
+        querySessionHistory.forEach((item: any, idx: number) => {
+          const isSystemQuestion = item.question.startsWith('default_') || item.question === 'Updated Analysis from newly uploaded files' || item.question === 'Context Update';
+
+          if (!isSystemQuestion) {
+            historyMessages.push({
+              id: `user-${idx}`,
+              role: 'user',
+              content: item.question,
+              timestamp: new Date()
+            });
+          }
+
+          historyMessages.push({
+            id: `assistant-${idx}`,
+            role: 'assistant',
+            content: item.answer,
+            timestamp: new Date(),
+            visualizations: item.visualizations || []
+          });
+        });
+
+        if (historyMessages.length > 0) {
+          setMessages(historyMessages);
+
+          const lastItem = querySessionHistory[querySessionHistory.length - 1];
+          if (lastItem && lastItem.follow_up_questions && Array.isArray(lastItem.follow_up_questions)) {
+            setFollowUpQuestions(lastItem.follow_up_questions);
+          }
+
+          return true; // Indicates history was loaded
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to parse selected chat history:', error);
+      return false;
+    }
+  }, []);
+
+  const fetchSuggestedQuestions = useCallback(async () => {
+    try {
+      const chatSessionId = sessionId || localStorage.getItem('DAgent_session_id');
+      if (!chatSessionId) return;
+
+      setIsFetchingSuggestions(true);
+      const response: any = await connectorService.sendSessionChat({
+        session_id: chatSessionId,
+        question: "",
+        user_id: userId
+      });
+
+      const followUps: string[] = response?.follow_up_questions || response?.suggested_questions || [];
+      setFollowUpQuestions(followUps);
+    } catch (error) {
+      console.error('Failed to fetch suggested questions:', error);
+    } finally {
+      setIsFetchingSuggestions(false);
+    }
+  }, [sessionId, userId]);
+
+  useEffect(() => {
+    if (mode === 'chat') {
+      fetchChatHistory().then((hasHistory) => {
+        // If there's no history and no existing messages, fetch suggestions
+        if (!hasHistory && messages.length <= 1) {
+          fetchSuggestedQuestions();
+        }
+      });
+    }
+  }, [mode, fetchChatHistory, fetchSuggestedQuestions]);
+
+  return {
+    messages,
+    sendMessage,
+    isLoading,
+    processingSteps,
+    scrollRef,
+    mode,
+    completeWorkflow,
+    startChat,
+    startWorkflow,
+    followUpQuestions,
+    fetchSuggestedQuestions,
+    isFetchingSuggestions
+  };
+};
