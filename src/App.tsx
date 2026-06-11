@@ -233,7 +233,7 @@ function AppContent() {
         console.error('Failed to fetch chat history for visit number calculation', e);
       }
 
-      const questionToUse = isExisting ? "Updated Analysis from newly uploaded files" : defaultName;
+      const questionToUse = defaultName;
 
       const newTurn = {
         question: questionToUse,
