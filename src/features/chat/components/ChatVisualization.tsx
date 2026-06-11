@@ -16,7 +16,7 @@ interface ChatVisualizationProps {
 
 const COLORS = ['var(--accent)', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
 
-export const ChatVisualization: React.FC<ChatVisualizationProps> = ({ visualization }) => {
+export const ChatVisualization = React.memo(({ visualization }: ChatVisualizationProps) => {
   const { type, data, title, columns, xKey = 'label', yKey = 'value' } = visualization;
 
   const resolveKeys = () => {
@@ -70,7 +70,7 @@ export const ChatVisualization: React.FC<ChatVisualizationProps> = ({ visualizat
     if (!chartRef.current) return;
 
     try {
-      const dataUrl = await toPng(chartRef.current, { 
+      const dataUrl = await toPng(chartRef.current, {
         backgroundColor: 'var(--bg)',
         pixelRatio: 3,
         cacheBust: true,
@@ -264,4 +264,6 @@ export const ChatVisualization: React.FC<ChatVisualizationProps> = ({ visualizat
     case 'pie_chart': return renderPieChart();
     default: return null;
   }
-};
+});
+
+ChatVisualization.displayName = 'ChatVisualization';

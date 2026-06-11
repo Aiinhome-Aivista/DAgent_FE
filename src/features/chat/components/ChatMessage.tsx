@@ -1,3 +1,4 @@
+import React from 'react';
 import { Message } from '../types';
 import { motion } from 'motion/react';
 import { ChatVisualization } from './ChatVisualization';
@@ -5,10 +6,9 @@ import { formatChatMessage } from '../../../utils/format';
 
 interface ChatMessageProps {
   message: Message;
-  key?: string | number;
 }
 
-export const ChatMessage = ({ message }: ChatMessageProps) => {
+export const ChatMessage = React.memo(({ message }: ChatMessageProps) => {
   const isAssistant = message.role === 'assistant';
 
   return (
@@ -20,16 +20,16 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
       <div
         className={`
           max-w-[90%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm
-          ${isAssistant 
-            ? 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] rounded-tl-none' 
+          ${isAssistant
+            ? 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] rounded-tl-none'
             : 'bg-[var(--accent)] text-white rounded-tr-none shadow-lg shadow-[var(--accent)]/10'}
         `}
       >
-        <div 
+        <div
           className="prose-chat break-words"
-          dangerouslySetInnerHTML={{ __html: formatChatMessage(message.content, isAssistant) }} 
+          dangerouslySetInnerHTML={{ __html: formatChatMessage(message.content, isAssistant) }}
         />
-        
+
         {isAssistant && message.visualizations && message.visualizations.length > 0 && (
           <div className="mt-4 space-y-4 w-full min-w-[300px] md:min-w-[500px]">
             {message.visualizations.map((viz, idx) => (
@@ -38,7 +38,7 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
           </div>
         )}
 
-        <div 
+        <div
           className={`
             text-[9px] font-mono uppercase tracking-widest opacity-40
             ${isAssistant ? 'text-[var(--text-secondary)]' : 'text-white/80'}
@@ -49,4 +49,7 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
       </div>
     </motion.div>
   );
-};
+});
+
+ChatMessage.displayName = 'ChatMessage';
+
