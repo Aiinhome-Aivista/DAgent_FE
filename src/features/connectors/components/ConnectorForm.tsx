@@ -1,16 +1,16 @@
 import { useState, useRef, useEffect  } from 'react';
 import { Card, CardContent, CardHeader, Input, Button } from '@/src/ui-kit';
-import { Server, Globe, ChevronLeft, Search, FileSpreadsheet, FileCode2 } from 'lucide-react';
+import { Server, Globe, ChevronLeft, Search, FileSpreadsheet, FileCode2, Network } from 'lucide-react';
 import { connectorService } from '@/src/services/connector.service';
 import { useConnectorContext } from '../../../context/ConnectorContext';
 import { useAuthContext } from '../../../context/AuthContext';
 
-
 // Import Child Components
 import { WebSearchForm } from './connector_form/WebSearchForm';
 import { FileUploadForm } from './connector_form/FileUploadForm';
-import { DatabaseForm } from './connector_form/DatabaseForm';
+import { DatabaseForm }   from './connector_form/DatabaseForm';
 import { DAgentAssistant } from './connector_form/DAgentAssistant';
+import { FtpForm }        from './connector_form/FtpForm';          // ← NEW
 import { FieldGuide, ConnectorFormData } from '@/src/types/connector';
 
 const GUIDES: Record<string, FieldGuide> = {
@@ -53,7 +53,33 @@ const GUIDES: Record<string, FieldGuide> = {
     title: "Database Schema (Optional)",
     description: "The specific schema to connect to within your database.",
     tip: "If left empty, all schemas are searched. Default schema for PostgreSQL is usually 'public'."
-  }
+  },
+  // ─── FTP guides ───────────────────────────────────────────────────────────
+  ftp_host: {
+    title: "FTP Server Host",
+    description: "The hostname or IP address of the FTP server you want to connect to.",
+    tip: "Example: 'ftp.example.com' or '192.168.1.100'"
+  },
+  ftp_port: {
+    title: "FTP Port",
+    description: "The port your FTP server listens on. Default is 21.",
+    tip: "FTPS (explicit) often uses port 21; SFTP uses 22. Check with your server admin."
+  },
+  ftp_username: {
+    title: "FTP Username",
+    description: "The account used to authenticate with the FTP server.",
+    tip: "Use a dedicated read-only FTP account for best security."
+  },
+  ftp_password: {
+    title: "FTP Password",
+    description: "Password for the FTP account.",
+    tip: "Credentials are stored encrypted in the platform database."
+  },
+  ftp_remote_dir: {
+    title: "Remote Directory",
+    description: "The directory on the FTP server to fetch files from.",
+    tip: "Use '/' for the root directory, or '/data/exports' for a specific folder."
+  },
 };
 
 interface ConnectorFormProps {
@@ -77,6 +103,17 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     schema: ''
   });
 
+  // ── FTP-specific form data ──────────────────────────────────────
+  const [ftpFormData, setFtpFormData] = useState({
+    name:         connector?.name || 'FTP Connector',
+    host:         '',
+    port:         '21',
+    username:     '',
+    password:     '',
+    remote_dir:   '/',
+    passive_mode: true,
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -94,7 +131,6 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
   } = useConnectorContext();
 
   const [isDragging, setIsDragging] = useState(false);
-
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleFocus = (field: string) => setActiveField(field);
@@ -202,10 +238,11 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     }
   };
 
-  const isWebSearch = connector?.name === 'Web Search using LLM';
-  const isCsvUpload = connector?.name === 'Upload CSV File';
-  const isSqlUpload = connector?.name === 'Upload SQL File';
+  const isWebSearch  = connector?.name === 'Web Search using LLM';
+  const isCsvUpload  = connector?.name === 'Upload CSV File';
+  const isSqlUpload  = connector?.name === 'Upload SQL File';
   const isFileUpload = isCsvUpload || isSqlUpload;
+  const isFtp        = connector?.name === 'FTP Connector';   // ← NEW
 
   const acceptedFileTypes = isCsvUpload ? '.csv' : isSqlUpload ? '.sql' : '';
 
@@ -231,7 +268,6 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
 
     setUploadedFiles(prev => [...prev, ...newFiles]);
     
-    // Automatically start/restart upload worker ONLY if already in uploading state
     if (userId && isUploading && newFiles.length > 0) {
       setTimeout(() => handleContextUpload(userId as number), 0);
     }
@@ -252,7 +288,6 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     setUploadedFiles(prev => [...prev, ...newFiles]);
     e.target.value = '';
     
-    // Automatically start/restart upload worker ONLY if already in uploading state
     if (userId && isUploading && newFiles.length > 0) {
       setTimeout(() => handleContextUpload(userId as number), 0);
     }
@@ -318,6 +353,8 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                   <FileSpreadsheet className="w-6 h-6" />
                 ) : isSqlUpload ? (
                   <FileCode2 className="w-6 h-6" />
+                ) : isFtp ? (
+                  <Network className="w-6 h-6" />           // ← NEW icon
                 ) : (
                   <Server className="w-6 h-6" />
                 )}
@@ -327,7 +364,13 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                   {connector ? `Connect to ${connector.name}` : 'New Data source'}
                 </h2>
                 <p className="text-sm text-[var(--text-secondary)]">
-                  {isWebSearch ? 'Identify live data for AI analysis' : isFileUpload ? `Upload ${isCsvUpload ? 'CSV' : 'SQL'} files for AI analysis` : 'Configure your data source settings'}
+                  {isWebSearch
+                    ? 'Identify live data for AI analysis'
+                    : isFileUpload
+                    ? `Upload ${isCsvUpload ? 'CSV' : 'SQL'} files for AI analysis`
+                    : isFtp
+                    ? 'Fetch files from an FTP server with scheduled sync'
+                    : 'Configure your data source settings'}
                 </p>
               </div>
             </div>
@@ -339,7 +382,8 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
               </div>
             )}
 
-            {!isFileUpload && (
+            {/* Data source name field — hidden for file uploads and FTP (FTP manages its own name field) */}
+            {!isFileUpload && !isFtp && (
               <div onMouseEnter={() => handleMouseEnter('name')} className="mb-6">
                 <Input
                   label="Data source Name"
@@ -352,6 +396,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
               </div>
             )}
 
+            {/* ── Render the right sub-form ─────────────────────── */}
             {isWebSearch ? (
               <WebSearchForm
                 searchQuery={searchQuery}
@@ -384,6 +429,18 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                 handleFileUploadConnect={handleFileUploadConnect}
                 isUploading={isUploading}
                 onBack={onBack}
+              />
+            ) : isFtp ? (
+              // ── FTP Form ──────────────────────────────────────────
+              <FtpForm
+                formData={ftpFormData}
+                setFormData={setFtpFormData}
+                handleFocus={handleFocus}
+                handleMouseEnter={handleMouseEnter}
+                onBack={onBack}
+                userId={userId as number | null}
+                sessionId={localStorage.getItem('DAgent_session_id')}
+                onConnectSuccess={() => onTestSuccess?.(ftpFormData.name, false)}
               />
             ) : (
               <DatabaseForm

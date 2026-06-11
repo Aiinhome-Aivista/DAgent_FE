@@ -1,14 +1,13 @@
 import { Connector } from '../types';
 import { Card, CardContent, Badge, Button } from '@/src/ui-kit';
-import { Database, Server, Share2, ArrowUpRight, Globe, Search, FileSpreadsheet, FileCode2, Upload } from 'lucide-react';
+import { Database, Server, Share2, ArrowUpRight, Globe, Search, FileSpreadsheet, FileCode2, Upload, Network } from 'lucide-react';
 
 const getBrandIcon = (name: string) => {
   const lower = name.toLowerCase();
-  if (lower.includes('postgres')) return 'https://cdn.simpleicons.org/postgresql';
-  if (lower.includes('mysql')) return 'https://cdn.simpleicons.org/mysql';
-  if (lower.includes('snowflake')) return 'https://cdn.simpleicons.org/snowflake';
-  if (lower.includes('google sheets')) return 'https://cdn.simpleicons.org/googlesheets';
-
+  if (lower.includes('postgres'))     return 'https://cdn.simpleicons.org/postgresql';
+  if (lower.includes('mysql'))        return 'https://cdn.simpleicons.org/mysql';
+  if (lower.includes('snowflake'))    return 'https://cdn.simpleicons.org/snowflake';
+  if (lower.includes('google sheets'))return 'https://cdn.simpleicons.org/googlesheets';
   return null;
 };
 
@@ -44,6 +43,9 @@ export const ConnectorCard = ({ connector, onClick }: ConnectorCardProps) => {
               <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
             ) : connector.name === 'Upload SQL File' ? (
               <FileCode2 className="w-5 h-5 text-blue-500" />
+            ) : connector.name === 'FTP Connector' ? (
+              // ── FTP icon ──────────────────────────────────────────
+              <Network className="w-5 h-5 text-violet-500" />
             ) : brandIcon ? (
               <img src={brandIcon} alt={connector.name} className="w-5 h-5 object-contain" />
             ) : (

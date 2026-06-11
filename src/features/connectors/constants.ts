@@ -63,4 +63,13 @@ export const SUPPORTED_CONNECTORS = [
     icon: 'sql',
     status: 'disconnected',
   },
+  // ─── NEW ───────────────────────────────────────────────────────────────────
+  {
+    id: '9',
+    name: 'FTP Connector',
+    description: 'Connect to an FTP server to fetch files with incremental progress tracking and scheduled sync',
+    type: 'Integration',
+    icon: 'ftp',
+    status: 'disconnected',
+  },
 ];
