@@ -1,10 +1,11 @@
 export interface Visualization {
-  type: 'table' | 'bar_chart' | 'pie_chart';
+  type: 'table' | 'bar_chart' | 'pie_chart' | 'line_chart';
   title?: string;
   columns?: { key: string; label: string }[];
   data: any[];
   xKey?: string;
   yKey?: string;
+  seriesKey?: string;
 }
 
 export interface Message {

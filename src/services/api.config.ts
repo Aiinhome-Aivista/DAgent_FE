@@ -7,8 +7,8 @@ export interface ApiConfig {
 }
 
 export const defaultConfig: ApiConfig = {
-  baseUrl: 'http://122.163.121.176:3019',
-  // baseUrl: 'http://localhost:3019/',
+  // baseUrl: 'http://122.163.121.176:3019',
+  baseUrl: 'http://localhost:3019/',
   // baseUrl: 'http://157.173.221.226:3004',
   timeout: 10000,
 };
@@ -57,12 +57,12 @@ export const API_ENDPOINTS = {
   },
   // ─── FTP Connector ──────────────────────────────────────────────────────────
   FTP: {
-    CONNECT:         '/ftp/connect',
-    FETCH:           '/ftp/fetch',
-    PROGRESS:        '/ftp/progress',   // append /<job_id> at call site
-    SCHEDULE_GET:    '/ftp/schedule',
-    SCHEDULE_POST:   '/ftp/schedule',
+    CONNECT: '/ftp/connect',
+    FETCH: '/ftp/fetch',
+    PROGRESS: '/ftp/progress',   // append /<job_id> at call site
+    SCHEDULE_GET: '/ftp/schedule',
+    SCHEDULE_POST: '/ftp/schedule',
     SCHEDULE_DELETE: '/ftp/schedule',
-    FETCH_LOG:       '/ftp/fetch_log',
+    FETCH_LOG: '/ftp/fetch_log',
   },
 };
