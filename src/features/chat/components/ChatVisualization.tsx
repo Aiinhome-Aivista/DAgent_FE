@@ -2,10 +2,11 @@ import React from 'react';
 import {
   BarChart, Bar,
   PieChart, Pie, Cell,
+  LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer
 } from 'recharts';
-import { Download, Table as TableIcon, BarChart3, PieChart as PieIcon, Image as ImageIcon } from 'lucide-react';
+import { Download, Table as TableIcon, BarChart3, PieChart as PieIcon, LineChart as LineChartIcon, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/src/ui-kit';
 import { Visualization } from '../types';
 import { toPng } from 'html-to-image';
@@ -174,7 +175,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
       </div>
       <div className="h-64 w-full" >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, left: 15, bottom: 45 }}>
+          <BarChart data={data} margin={{ top: 10, right: 10, left: 55, bottom: 45 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
             <XAxis
               dataKey={resolvedXKey}
@@ -188,13 +189,15 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             <YAxis
               stroke="var(--text-secondary)"
               fontSize={12}
-              tickLine={false}
-              axisLine={false}
+              tickLine={true}
+              axisLine={true}
               tick={{ fill: 'var(--text-secondary)' }}
               tickFormatter={formatValue}
-              label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
+              width={50}
+              label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold', style: { textAnchor: 'middle' } }}
             />
             <Tooltip
+              wrapperStyle={{ zIndex: 100 }}
               cursor={{ fill: 'var(--accent)', opacity: 0.05 }}
               contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               itemStyle={{ color: 'var(--accent)', fontWeight: 'bold' }}
@@ -243,6 +246,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
               ))}
             </Pie>
             <Tooltip
+              wrapperStyle={{ zIndex: 100 }}
               contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               formatter={(value: any, name: any) => [typeof value === 'number' ? value.toLocaleString() : value, name]}
             />
@@ -258,10 +262,127 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
     </div>
   );
 
+  const renderLineChart = () => {
+    if (!data || data.length === 0) return null;
+
+    let chartData = data;
+    let lines = [resolvedYKey];
+
+    // Use seriesKey for grouping if provided
+    const groupKey = visualization.seriesKey;
+
+    if (groupKey) {
+      const groupedData: Record<string, any> = {};
+      const uniqueLines = new Set<string>();
+
+      data.forEach(item => {
+        const xVal = item[resolvedXKey];
+        const groupVal = item[groupKey];
+        const yVal = item[resolvedYKey];
+        
+        if (!groupedData[xVal]) {
+          groupedData[xVal] = { [resolvedXKey]: xVal };
+        }
+        groupedData[xVal][groupVal] = yVal;
+        uniqueLines.add(groupVal);
+      });
+
+      // Sort by xKey chronologically if they are date/month strings, otherwise alphabetically
+      chartData = Object.values(groupedData).sort((a, b) => {
+        const valA = String(a[resolvedXKey]);
+        const valB = String(b[resolvedXKey]);
+        const dateA = Date.parse(valA);
+        const dateB = Date.parse(valB);
+        if (!isNaN(dateA) && !isNaN(dateB)) {
+          return dateA - dateB;
+        }
+        return valA.localeCompare(valB);
+      });
+      lines = Array.from(uniqueLines);
+    }
+
+    const hasLegend = lines.length > 1;
+
+    return (
+    <div ref={chartRef} className="bg-[var(--bg)] rounded-xl border border-[var(--border)] p-4 transition-all duration-300 hover:shadow-lg hover:shadow-black/5">
+      <div className="flex justify-between items-center mb-4 gap-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <LineChartIcon className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+          <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] truncate" title={title || 'Line Chart'}>{title || 'Line Chart'}</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDownloadPng}
+          className="h-10 w-10 p-0 text-xs flex items-center justify-center rounded-lg border-[var(--border)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] hover:border-[var(--accent)]/30 transition-all shrink-0 download-button-exclude"
+        >
+          <Download className="w-6 h-6" />
+        </Button>
+      </div>
+      <div className={`w-full ${hasLegend ? 'h-72' : 'h-64'}`} >
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 10, right: 10, left: 55, bottom: hasLegend ? 80 : 45 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
+            <XAxis
+              dataKey={resolvedXKey}
+              stroke="var(--text-secondary)"
+              fontSize={12}
+              tickLine={false}
+              axisLine={true}
+              tick={{ fill: 'var(--text-secondary)' }}
+              height={hasLegend ? 45 : 30}
+              label={{ value: xLabel, position: 'insideBottom', offset: hasLegend ? 15 : -25, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
+            />
+            <YAxis
+              stroke="var(--text-secondary)"
+              fontSize={12}
+              tickLine={true}
+              axisLine={true}
+              tick={{ fill: 'var(--text-secondary)' }}
+              tickFormatter={formatValue}
+              width={50}
+              label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold', style: { textAnchor: 'middle' } }}
+            />
+            <Tooltip
+              wrapperStyle={{ zIndex: 100 }}
+              contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+              itemStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
+              labelStyle={{ color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 'bold' }}
+              formatter={(value: any, name: any) => [typeof value === 'number' ? value.toLocaleString() : value, name === resolvedYKey ? yLabel : getLabel(name)]}
+            />
+            {hasLegend && (
+              <Legend 
+                verticalAlign="bottom"
+                height={36}
+                iconType="circle"
+                wrapperStyle={{ paddingTop: '10px' }}
+                formatter={(value) => <span className="text-[10px] text-[var(--text-secondary)] font-bold">{getLabel(value)}</span>}
+              />
+            )}
+            {lines.map((lineKey, idx) => (
+              <Line 
+                key={lineKey} 
+                type="monotone" 
+                dataKey={lineKey} 
+                name={lineKey}
+                stroke={COLORS[idx % COLORS.length]} 
+                strokeWidth={3} 
+                dot={{ r: 4, fill: COLORS[idx % COLORS.length] }} 
+                activeDot={{ r: 6 }} 
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+  };
+
   switch (type) {
     case 'table': return renderTable();
     case 'bar_chart': return renderBarChart();
     case 'pie_chart': return renderPieChart();
+    case 'line_chart': return renderLineChart();
     default: return null;
   }
 });

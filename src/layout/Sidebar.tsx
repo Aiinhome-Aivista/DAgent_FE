@@ -399,6 +399,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                   if (session.querySessionId) {
                                                     localStorage.setItem('current_visit_number', session.querySessionId.replace('session_visit_', ''));
                                                   }
+                                                  if (session.querySessionName && session.querySessionName.startsWith('default_')) {
+                                                    localStorage.setItem('is_default_chat', 'true');
+                                                  } else {
+                                                    localStorage.removeItem('is_default_chat');
+                                                  }
                                                   setActiveTab('chat');
                                                   setChatKey((prev: number) => prev + 1);
                                                 }}
