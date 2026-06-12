@@ -3,7 +3,7 @@ import { Connector } from '../features/connectors';
 import { QuerySession } from '../services/chatHistory.service';
 
 export type Tab = 'chat' | 'connectors' | 'new-connector' | 'collection' | 'analysis' | 'admin';
-export type ViewMode = 'landing' | 'login' | 'app';
+export type ViewMode = 'landing' | 'login' | 'app' | 'dashboard';
 
 export interface SidebarProps {
   isSidebarOpen: boolean;

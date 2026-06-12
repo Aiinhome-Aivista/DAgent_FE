@@ -25,9 +25,10 @@ import image2 from '@/src/assets/images/landing2.jpg';
 interface LandingPageProps {
   onGetStarted: () => void;
   onLogin: () => void;
+  onDashboardClick?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin, onDashboardClick }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   return (
@@ -379,7 +380,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Product</h4>
             <ul className="space-y-4 text-sm text-slate-600">
               <li>Pricing</li>
-              <li>Connectors</li>
+              <li onClick={onDashboardClick} className="cursor-pointer hover:text-accent">Connectors</li>
               <li>Slack Agent</li>
               <li>DAgent for Labs</li>
             </ul>

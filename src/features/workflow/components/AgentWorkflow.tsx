@@ -28,6 +28,7 @@ interface AgentWorkflowProps {
 import { HistoryItemCard } from './HistoryItemCard';
 import { AgentStepper, getAgentIcon } from './AgentStepper';
 import { IngestDataView } from './IngestDataView';
+import { DashboardKPIs, DashboardGraphs } from '../../dashboard/components/DashboardCharts';
 
 const formatInsightsText = (text: string) => {
   if (typeof text !== 'string') return JSON.stringify(text, null, 2);
@@ -649,7 +650,7 @@ export const AgentWorkflow = ({
       {/* Main Content - Agent History & Actions */}
       <div className="flex-1 flex flex-col min-h-0">
         {selectedAgent && (
-          <Card className={`flex-1 flex flex-col border-[var(--border)] shadow-xl overflow-hidden bg-[var(--surface)]/50 ${compact ? 'border-none shadow-none bg-transparent' : ''}`}>
+          <Card className={`flex-1 flex flex-col ${(compact || selectedAgent.id === 'query') ? 'border-none shadow-none bg-transparent' : 'border-[var(--border)] shadow-xl overflow-hidden bg-[var(--surface)]/50'}`}>
             {selectedAgent.id !== 'query' && (
               <CardHeader className={`${compact ? 'px-0 pt-1 pb-3' : 'bg-[var(--surface)] p-4 border-b border-[var(--border)]'} shrink-0`}>
                 <div className="flex items-center justify-between">
@@ -730,8 +731,12 @@ export const AgentWorkflow = ({
                   )}
 
                   {selectedAgent.id === 'query' ? (
-                    <div className="flex-1 h-full flex flex-col">
-                      <div className="h-full overflow-hidden">
+                    <div className="flex-1 flex flex-col gap-6 p-4 overflow-y-auto">
+                      <div className="shrink-0">
+                        <DashboardKPIs />
+                      </div>
+                      
+                      <div className="shrink-0 h-[600px]">
                         <ChatWindow
                           initialMode="chat"
                           initialMessage={initialChatMessage}
@@ -739,6 +744,10 @@ export const AgentWorkflow = ({
                           onNewSessionCreated={onNewSessionCreated}
                           sessionId={sessionId}
                         />
+                      </div>
+
+                      <div className="shrink-0">
+                        <DashboardGraphs />
                       </div>
                     </div>
                   ) : (
