@@ -402,10 +402,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                   setActiveTab('chat');
                                                   setChatKey((prev: number) => prev + 1);
                                                 }}
-                                                className="w-full text-left p-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 hover:bg-[var(--surface-hover)] transition-all cursor-pointer group flex items-center gap-3"
+                                                className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer group flex items-center gap-3 ${
+                                                  session.querySessionId && localStorage.getItem('current_visit_number') === session.querySessionId.replace('session_visit_', '')
+                                                    ? 'border-[var(--accent)] bg-[var(--accent)]/10 shadow-sm'
+                                                    : 'border-[var(--border)] bg-[var(--bg)]/50 hover:bg-[var(--surface-hover)]'
+                                                }`}
                                               >
-                                                <MessageSquare className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-[var(--accent)] transition-colors shrink-0" />
-                                                <div className="text-[11px] font-semibold truncate text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                                                <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${
+                                                  session.querySessionId && localStorage.getItem('current_visit_number') === session.querySessionId.replace('session_visit_', '')
+                                                    ? 'text-[var(--accent)]'
+                                                    : 'text-[var(--text-secondary)] group-hover:text-[var(--accent)]'
+                                                }`} />
+                                                <div className={`text-[11px] font-semibold truncate transition-colors ${
+                                                  session.querySessionId && localStorage.getItem('current_visit_number') === session.querySessionId.replace('session_visit_', '')
+                                                    ? 'text-[var(--text-primary)]'
+                                                    : 'text-[var(--text-primary)] group-hover:text-[var(--accent)]'
+                                                }`}>
                                                   {session.querySessionName}
                                                 </div>
                                               </div>

@@ -17,6 +17,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   handleStartWorkflow,
   handleForwardWithContext,
   handleCreateWorkspaceFromSummary,
+  onNewSessionCreated,
   sessionId
 }) => {
   return (
@@ -37,6 +38,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               defaultAgentId="query"
               onChangeTab={changeTab}
               initialChatMessage={initialChatMessage}
+              onNewSessionCreated={onNewSessionCreated}
               sessionId={sessionId}
             />
           </motion.div>

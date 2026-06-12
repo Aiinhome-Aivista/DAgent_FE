@@ -20,6 +20,7 @@ interface AgentWorkflowProps {
   onNewConnector?: () => void;
   onForwardWithContext?: (agentId: string, context: string) => void;
   onCreateWorkspaceFromSummary?: (summary: string) => void;
+  onNewSessionCreated?: () => void;
   initialChatMessage?: string;
   sessionId?: string;
 }
@@ -101,6 +102,7 @@ export const AgentWorkflow = ({
   onNewConnector,
   onForwardWithContext,
   onCreateWorkspaceFromSummary,
+  onNewSessionCreated,
   initialChatMessage,
   sessionId
 }: AgentWorkflowProps) => {
@@ -734,6 +736,7 @@ export const AgentWorkflow = ({
                           initialMode="chat"
                           initialMessage={initialChatMessage}
                           onOpenDataSource={onChangeTab ? () => onChangeTab('connectors') : undefined}
+                          onNewSessionCreated={onNewSessionCreated}
                           sessionId={sessionId}
                         />
                       </div>

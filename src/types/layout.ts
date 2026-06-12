@@ -56,7 +56,8 @@ export interface MainContentProps {
   changeTab: (tab: Tab) => void;
   handleBackToConnectors: () => void;
   handleStartWorkflow: (connectionName?: string, shouldSwitchTab?: boolean) => Promise<void>;
-  handleForwardWithContext: (agentId: string, context: string) => void;
+  handleForwardWithContext?: (agentId: string, context: string) => void;
   handleCreateWorkspaceFromSummary?: (summary: string) => void;
+  onNewSessionCreated?: () => void;
   sessionId?: string;
 }

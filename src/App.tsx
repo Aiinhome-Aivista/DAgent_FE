@@ -195,15 +195,11 @@ function AppContent() {
     const formattedDate = `${String(date.getDate()).padStart(2, '0')}_${String(date.getMonth() + 1).padStart(2, '0')}_${date.getFullYear()}`;
     const defaultName = `default_${formattedDate}`;
 
-    // DO NOT load this history into the immediate chat view.
-    // We want to open a "New Query Session" fresh, so we clear the selection.
-    localStorage.removeItem('selected_query_session');
+    // Identify this as a read-only default chat summary container
+    localStorage.setItem('is_default_chat', 'true');
 
-    // Clear the initial message and switch to chat tab immediately to avoid page lag or blinking
+    // Clear the initial message
     setInitialChatMessage(undefined);
-    changeTab('chat');
-    setChatKey(prev => prev + 1);
-    setWorkflowKey(prev => typeof prev === 'number' ? prev + 1 : prev);
 
     try {
       let nextVisitNumber = 1;
@@ -233,7 +229,7 @@ function AppContent() {
         console.error('Failed to fetch chat history for visit number calculation', e);
       }
 
-      const questionToUse = defaultName;
+      const questionToUse = isExisting ? "Updated Analysis from newly uploaded files" : defaultName;
 
       const newTurn = {
         question: questionToUse,
@@ -297,10 +293,26 @@ function AppContent() {
         }
       });
 
+      // Set local storage so chat window and sidebar consider it active
+      localStorage.setItem('selected_query_session', JSON.stringify(newSessionHistory));
+      localStorage.setItem('current_visit_number', nextVisitNumber.toString());
+
+      // Now switch to chat tab
+      changeTab('chat');
+      setChatKey(prev => prev + 1);
+      setWorkflowKey(prev => typeof prev === 'number' ? prev + 1 : prev);
+
       // Force expand the workspace
       setExpandedWorkspaceId(selectedWorkspace.id);
     } catch (err) {
       console.error('Failed to create/update query session from summary:', err);
+    }
+  };
+
+  const handleNewSessionCreated = () => {
+    // Refresh the workspace history to pick up the newly created query session
+    if (selectedWorkspace) {
+      fetchWorkspaceHistory(selectedWorkspace.id, selectedWorkspace.session_id, true);
     }
   };
 
@@ -371,6 +383,7 @@ function AppContent() {
           handleStartWorkflow={handleStartWorkflow}
           handleForwardWithContext={handleForwardWithContext}
           handleCreateWorkspaceFromSummary={handleCreateWorkspaceFromSummary}
+          onNewSessionCreated={handleNewSessionCreated}
           sessionId={selectedWorkspace?.session_id}
         />
       </main>

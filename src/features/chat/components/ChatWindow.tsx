@@ -13,6 +13,7 @@ interface ChatWindowProps {
   initialMessage?: string;
   suggestedQuestions?: string[];
   onOpenDataSource?: () => void;
+  onNewSessionCreated?: () => void;
   sessionId?: string;
 }
 
@@ -22,9 +23,10 @@ export const ChatWindow = ({
   initialMessage,
   suggestedQuestions = [],
   onOpenDataSource,
+  onNewSessionCreated,
   sessionId
 }: ChatWindowProps) => {
-  const { messages, sendMessage, isLoading, processingSteps, scrollRef, mode, completeWorkflow, startChat, followUpQuestions, isFetchingSuggestions } = useChat(initialMode, initialMessage, sessionId);
+  const { messages, sendMessage, isLoading, processingSteps, scrollRef, mode, completeWorkflow, startChat, followUpQuestions, isFetchingSuggestions } = useChat(initialMode, initialMessage, sessionId, onNewSessionCreated);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [isLoadingConnectors, setIsLoadingConnectors] = useState(true);
   const [chatInput, setChatInput] = useState('');

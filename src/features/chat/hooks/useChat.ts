@@ -6,7 +6,7 @@ import { useAuthContext } from '@/src/context/AuthContext';
 
 export type ChatMode = 'landing' | 'workflow' | 'chat';
 
-export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: string, sessionId?: string) => {
+export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: string, sessionId?: string, onNewSessionCreated?: () => void) => {
   const { userId } = useAuthContext();
   const [mode, setMode] = useState<ChatMode>(initialMode);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -54,16 +54,29 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    // We will update messages below based on branching
     setIsLoading(true);
     setFollowUpQuestions([]);
     setProcessingSteps(['Analyzing query...']);
 
     try {
-      const chatSessionId = sessionId
-        || localStorage.getItem('DAgent_session_id')
+      const chatSessionId = sessionId || localStorage.getItem('DAgent_session_id');
 
-      const currentVisitNumber = localStorage.getItem('current_visit_number');
+      // Check if we are currently in the read-only default chat
+      const isDefaultChat = localStorage.getItem('is_default_chat') === 'true';
+      let currentVisitNumber = localStorage.getItem('current_visit_number');
+
+      if (isDefaultChat) {
+        // We branch out into a NEW chat session based on this query.
+        localStorage.removeItem('current_visit_number');
+        localStorage.removeItem('is_default_chat');
+        currentVisitNumber = null;
+        
+        // Clear the UI messages to create a fresh chat view
+        setMessages([userMessage]);
+      } else {
+        setMessages((prev) => [...prev, userMessage]);
+      }
 
       const response: any = await connectorService.sendSessionChat({
         session_id: chatSessionId,
@@ -91,6 +104,13 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
 
       setMessages((prev) => [...prev, assistantMessage]);
       setFollowUpQuestions(followUps);
+
+      if (isDefaultChat && onNewSessionCreated) {
+        // Trigger sidebar refresh so the new chat shows up and gets selected
+        setTimeout(() => {
+          onNewSessionCreated();
+        }, 500); // short delay to ensure DB transaction completes
+      }
     } catch (error) {
       console.error('Session Chat Error:', error);
       const errorMessage: Message = {
