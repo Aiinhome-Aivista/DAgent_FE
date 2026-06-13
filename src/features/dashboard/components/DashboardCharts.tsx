@@ -1370,11 +1370,13 @@ const graphComponents: Record<string, React.FC> = {
 interface GraphSidePanelProps {
   activeGraphId: string | null;
   onClose: () => void;
+  inline?: boolean;
 }
 
 export const GraphSidePanel: React.FC<GraphSidePanelProps> = ({
   activeGraphId,
   onClose,
+  inline = false,
 }) => {
   const GraphComponent = activeGraphId ? graphComponents[activeGraphId] : null;
   const activeItem = graphPanelItems.find((g) => g.id === activeGraphId);
@@ -1384,22 +1386,28 @@ export const GraphSidePanel: React.FC<GraphSidePanelProps> = ({
       {activeGraphId && GraphComponent && (
         <>
           {/* Backdrop */}
-          <motion.div
-            key="graph-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-transparent z-[60]"
-          />
+          {!inline && (
+            <motion.div
+              key="graph-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-transparent z-[60]"
+            />
+          )}
           {/* Panel */}
           <motion.div
             key="graph-panel"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
+            initial={inline ? { width: 0, opacity: 0 } : { x: "100%" }}
+            animate={inline ? { width: 750, opacity: 1 } : { x: 0 }}
+            exit={inline ? { width: 0, opacity: 0 } : { x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-[750px] max-w-[90vw] bg-slate-50 shadow-2xl z-[70] flex flex-col"
+            className={
+              inline
+                ? "h-full shrink-0 border-l border-slate-200 bg-slate-50 flex flex-col relative z-[70] overflow-hidden"
+                : "fixed top-0 right-0 h-full w-[750px] max-w-[90vw] bg-slate-50 shadow-2xl z-[70] flex flex-col"
+            }
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white shrink-0">

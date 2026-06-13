@@ -745,8 +745,9 @@ export const AgentWorkflow = ({
                       </div>
 
                       {/* Right side strip - scrollable KPIs + Graph buttons */}
-                      <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                        <div className="p-3 space-y-3">
+                      {!activeGraphId && (
+                        <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                          <div className="p-3 space-y-3">
                           {/* KPIs */}
                           <DashboardKPIs />
 
@@ -779,10 +780,10 @@ export const AgentWorkflow = ({
                             ))}
                           </div>
                         </div>
-                      </div>
-
+                        </div>
+                      )}
                       {/* Graph Side Panel overlay */}
-                      <GraphSidePanel activeGraphId={activeGraphId} onClose={() => setActiveGraphId(null)} />
+                      <GraphSidePanel activeGraphId={activeGraphId} onClose={() => setActiveGraphId(null)} inline={true} />
                     </div>
                   ) : (
                     (() => {
