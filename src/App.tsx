@@ -26,7 +26,7 @@ function AppContent() {
   const { theme, toggleTheme } = useTheme();
   const { userId, roleId, roleName, logout } = useAuthContext();
   const [viewMode, setViewMode] = useState<ViewMode>(userId ? 'app' : 'landing');
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>(roleName === 'Admin' ? 'admin' : 'chat');
   const { selectedConnector, setSelectedConnector, resetConnectorState } = useConnectorContext();
   const [justFinishedWorkflow, setJustFinishedWorkflow] = useState(false);
