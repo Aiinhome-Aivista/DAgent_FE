@@ -43,6 +43,7 @@ export const API_ENDPOINTS = {
     SET_ACTIVE_WORKSPACE: '/set-active-workspace',
     ASSIGN_WORKSPACE_USERS: '/assign_workspace_users',
     WORKSPACE_USERS: '/workspace_users',
+    DELETE: '/delete_workspace',
   },
   FILE_UPLOAD: {
     CSV_UPLOAD: '/upload_csv',

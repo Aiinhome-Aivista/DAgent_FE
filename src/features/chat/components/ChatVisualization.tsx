@@ -279,7 +279,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
         const xVal = item[resolvedXKey];
         const groupVal = item[groupKey];
         const yVal = item[resolvedYKey];
-        
+
         if (!groupedData[xVal]) {
           groupedData[xVal] = { [resolvedXKey]: xVal };
         }
@@ -304,78 +304,78 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
     const hasLegend = lines.length > 1;
 
     return (
-    <div ref={chartRef} className="bg-[var(--bg)] rounded-xl border border-[var(--border)] p-4 transition-all duration-300 hover:shadow-lg hover:shadow-black/5">
-      <div className="flex justify-between items-center mb-4 gap-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <LineChartIcon className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-          <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] truncate" title={title || 'Line Chart'}>{title || 'Line Chart'}</span>
+      <div ref={chartRef} className="bg-[var(--bg)] rounded-xl border border-[var(--border)] p-4 transition-all duration-300 hover:shadow-lg hover:shadow-black/5">
+        <div className="flex justify-between items-center mb-4 gap-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <LineChartIcon className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] truncate" title={title || 'Line Chart'}>{title || 'Line Chart'}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPng}
+            className="h-10 w-10 p-0 text-xs flex items-center justify-center rounded-lg border-[var(--border)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] hover:border-[var(--accent)]/30 transition-all shrink-0 download-button-exclude"
+          >
+            <Download className="w-6 h-6" />
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDownloadPng}
-          className="h-10 w-10 p-0 text-xs flex items-center justify-center rounded-lg border-[var(--border)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] hover:border-[var(--accent)]/30 transition-all shrink-0 download-button-exclude"
-        >
-          <Download className="w-6 h-6" />
-        </Button>
-      </div>
-      <div className={`w-full ${hasLegend ? 'h-72' : 'h-64'}`} >
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 10, right: 10, left: 55, bottom: hasLegend ? 80 : 45 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
-            <XAxis
-              dataKey={resolvedXKey}
-              stroke="var(--text-secondary)"
-              fontSize={12}
-              tickLine={false}
-              axisLine={true}
-              tick={{ fill: 'var(--text-secondary)' }}
-              height={hasLegend ? 45 : 30}
-              label={{ value: xLabel, position: 'insideBottom', offset: hasLegend ? 15 : -25, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
-            />
-            <YAxis
-              stroke="var(--text-secondary)"
-              fontSize={12}
-              tickLine={true}
-              axisLine={true}
-              tick={{ fill: 'var(--text-secondary)' }}
-              tickFormatter={formatValue}
-              width={50}
-              label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold', style: { textAnchor: 'middle' } }}
-            />
-            <Tooltip
-              wrapperStyle={{ zIndex: 100 }}
-              contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-              itemStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
-              labelStyle={{ color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 'bold' }}
-              formatter={(value: any, name: any) => [typeof value === 'number' ? value.toLocaleString() : value, name === resolvedYKey ? yLabel : getLabel(name)]}
-            />
-            {hasLegend && (
-              <Legend 
-                verticalAlign="bottom"
-                height={36}
-                iconType="circle"
-                wrapperStyle={{ paddingTop: '10px' }}
-                formatter={(value) => <span className="text-[10px] text-[var(--text-secondary)] font-bold">{getLabel(value)}</span>}
+        <div className={`w-full ${hasLegend ? 'h-72' : 'h-64'}`} >
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 55, bottom: hasLegend ? 80 : 45 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
+              <XAxis
+                dataKey={resolvedXKey}
+                stroke="var(--text-secondary)"
+                fontSize={12}
+                tickLine={false}
+                axisLine={true}
+                tick={{ fill: 'var(--text-secondary)' }}
+                height={hasLegend ? 45 : 30}
+                label={{ value: xLabel, position: 'insideBottom', offset: hasLegend ? 15 : -25, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
               />
-            )}
-            {lines.map((lineKey, idx) => (
-              <Line 
-                key={lineKey} 
-                type="monotone" 
-                dataKey={lineKey} 
-                name={lineKey}
-                stroke={COLORS[idx % COLORS.length]} 
-                strokeWidth={3} 
-                dot={{ r: 4, fill: COLORS[idx % COLORS.length] }} 
-                activeDot={{ r: 6 }} 
+              <YAxis
+                stroke="var(--text-secondary)"
+                fontSize={12}
+                tickLine={true}
+                axisLine={true}
+                tick={{ fill: 'var(--text-secondary)' }}
+                tickFormatter={formatValue}
+                width={50}
+                label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold', style: { textAnchor: 'middle' } }}
               />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+              <Tooltip
+                wrapperStyle={{ zIndex: 100 }}
+                contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                itemStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
+                labelStyle={{ color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 'bold' }}
+                formatter={(value: any, name: any) => [typeof value === 'number' ? value.toLocaleString() : value, name === resolvedYKey ? yLabel : getLabel(name)]}
+              />
+              {hasLegend && (
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="circle"
+                  wrapperStyle={{ paddingTop: '10px' }}
+                  formatter={(value) => <span className="text-[10px] text-[var(--text-secondary)] font-bold">{getLabel(value)}</span>}
+                />
+              )}
+              {lines.map((lineKey, idx) => (
+                <Line
+                  key={lineKey}
+                  type="monotone"
+                  dataKey={lineKey}
+                  name={lineKey}
+                  stroke={COLORS[idx % COLORS.length]}
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: COLORS[idx % COLORS.length] }}
+                  activeDot={{ r: 6 }}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
-    </div>
-  );
+    );
   };
 
   switch (type) {
