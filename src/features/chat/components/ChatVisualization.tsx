@@ -175,7 +175,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
       </div>
       <div className="h-64 w-full" >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, left: 15, bottom: 45 }}>
+          <BarChart data={data} margin={{ top: 10, right: 10, left: 55, bottom: 45 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
             <XAxis
               dataKey={resolvedXKey}
@@ -189,13 +189,15 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             <YAxis
               stroke="var(--text-secondary)"
               fontSize={12}
-              tickLine={false}
-              axisLine={false}
+              tickLine={true}
+              axisLine={true}
               tick={{ fill: 'var(--text-secondary)' }}
               tickFormatter={formatValue}
-              label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
+              width={50}
+              label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold', style: { textAnchor: 'middle' } }}
             />
             <Tooltip
+              wrapperStyle={{ zIndex: 100 }}
               cursor={{ fill: 'var(--accent)', opacity: 0.05 }}
               contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               itemStyle={{ color: 'var(--accent)', fontWeight: 'bold' }}
@@ -244,6 +246,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
               ))}
             </Pie>
             <Tooltip
+              wrapperStyle={{ zIndex: 100 }}
               contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               formatter={(value: any, name: any) => [typeof value === 'number' ? value.toLocaleString() : value, name]}
             />
@@ -284,10 +287,21 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
         uniqueLines.add(groupVal);
       });
 
-      // Sort by xKey string value
-      chartData = Object.values(groupedData).sort((a, b) => String(a[resolvedXKey]).localeCompare(String(b[resolvedXKey])));
+      // Sort by xKey chronologically if they are date/month strings, otherwise alphabetically
+      chartData = Object.values(groupedData).sort((a, b) => {
+        const valA = String(a[resolvedXKey]);
+        const valB = String(b[resolvedXKey]);
+        const dateA = Date.parse(valA);
+        const dateB = Date.parse(valB);
+        if (!isNaN(dateA) && !isNaN(dateB)) {
+          return dateA - dateB;
+        }
+        return valA.localeCompare(valB);
+      });
       lines = Array.from(uniqueLines);
     }
+
+    const hasLegend = lines.length > 1;
 
     return (
       <div ref={chartRef} className="bg-[var(--bg)] rounded-xl border border-[var(--border)] p-4 transition-all duration-300 hover:shadow-lg hover:shadow-black/5">
@@ -305,39 +319,43 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             <Download className="w-6 h-6" />
           </Button>
         </div>
-        <div className="h-64 w-full" >
+        <div className={`w-full ${hasLegend ? 'h-72' : 'h-64'}`} >
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 15, bottom: 45 }}>
+            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 55, bottom: hasLegend ? 80 : 45 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
               <XAxis
                 dataKey={resolvedXKey}
                 stroke="var(--text-secondary)"
                 fontSize={12}
                 tickLine={false}
-                axisLine={false}
+                axisLine={true}
                 tick={{ fill: 'var(--text-secondary)' }}
-                label={{ value: xLabel, position: 'insideBottom', offset: -25, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
+                height={hasLegend ? 45 : 30}
+                label={{ value: xLabel, position: 'insideBottom', offset: hasLegend ? 15 : -25, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
               />
               <YAxis
                 stroke="var(--text-secondary)"
                 fontSize={12}
-                tickLine={false}
-                axisLine={false}
+                tickLine={true}
+                axisLine={true}
                 tick={{ fill: 'var(--text-secondary)' }}
                 tickFormatter={formatValue}
-                label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
+                width={50}
+                label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold', style: { textAnchor: 'middle' } }}
               />
               <Tooltip
+                wrapperStyle={{ zIndex: 100 }}
                 contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 itemStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
                 labelStyle={{ color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 'bold' }}
                 formatter={(value: any, name: any) => [typeof value === 'number' ? value.toLocaleString() : value, name === resolvedYKey ? yLabel : getLabel(name)]}
               />
-              {lines.length > 1 && (
+              {hasLegend && (
                 <Legend
                   verticalAlign="bottom"
                   height={36}
                   iconType="circle"
+                  wrapperStyle={{ paddingTop: '10px' }}
                   formatter={(value) => <span className="text-[10px] text-[var(--text-secondary)] font-bold">{getLabel(value)}</span>}
                 />
               )}
