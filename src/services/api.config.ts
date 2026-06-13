@@ -71,4 +71,5 @@ export const API_ENDPOINTS = {
     GET_STAGED_KNOWLEDGE: '/api/admin/staged_knowledge',
     TRIGGER_INDEXING: '/api/admin/trigger_indexing'
   }
+
 };
