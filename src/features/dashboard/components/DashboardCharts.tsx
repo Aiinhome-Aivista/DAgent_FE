@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { toPng } from "html-to-image";
 import {
   BarChart,
   Bar,
@@ -29,6 +30,7 @@ import {
   TrendingUp,
   BarChart2,
   X,
+  Download,
 } from "lucide-react";
 import {
   ComposableMap,
@@ -202,21 +204,18 @@ export const DashboardKPIs = () => (
   <div className="flex flex-col gap-3 w-full">
     {/* KPI 1 */}
     <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
+      <div className="flex items-center gap-1">
+        <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
           ₹
         </div>
-        <div className="text-[10px] font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md shrink-0">
-          <span className="text-slate-400">— 0.0%</span>
-        </div>
-      </div>
-      <div className="min-w-0">
         <p
           className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5 whitespace-nowrap overflow-hidden"
           title="Total Sales Revenue"
         >
           Total Sales Revenue
         </p>
+      </div>
+      <div className="min-w-0">
         <h3 className="text-lg font-black text-slate-700 leading-tight my-1">
           ₹43.82 M
         </h3>
@@ -227,8 +226,8 @@ export const DashboardKPIs = () => (
 
     {/* KPI 2 */}
     <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-1">
+        <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
           <svg
             className="w-4 h-4"
             fill="none"
@@ -243,14 +242,14 @@ export const DashboardKPIs = () => (
             />
           </svg>
         </div>
-      </div>
-      <div className="min-w-0">
         <p
           className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5 whitespace-nowrap overflow-hidden"
           title="Top Performing Tyre"
         >
           Top Performing Tyre
         </p>
+      </div>
+      <div className="min-w-0">
         <h3 className="text-lg font-black text-emerald-600 leading-tight my-1">
           TRUCK
         </h3>
@@ -261,8 +260,8 @@ export const DashboardKPIs = () => (
 
     {/* KPI 3 */}
     <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-1">
+        <div className="w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
           <svg
             className="w-4 h-4"
             fill="none"
@@ -283,14 +282,14 @@ export const DashboardKPIs = () => (
             />
           </svg>
         </div>
-      </div>
-      <div className="min-w-0">
         <p
           className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5 whitespace-nowrap overflow-hidden"
           title="Leading Region"
         >
           Leading Region
         </p>
+      </div>
+      <div className="min-w-0">
         <h3 className="text-lg font-black text-purple-600 leading-tight my-1">
           JAIPUR
         </h3>
@@ -301,8 +300,8 @@ export const DashboardKPIs = () => (
 
     {/* KPI 4 */}
     <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-1">
+        <div className="w-6 h-6 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
           <svg
             className="w-4 h-4"
             fill="none"
@@ -317,17 +316,14 @@ export const DashboardKPIs = () => (
             />
           </svg>
         </div>
-        <div className="text-[10px] font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md shrink-0">
-          <span className="text-slate-400">— 0.0%</span>
-        </div>
-      </div>
-      <div className="min-w-0">
         <p
           className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5 whitespace-nowrap overflow-hidden"
           title="Year-Over-Year"
         >
           Year-Over-Year
         </p>
+      </div>
+      <div className="min-w-0">
         <h3 className="text-lg font-black text-slate-700 leading-tight my-1">
           +0.0%
         </h3>
@@ -1147,7 +1143,12 @@ const TyreSalesGraph = () => (
             tickLine={false}
             tickFormatter={(val) => `₹${val} Cr`}
           >
-            <Label value="Sales (₹)" offset={5} position="bottom" style={{ fill: '#64748b', fontSize: 11 }} />
+            <Label
+              value="Sales (₹)"
+              offset={5}
+              position="bottom"
+              style={{ fill: "#64748b", fontSize: 11 }}
+            />
           </XAxis>
           <YAxis
             type="category"
@@ -1184,6 +1185,7 @@ const TyreSalesGraph = () => (
 
 // Year Comparison needs its own state, so it's a proper component
 const YearComparisonGraph = () => {
+  const chartRef = useRef<HTMLDivElement>(null);
   const [selectedYears, setSelectedYears] = useState<number[]>([2024, 2025]);
   const [chartType, setChartType] = useState<"column" | "line" | "area">(
     "column",
@@ -1203,6 +1205,21 @@ const YearComparisonGraph = () => {
         ? prev.filter((y) => y !== year)
         : [...prev, year].sort(),
     );
+  };
+
+  const handleDownload = async () => {
+    if (!chartRef.current) return;
+    try {
+      const dataUrl = await toPng(chartRef.current, {
+        backgroundColor: "#ffffff",
+      });
+      const link = document.createElement("a");
+      link.download = "year-comparison-chart.png";
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to download chart", err);
+    }
   };
 
   const renderChart = () => {
@@ -1298,10 +1315,18 @@ const YearComparisonGraph = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
+    <div
+      ref={chartRef}
+      className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]"
+    >
       <div className="flex items-center justify-between mb-4 gap-2">
-        <h3 className="text-base font-bold text-slate-800 whitespace-nowrap">Year comparison</h3>
-        <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        <h3 className="text-base font-bold text-slate-800 whitespace-nowrap">
+          Year comparison
+        </h3>
+        <div
+          className="flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-1"
+          style={{ scrollbarWidth: "none" }}
+        >
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-medium text-slate-400">Years</span>
             <div className="flex items-center gap-1">
@@ -1319,7 +1344,7 @@ const YearComparisonGraph = () => {
               })}
             </div>
           </div>
-          
+
           <div className="text-slate-300 text-xs">|</div>
 
           <div className="flex items-center bg-slate-50 p-0.5 rounded-xl border border-slate-200">
@@ -1342,6 +1367,16 @@ const YearComparisonGraph = () => {
               <AreaChartIcon className="w-3.5 h-3.5" /> Area
             </button>
           </div>
+
+          {/* <div className="text-slate-300 text-xs hidden sm:block">|</div> */}
+
+          <button
+            onClick={handleDownload}
+            className="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+            title="Download Graph"
+          >
+            <Download className="w-5 h-5" />
+          </button>
         </div>
       </div>
       <div className="flex-1 min-h-0">
