@@ -601,7 +601,7 @@ export const DashboardGraphs = () => {
 
     // Default to column (BarChart)
     return (
-      <BarChart {...commonProps}>
+      <BarChart {...commonProps} barGap={7}>
         {commonAxes}
         {selectedYears.map((year) => (
           <Bar
@@ -610,7 +610,7 @@ export const DashboardGraphs = () => {
             fill={yearColors[year]}
             name={`${year}`}
             radius={[4, 4, 0, 0]}
-            barSize={16}
+            barSize={8}
           />
         ))}
       </BarChart>
@@ -951,6 +951,12 @@ export const DashboardGraphs = () => {
 
 export const graphPanelItems = [
   {
+    id: "yearcomp",
+    name: "Year Comparison",
+    icon: BarChart3,
+    color: "text-violet-500 bg-violet-50",
+  },
+  {
     id: "map",
     name: "India Coverage",
     icon: Map,
@@ -961,12 +967,6 @@ export const graphPanelItems = [
     name: "YoY Growth",
     icon: TrendingUp,
     color: "text-blue-500 bg-blue-50",
-  },
-  {
-    id: "yearcomp",
-    name: "Year Comparison",
-    icon: BarChart3,
-    color: "text-violet-500 bg-violet-50",
   },
   {
     id: "zone",
@@ -1203,7 +1203,7 @@ const YearComparisonGraph = () => {
   const renderChart = () => {
     const commonProps = {
       data: dummyYearComparisonData,
-      margin: { top: 20, right: 30, left: 20, bottom: 5 },
+      margin: { top: 20, right: 0, left: -15, bottom: 5 },
     };
     const commonAxes = (
       <>
@@ -1276,7 +1276,7 @@ const YearComparisonGraph = () => {
       );
     }
     return (
-      <BarChart {...commonProps}>
+      <BarChart {...commonProps} barGap={2} barCategoryGap="25%">
         {commonAxes}
         {selectedYears.map((year) => (
           <Bar
@@ -1285,7 +1285,7 @@ const YearComparisonGraph = () => {
             fill={yearColors[year]}
             name={`${year}`}
             radius={[4, 4, 0, 0]}
-            barSize={16}
+            maxBarSize={30}
           />
         ))}
       </BarChart>
@@ -1294,39 +1294,45 @@ const YearComparisonGraph = () => {
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
-        <h3 className="text-lg font-bold text-slate-800">Year comparison</h3>
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <h3 className="text-base font-bold text-slate-800 whitespace-nowrap">Year comparison</h3>
+        <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           <div className="flex items-center gap-1.5">
-            {availableYears.map((year) => {
-              const isSelected = selectedYears.includes(year);
-              return (
-                <button
-                  key={year}
-                  onClick={() => toggleYear(year)}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all border ${isSelected ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
-                >
-                  {year}
-                </button>
-              );
-            })}
+            <span className="text-xs font-medium text-slate-400">Years</span>
+            <div className="flex items-center gap-1">
+              {availableYears.map((year) => {
+                const isSelected = selectedYears.includes(year);
+                return (
+                  <button
+                    key={year}
+                    onClick={() => toggleYear(year)}
+                    className={`px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-xs font-bold rounded-lg transition-all border ${isSelected ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
+                  >
+                    {year}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
+          
+          <div className="text-slate-300 text-xs">|</div>
+
+          <div className="flex items-center bg-slate-50 p-0.5 rounded-xl border border-slate-200">
             <button
               onClick={() => setChartType("column")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${chartType === "column" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              className={`flex items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs font-bold transition-all ${chartType === "column" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
             >
-              <BarChart3 className="w-3.5 h-3.5" /> Column
+              <BarChart3 className="w-3 h-3" /> Column
             </button>
             <button
               onClick={() => setChartType("line")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${chartType === "line" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              className={`flex items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs font-bold transition-all ${chartType === "line" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
             >
-              <LineChartIcon className="w-3.5 h-3.5" /> Line
+              <LineChartIcon className="w-3 h-3" /> Line
             </button>
             <button
               onClick={() => setChartType("area")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${chartType === "area" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              className={`flex items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs font-bold transition-all ${chartType === "area" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
             >
               <AreaChartIcon className="w-3.5 h-3.5" /> Area
             </button>
@@ -1388,7 +1394,7 @@ export const GraphSidePanel: React.FC<GraphSidePanelProps> = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-[600px] max-w-[90vw] bg-slate-50 shadow-2xl z-[70] flex flex-col"
+            className="fixed top-0 right-0 h-full w-[800px] max-w-[90vw] bg-slate-50 shadow-2xl z-[70] flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white shrink-0">
