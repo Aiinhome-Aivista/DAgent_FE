@@ -47,6 +47,27 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
 
   const { x: resolvedXKey, y: resolvedYKey } = resolveKeys();
 
+  const sortedData = React.useMemo(() => {
+    if (!data || data.length === 0) return data;
+    const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+    const SHORT_MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+    return [...data].sort((a, b) => {
+      const valA = String(a[resolvedXKey]).toLowerCase().trim();
+      const valB = String(b[resolvedXKey]).toLowerCase().trim();
+      
+      const monthIndexA = MONTHS.indexOf(valA) !== -1 ? MONTHS.indexOf(valA) : SHORT_MONTHS.indexOf(valA);
+      const monthIndexB = MONTHS.indexOf(valB) !== -1 ? MONTHS.indexOf(valB) : SHORT_MONTHS.indexOf(valB);
+      
+      if (monthIndexA !== -1 && monthIndexB !== -1) {
+        return monthIndexA - monthIndexB;
+      }
+      // If one is a month and the other isn't, we just keep original order or we could handle dates here too.
+      // But keeping original if not explicitly both months is safer for general data.
+      return 0;
+    });
+  }, [data, resolvedXKey]);
+
   const getLabel = (key: string) => {
     if (columns) {
       const col = columns.find(c => c.key === key);
@@ -110,8 +131,8 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
   };
 
   const renderTable = () => {
-    if (!data || data.length === 0) return null;
-    const tableColumns = columns || Object.keys(data[0]).map(key => ({ key, label: key }));
+    if (!sortedData || sortedData.length === 0) return null;
+    const tableColumns = columns || Object.keys(sortedData[0]).map(key => ({ key, label: key }));
 
     return (
       <div className="bg-[var(--bg)] rounded-xl border border-[var(--border)] overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-black/5">
@@ -141,7 +162,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]/50">
-              {data.map((row, i) => (
+              {sortedData.map((row, i) => (
                 <tr key={i} className="hover:bg-[var(--accent)]/5 transition-colors group">
                   {tableColumns.map(col => (
                     <td key={`${i}-${col.key}`} className="px-4 py-2.5 font-mono text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
@@ -175,7 +196,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
       </div>
       <div className="h-64 w-full" >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, left: 55, bottom: 45 }}>
+          <BarChart data={sortedData} margin={{ top: 10, right: 10, left: 55, bottom: 45 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
             <XAxis
               dataKey={resolvedXKey}
@@ -231,7 +252,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data}
+              data={sortedData}
               cx="50%"
               cy="50%"
               innerRadius={60}
@@ -241,7 +262,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
               nameKey={resolvedXKey}
               label={({ value }) => `${value}`}
             >
-              {data.map((entry, index) => (
+              {sortedData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="none" />
               ))}
             </Pie>
@@ -263,9 +284,9 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
   );
 
   const renderLineChart = () => {
-    if (!data || data.length === 0) return null;
+    if (!sortedData || sortedData.length === 0) return null;
 
-    let chartData = data;
+    let chartData = sortedData;
     let lines = [resolvedYKey];
 
     // Use seriesKey for grouping if provided
@@ -275,7 +296,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
       const groupedData: Record<string, any> = {};
       const uniqueLines = new Set<string>();
 
-      data.forEach(item => {
+      sortedData.forEach(item => {
         const xVal = item[resolvedXKey];
         const groupVal = item[groupKey];
         const yVal = item[resolvedYKey];
@@ -287,10 +308,22 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
         uniqueLines.add(groupVal);
       });
 
+      const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+      const SHORT_MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
       // Sort by xKey chronologically if they are date/month strings, otherwise alphabetically
       chartData = Object.values(groupedData).sort((a, b) => {
-        const valA = String(a[resolvedXKey]);
-        const valB = String(b[resolvedXKey]);
+        const valA = String(a[resolvedXKey]).toLowerCase().trim();
+        const valB = String(b[resolvedXKey]).toLowerCase().trim();
+        
+        // Month sorting check
+        const monthIndexA = MONTHS.indexOf(valA) !== -1 ? MONTHS.indexOf(valA) : SHORT_MONTHS.indexOf(valA);
+        const monthIndexB = MONTHS.indexOf(valB) !== -1 ? MONTHS.indexOf(valB) : SHORT_MONTHS.indexOf(valB);
+        
+        if (monthIndexA !== -1 && monthIndexB !== -1) {
+          return monthIndexA - monthIndexB;
+        }
+
         const dateA = Date.parse(valA);
         const dateB = Date.parse(valB);
         if (!isNaN(dateA) && !isNaN(dateB)) {
