@@ -67,4 +67,11 @@ export const API_ENDPOINTS = {
     SCHEDULE_DELETE: '/ftp/schedule',
     FETCH_LOG: '/ftp/fetch_log',
   },
+  ADMIN: {
+    GET_CHATS: '/api/admin/chats',
+    PUSH_TO_KG: '/api/admin/push_to_kg',
+    GET_STAGED_KNOWLEDGE: '/api/admin/staged_knowledge',
+    TRIGGER_INDEXING: '/api/admin/trigger_indexing'
+  }
+
 };
