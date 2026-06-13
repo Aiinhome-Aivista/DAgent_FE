@@ -1096,7 +1096,9 @@ const ZonePieGraph = () => (
               `${name}: ${(percent * 100).toFixed(1)}%`
             }
             labelLine={true}
-            stroke="none"
+            stroke="#ffffff"
+            strokeWidth={3}
+            paddingAngle={2}
           >
             {dummyZoneData.map((entry, index) => (
               <Cell
@@ -1203,7 +1205,7 @@ const YearComparisonGraph = () => {
   const renderChart = () => {
     const commonProps = {
       data: dummyYearComparisonData,
-      margin: { top: 20, right: 0, left: -15, bottom: 5 },
+      margin: { top: 20, right: 0, left: -5, bottom: 5 },
     };
     const commonAxes = (
       <>
