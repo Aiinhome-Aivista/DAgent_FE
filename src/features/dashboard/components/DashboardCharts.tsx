@@ -16,6 +16,7 @@ import {
   Line,
   AreaChart,
   Area,
+  Label,
 } from "recharts";
 import {
   BarChart3,
@@ -1132,7 +1133,7 @@ const TyreSalesGraph = () => (
         <BarChart
           data={dummyTyreData}
           layout="vertical"
-          margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
+          margin={{ top: 5, right: 30, left: 60, bottom: 25 }}
         >
           <CartesianGrid
             strokeDasharray="3 3"
@@ -1141,11 +1142,13 @@ const TyreSalesGraph = () => (
           />
           <XAxis
             type="number"
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 10 }}
             axisLine={false}
             tickLine={false}
-            tickFormatter={(val) => `$${val} M`}
-          />
+            tickFormatter={(val) => `₹${val} Cr`}
+          >
+            <Label value="Sales (₹)" offset={5} position="bottom" style={{ fill: '#64748b', fontSize: 11 }} />
+          </XAxis>
           <YAxis
             type="category"
             dataKey="name"
@@ -1163,7 +1166,7 @@ const TyreSalesGraph = () => (
               border: "1px solid #e2e8f0",
               boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
             }}
-            formatter={(val) => [`$${val} M`, "Sales"]}
+            formatter={(val: number) => [`₹${val} Cr`, "Sales"]}
           />
           <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
             {dummyTyreData.map((entry, index) => (
@@ -1396,7 +1399,7 @@ export const GraphSidePanel: React.FC<GraphSidePanelProps> = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-[800px] max-w-[90vw] bg-slate-50 shadow-2xl z-[70] flex flex-col"
+            className="fixed top-0 right-0 h-full w-[750px] max-w-[90vw] bg-slate-50 shadow-2xl z-[70] flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white shrink-0">
@@ -1414,7 +1417,7 @@ export const GraphSidePanel: React.FC<GraphSidePanelProps> = ({
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
