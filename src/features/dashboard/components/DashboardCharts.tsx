@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
 } from 'recharts';
-import { BarChart3, LineChart as LineChartIcon, AreaChart as AreaChartIcon, Plus, Minus } from 'lucide-react';
+import { BarChart3, LineChart as LineChartIcon, AreaChart as AreaChartIcon, Plus, Minus, Map, PieChart as PieChartIcon, TrendingUp, BarChart2, X } from 'lucide-react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 
 export const dummyYoYData = [
@@ -75,54 +76,65 @@ export const dummyTyreData = [
 ];
 
 export const DashboardKPIs = () => (
-  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-      <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4 font-bold text-xl">$</div>
-      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Sales Revenue</p>
-      <h3 className="text-3xl font-black text-slate-800 mb-1">$43.82 M</h3>
-      <p className="text-xs text-slate-500 mb-4">6.71 Lac units sold</p>
-      <div className="text-sm font-semibold flex items-center gap-2 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg w-fit">
-        <span className="text-slate-400">— 0.0%</span> vs last year
+  <div className="flex flex-col gap-3 w-full">
+    <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">$</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Sales Revenue</p>
+          <h3 className="text-lg font-black text-slate-800 leading-tight">$43.82 M</h3>
+          <p className="text-[10px] text-slate-500">6.71 Lac units sold</p>
+        </div>
+        <div className="text-[10px] font-semibold text-slate-500 bg-slate-50 px-2 py-1 rounded-md shrink-0">
+          <span className="text-slate-400">— 0.0%</span>
+        </div>
       </div>
     </div>
 
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-      <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 font-bold text-xl">
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-      </div>
-      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Top Performing Tyre</p>
-      <h3 className="text-3xl font-black text-slate-800 mb-1">TRUCK</h3>
-      <p className="text-xs text-slate-500 mb-4">$27.53 M</p>
-      <div className="text-sm font-semibold flex items-center gap-2 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg w-fit">
-        vs same period last year
-      </div>
-    </div>
-
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-      <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-4 font-bold">
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-      </div>
-      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Leading Region</p>
-      <h3 className="text-3xl font-black text-slate-800 mb-1">JAIPUR</h3>
-      <p className="text-xs text-slate-500 mb-4">$3.83 M</p>
-      <div className="text-sm font-semibold flex items-center gap-2 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg w-fit">
-        vs same period last year
+    <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm shrink-0">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Top Performing Tyre</p>
+          <h3 className="text-lg font-black text-slate-800 leading-tight">TRUCK</h3>
+          <p className="text-[10px] text-slate-500">$27.53 M</p>
+        </div>
       </div>
     </div>
 
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-      <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4 font-bold">
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+    <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center font-bold shrink-0">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Leading Region</p>
+          <h3 className="text-lg font-black text-slate-800 leading-tight">JAIPUR</h3>
+          <p className="text-[10px] text-slate-500">$3.83 M</p>
+        </div>
       </div>
-      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Year-Over-Year</p>
-      <h3 className="text-3xl font-black text-slate-800 mb-1">+0.0%</h3>
-      <p className="text-xs text-slate-500 mb-4">vs same period last year</p>
-      <div className="text-sm font-semibold flex items-center gap-2 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg w-fit">
-        <span className="text-slate-400">— 0.0%</span> vs last year
+    </div>
+
+    <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold shrink-0">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Year-Over-Year</p>
+          <h3 className="text-lg font-black text-slate-800 leading-tight">+0.0%</h3>
+          <p className="text-[10px] text-slate-500">vs same period last year</p>
+        </div>
+        <div className="text-[10px] font-semibold text-slate-500 bg-slate-50 px-2 py-1 rounded-md shrink-0">
+          <span className="text-slate-400">— 0.0%</span>
+        </div>
       </div>
     </div>
   </div>
 );
+
 
 const coverageMarkers = [
   { name: "Delhi", coordinates: [77.1025, 28.7041], coverage: 85, color: "#0ea5e9" },
@@ -502,5 +514,239 @@ export const DashboardGraphs = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// --- Graph Panel Items & Side Panel ---
+
+export const graphPanelItems = [
+  { id: 'map', name: 'India Coverage', icon: Map, color: 'text-cyan-500 bg-cyan-50' },
+  { id: 'yoy', name: 'YoY Growth', icon: TrendingUp, color: 'text-blue-500 bg-blue-50' },
+  { id: 'yearcomp', name: 'Year Comparison', icon: BarChart3, color: 'text-violet-500 bg-violet-50' },
+  { id: 'zone', name: 'Sales by Zone', icon: PieChartIcon, color: 'text-amber-500 bg-amber-50' },
+  { id: 'tyre', name: 'Tyre Sales', icon: BarChart2, color: 'text-emerald-500 bg-emerald-50' },
+];
+
+// Individual graph renderers for the side panel
+const IndiaMapGraph = () => (
+  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[500px]">
+    <h3 className="text-lg font-bold text-slate-800 mb-4">India coverage by region</h3>
+    <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+      <IndiaCoverageMap />
+    </div>
+  </div>
+);
+
+const YoYGrowthGraph = () => (
+  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[500px]">
+    <h3 className="text-lg font-bold text-slate-800 mb-4">YoY Growth by Region</h3>
+    <div className="flex-1 min-h-0">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={[
+            { name: 'FY 2026', ...dummyYoYData.reduce((acc, curr) => ({ ...acc, [curr.name]: curr.y2026 }), {}) },
+            { name: 'FY 2025', ...dummyYoYData.reduce((acc, curr) => ({ ...acc, [curr.name]: curr.y2025 }), {}) }
+          ]}
+          margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
+          barGap={0}
+          barCategoryGap="20%"
+        >
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+          <XAxis dataKey="name" tick={{ fontSize: 11, fontWeight: 'bold' }} axisLine={false} tickLine={false} dy={10} />
+          <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val}M`} />
+          <RechartsTooltip wrapperStyle={{ zIndex: 1000 }} cursor={{ fill: '#f8fafc' }} contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+          {dummyYoYData.slice(0, 10).map((region, index) => {
+            const colors = ['#3b82f6', '#ef4444', '#0ea5e9', '#f97316', '#10b981', '#8b5cf6', '#f43f5e', '#06b6d4', '#84cc16', '#14b8a6'];
+            return <Bar key={region.name} dataKey={region.name} fill={colors[index % colors.length]} radius={[2, 2, 0, 0]} barSize={4} />;
+          })}
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
+const ZonePieGraph = () => (
+  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
+    <h3 className="text-lg font-bold text-slate-800 mb-4">Sales by Zone</h3>
+    <div className="flex-1 min-h-0 flex items-center justify-center">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={dummyZoneData}
+            cx="50%"
+            cy="50%"
+            outerRadius={120}
+            fill="#8884d8"
+            dataKey="value"
+            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+            labelLine={true}
+            stroke="none"
+          >
+            {dummyZoneData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <RechartsTooltip wrapperStyle={{ zIndex: 1000 }} contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
+const TyreSalesGraph = () => (
+  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[400px]">
+    <h3 className="text-lg font-bold text-slate-800 mb-4">Top 10 Tyre Types by Sales</h3>
+    <div className="flex-1 min-h-0">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={dummyTyreData} layout="vertical" margin={{ top: 5, right: 30, left: 60, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+          <XAxis type="number" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val} M`} />
+          <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} width={80} />
+          <RechartsTooltip wrapperStyle={{ zIndex: 1000 }} cursor={{ fill: '#f8fafc' }} contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(val) => [`$${val} M`, 'Sales']} />
+          <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
+            {dummyTyreData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
+// Year Comparison needs its own state, so it's a proper component
+const YearComparisonGraph = () => {
+  const [selectedYears, setSelectedYears] = useState<number[]>([2024, 2025]);
+  const [chartType, setChartType] = useState<'column' | 'line' | 'area'>('column');
+  const availableYears = [2022, 2023, 2024, 2025, 2026];
+  const yearColors: Record<number, string> = { 2022: '#3b82f6', 2023: '#10b981', 2024: '#8b5cf6', 2025: '#f59e0b', 2026: '#ef4444' };
+
+  const toggleYear = (year: number) => {
+    setSelectedYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year].sort());
+  };
+
+  const renderChart = () => {
+    const commonProps = { data: dummyYearComparisonData, margin: { top: 20, right: 30, left: 20, bottom: 5 } };
+    const commonAxes = (
+      <>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val} M`} />
+        <RechartsTooltip wrapperStyle={{ zIndex: 1000 }} cursor={{ fill: '#f8fafc' }} contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+        <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+      </>
+    );
+    if (chartType === 'line') {
+      return (<LineChart {...commonProps}>{commonAxes}{selectedYears.map(year => (<Line key={year} type="monotone" dataKey={`y${year}`} stroke={yearColors[year]} name={`${year}`} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />))}</LineChart>);
+    }
+    if (chartType === 'area') {
+      return (<AreaChart {...commonProps}>{commonAxes}{selectedYears.map(year => (<Area key={year} type="monotone" dataKey={`y${year}`} stroke={yearColors[year]} fill={yearColors[year]} name={`${year}`} fillOpacity={0.3} strokeWidth={2} />))}</AreaChart>);
+    }
+    return (<BarChart {...commonProps}>{commonAxes}{selectedYears.map(year => (<Bar key={year} dataKey={`y${year}`} fill={yearColors[year]} name={`${year}`} radius={[4, 4, 0, 0]} barSize={16} />))}</BarChart>);
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
+        <h3 className="text-lg font-bold text-slate-800">Year comparison</h3>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            {availableYears.map(year => {
+              const isSelected = selectedYears.includes(year);
+              return (
+                <button key={year} onClick={() => toggleYear(year)}
+                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all border ${isSelected ? 'border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm' : 'border-transparent text-slate-500 hover:bg-slate-100'}`}
+                >{year}</button>
+              );
+            })}
+          </div>
+          <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
+            <button onClick={() => setChartType('column')} className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${chartType === 'column' ? 'bg-yellow-100 text-yellow-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <BarChart3 className="w-3.5 h-3.5" /> Column
+            </button>
+            <button onClick={() => setChartType('line')} className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${chartType === 'line' ? 'bg-yellow-100 text-yellow-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <LineChartIcon className="w-3.5 h-3.5" /> Line
+            </button>
+            <button onClick={() => setChartType('area')} className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${chartType === 'area' ? 'bg-yellow-100 text-yellow-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <AreaChartIcon className="w-3.5 h-3.5" /> Area
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0">
+        {selectedYears.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-slate-400 font-medium text-sm">Please select at least one year.</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">{renderChart()}</ResponsiveContainer>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const graphComponents: Record<string, React.FC> = {
+  map: IndiaMapGraph,
+  yoy: YoYGrowthGraph,
+  yearcomp: YearComparisonGraph,
+  zone: ZonePieGraph,
+  tyre: TyreSalesGraph,
+};
+
+interface GraphSidePanelProps {
+  activeGraphId: string | null;
+  onClose: () => void;
+}
+
+export const GraphSidePanel: React.FC<GraphSidePanelProps> = ({ activeGraphId, onClose }) => {
+  const GraphComponent = activeGraphId ? graphComponents[activeGraphId] : null;
+  const activeItem = graphPanelItems.find(g => g.id === activeGraphId);
+
+  return (
+    <AnimatePresence>
+      {activeGraphId && GraphComponent && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="graph-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]"
+          />
+          {/* Panel */}
+          <motion.div
+            key="graph-panel"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed top-0 right-0 h-full w-[600px] max-w-[90vw] bg-slate-50 shadow-2xl z-[70] flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white shrink-0">
+              <div className="flex items-center gap-3">
+                {activeItem && (
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeItem.color}`}>
+                    <activeItem.icon className="w-4 h-4" />
+                  </div>
+                )}
+                <h3 className="text-base font-bold text-slate-800">{activeItem?.name}</h3>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <GraphComponent />
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
