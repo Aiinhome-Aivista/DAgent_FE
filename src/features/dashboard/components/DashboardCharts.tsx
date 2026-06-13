@@ -394,7 +394,7 @@ const coverageMarkers = [
 ];
 
 const IndiaCoverageMap = () => {
-  const [position, setPosition] = useState({ coordinates: [80, 22], zoom: 1 });
+  const [position, setPosition] = useState({ coordinates: [80, 23], zoom: 1 });
   const [tooltipContent, setTooltipContent] = useState("");
 
   const handleZoomIn = () => {
@@ -415,7 +415,7 @@ const IndiaCoverageMap = () => {
     <div className="relative w-full h-full bg-white overflow-hidden">
       <ComposableMap
         projection="geoMercator"
-        projectionConfig={{ scale: 800 }}
+        projectionConfig={{ scale: 1000 }}
         style={{ width: "100%", height: "100%" }}
       >
         <ZoomableGroup
@@ -423,7 +423,7 @@ const IndiaCoverageMap = () => {
           center={position.coordinates as [number, number]}
           onMoveEnd={handleMoveEnd}
         >
-          <Geographies geography="/india-states.geojson">
+          <Geographies geography="/india-states-official.geojson">
             {({ geographies }) =>
               geographies.map((geo) => (
                 <Geography
@@ -980,23 +980,74 @@ export const graphPanelItems = [
 ];
 
 // Individual graph renderers for the side panel
-const IndiaMapGraph = () => (
-  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[500px]">
-    <h3 className="text-lg font-bold text-slate-800 mb-4">
-      India coverage by region
-    </h3>
-    <div className="flex-1 flex items-center justify-center relative overflow-hidden">
-      <IndiaCoverageMap />
-    </div>
-  </div>
-);
+const IndiaMapGraph = () => {
+  const chartRef = useRef<HTMLDivElement>(null);
 
-const YoYGrowthGraph = () => (
-  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[500px]">
-    <h3 className="text-lg font-bold text-slate-800 mb-4">
-      YoY Growth by Region
-    </h3>
-    <div className="flex-1 min-h-0">
+  const handleDownload = async () => {
+    if (!chartRef.current) return;
+    try {
+      const dataUrl = await toPng(chartRef.current, { backgroundColor: '#ffffff' });
+      const link = document.createElement('a');
+      link.download = 'india-coverage-map.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to download chart', err);
+    }
+  };
+
+  return (
+    <div ref={chartRef} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <h3 className="text-lg font-bold text-slate-800">
+          India coverage by region
+        </h3>
+        <button
+          onClick={handleDownload}
+          className="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+          title="Download Graph"
+        >
+          <Download className="w-5 h-5" />
+        </button>
+      </div>
+      <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+        <IndiaCoverageMap />
+      </div>
+    </div>
+  );
+};
+
+const YoYGrowthGraph = () => {
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = async () => {
+    if (!chartRef.current) return;
+    try {
+      const dataUrl = await toPng(chartRef.current, { backgroundColor: '#ffffff' });
+      const link = document.createElement('a');
+      link.download = 'yoy-growth-graph.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to download chart', err);
+    }
+  };
+
+  return (
+    <div ref={chartRef} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[500px]">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <h3 className="text-lg font-bold text-slate-800">
+          YoY Growth by Region
+        </h3>
+        <button
+          onClick={handleDownload}
+          className="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+          title="Download Graph"
+        >
+          <Download className="w-5 h-5" />
+        </button>
+      </div>
+      <div className="flex-1 min-h-0">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={[
@@ -1073,13 +1124,39 @@ const YoYGrowthGraph = () => (
         </BarChart>
       </ResponsiveContainer>
     </div>
-  </div>
-);
+    </div>
+  );
+};
 
-const ZonePieGraph = () => (
-  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
-    <h3 className="text-lg font-bold text-slate-800 mb-4">Sales by Zone</h3>
-    <div className="flex-1 min-h-0 flex items-center justify-center">
+const ZonePieGraph = () => {
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = async () => {
+    if (!chartRef.current) return;
+    try {
+      const dataUrl = await toPng(chartRef.current, { backgroundColor: '#ffffff' });
+      const link = document.createElement('a');
+      link.download = 'zone-sales-graph.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to download chart', err);
+    }
+  };
+
+  return (
+    <div ref={chartRef} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <h3 className="text-lg font-bold text-slate-800">Sales by Zone</h3>
+        <button
+          onClick={handleDownload}
+          className="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+          title="Download Graph"
+        >
+          <Download className="w-5 h-5" />
+        </button>
+      </div>
+      <div className="flex-1 min-h-0 flex items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -1116,15 +1193,41 @@ const ZonePieGraph = () => (
         </PieChart>
       </ResponsiveContainer>
     </div>
-  </div>
-);
+    </div>
+  );
+};
 
-const TyreSalesGraph = () => (
-  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[400px]">
-    <h3 className="text-lg font-bold text-slate-800 mb-4">
-      Top 10 Tyre Types by Sales
-    </h3>
-    <div className="flex-1 min-h-0">
+const TyreSalesGraph = () => {
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = async () => {
+    if (!chartRef.current) return;
+    try {
+      const dataUrl = await toPng(chartRef.current, { backgroundColor: '#ffffff' });
+      const link = document.createElement('a');
+      link.download = 'tyre-sales-graph.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to download chart', err);
+    }
+  };
+
+  return (
+    <div ref={chartRef} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[400px]">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <h3 className="text-lg font-bold text-slate-800">
+          Top 10 Tyre Types by Sales
+        </h3>
+        <button
+          onClick={handleDownload}
+          className="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+          title="Download Graph"
+        >
+          <Download className="w-5 h-5" />
+        </button>
+      </div>
+      <div className="flex-1 min-h-0">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={dummyTyreData}
@@ -1180,8 +1283,9 @@ const TyreSalesGraph = () => (
         </BarChart>
       </ResponsiveContainer>
     </div>
-  </div>
-);
+    </div>
+  );
+};
 
 // Year Comparison needs its own state, so it's a proper component
 const YearComparisonGraph = () => {
