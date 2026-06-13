@@ -31,6 +31,7 @@ import {
   BarChart2,
   X,
   Download,
+  RefreshCw,
 } from "lucide-react";
 import {
   ComposableMap,
@@ -202,52 +203,57 @@ export const dummyTyreData = [
 
 export const DashboardKPIs = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [metrics, setMetrics] = useState({
-    totalSalesRevenue: { value: "₹43.82 Cr", subtext: "6.71 Lac units sold" },
-    topPerformingTyre: { name: "TRUCK", revenue: "₹27.53 cr" },
-    leadingRegion: { name: "JAIPUR", revenue: "₹3.83 cr" },
-    yearOverYear: { change: "+0.0%", subtext: "vs same period last year" },
-  });
+  const [lastQuery, setLastQuery] = useState({ question: "", answer: "" });
+  const [metrics, setMetrics] = useState([
+    { label: "Total Sales Revenue", value: "₹43.82 Cr", subtext: "6.71 Lac units sold" },
+    { label: "Top Performing Tyre", value: "TRUCK", subtext: "₹27.53 cr" },
+    { label: "Leading Region", value: "JAIPUR", subtext: "₹3.83 cr" },
+    { label: "Year-Over-Year", value: "+0.0%", subtext: "vs same period last year" },
+  ]);
+
+  const fetchMetrics = async (question: string, answer: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("http://122.163.121.176:3019/graph-metrics", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question, answer }),
+      });
+      const data = await response.json();
+      if (data.status === "success" && data.data) {
+        // Map either the new format (metric_1, metric_2) or the old format
+        const newMetrics = Object.values(data.data).filter(Boolean) as Array<{ label?: string, name?: string, value?: string, revenue?: string, change?: string, subtext?: string }>;
+        
+        if (newMetrics.length > 0) {
+          setMetrics(prev => {
+            const updated = [...prev];
+            newMetrics.forEach((m, i) => {
+              if (i < 4 && m) {
+                updated[i] = {
+                  label: m.label ?? updated[i].label,
+                  value: m.value ?? m.revenue ?? m.change ?? updated[i].value,
+                  subtext: m.subtext ?? m.name ?? updated[i].subtext,
+                };
+              }
+            });
+            return updated;
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch graph metrics:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const handleChatMetricsUpdate = async (event: CustomEvent) => {
+    const handleChatMetricsUpdate = (event: CustomEvent) => {
       const { question, answer } = event.detail;
-      setIsLoading(true);
-      try {
-        const response = await fetch("http://122.163.121.176:3019/graph-metrics", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ question, answer }),
-        });
-        const data = await response.json();
-        if (data.status === "success" && data.data) {
-          const { leading_region, top_performing_tyre, total_sales_revenue, year_over_year } = data.data;
-          setMetrics(prev => ({
-            leadingRegion: leading_region ? { 
-              name: leading_region.name ?? prev.leadingRegion.name, 
-              revenue: leading_region.revenue ?? prev.leadingRegion.revenue 
-            } : prev.leadingRegion,
-            topPerformingTyre: top_performing_tyre ? { 
-              name: top_performing_tyre.name ?? prev.topPerformingTyre.name, 
-              revenue: top_performing_tyre.revenue ?? prev.topPerformingTyre.revenue 
-            } : prev.topPerformingTyre,
-            totalSalesRevenue: total_sales_revenue ? { 
-              value: total_sales_revenue.value ?? prev.totalSalesRevenue.value, 
-              subtext: total_sales_revenue.subtext ?? prev.totalSalesRevenue.subtext 
-            } : prev.totalSalesRevenue,
-            yearOverYear: year_over_year ? { 
-              change: year_over_year.change ?? prev.yearOverYear.change, 
-              subtext: year_over_year.subtext ?? prev.yearOverYear.subtext 
-            } : prev.yearOverYear,
-          }));
-        }
-      } catch (error) {
-        console.error("Failed to fetch graph metrics:", error);
-      } finally {
-        setIsLoading(false);
-      }
+      setLastQuery({ question, answer });
+      fetchMetrics(question, answer);
     };
 
     window.addEventListener("chat-metrics-update", handleChatMetricsUpdate as EventListener);
@@ -256,14 +262,15 @@ export const DashboardKPIs = () => {
     };
   }, []);
 
+  const handleRefresh = () => {
+    fetchMetrics(lastQuery.question, lastQuery.answer);
+  };
+
   const renderSkeleton = () => (
     <div className="flex flex-col gap-3 w-full">
       {[...Array(4)].map((_, i) => (
         <div key={i} className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-          <div className="flex items-center gap-1">
-            <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 animate-pulse"></div>
-            <div className="h-2.5 bg-slate-200 rounded w-24 ml-1 animate-pulse"></div>
-          </div>
+          <div className="h-2.5 bg-slate-200 rounded w-24 mt-1.5 animate-pulse"></div>
           <div className="min-w-0">
             <div className="h-5 bg-slate-200 rounded w-20 my-1 animate-pulse"></div>
             <div className="h-2 bg-slate-100 rounded w-28 mt-1.5 animate-pulse"></div>
@@ -273,143 +280,40 @@ export const DashboardKPIs = () => {
     </div>
   );
 
-  if (isLoading) {
-    return renderSkeleton();
-  }
-
   return (
     <div className="flex flex-col gap-3 w-full">
-      {/* KPI 1 */}
-      <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-        <div className="flex items-center gap-1">
-          <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
-            ₹
-          </div>
-          <p
-            className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5 whitespace-nowrap overflow-hidden"
-            title="Total Sales Revenue"
-          >
-            Total Sales Revenue
-          </p>
-        </div>
-        <div className="min-w-0">
-          <h3 className="text-lg font-black text-slate-700 leading-tight my-1">
-            {metrics.totalSalesRevenue.value}
-          </h3>
-
-          <p className="text-[10px] text-slate-400 mt-0.5">{metrics.totalSalesRevenue.subtext}</p>
-        </div>
+      <div className="flex justify-between items-center px-1">
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Key Metrics</h3>
+        <button 
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          title="Refresh Metrics"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
-      {/* KPI 2 */}
-      <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-        <div className="flex items-center gap-1">
-          <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-              />
-            </svg>
-          </div>
-          <p
-            className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5 whitespace-nowrap overflow-hidden"
-            title="Top Performing Tyre"
-          >
-            Top Performing Tyre
-          </p>
+      {isLoading ? renderSkeleton() : (
+        <div className="flex flex-col gap-3 w-full">
+          {metrics.map((metric, index) => (
+            <div key={index} className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
+              <p
+                className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5"
+                title={metric.label}
+              >
+                {metric.label}
+              </p>
+              <div className="min-w-0">
+                <h3 className="text-lg font-black text-slate-700 leading-tight my-1 uppercase">
+                  {metric.value}
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">{metric.subtext}</p>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="min-w-0">
-          <h3 className="text-lg font-black text-emerald-600 leading-tight my-1 uppercase">
-            {metrics.topPerformingTyre.name}
-          </h3>
-
-          <p className="text-[10px] text-slate-400 mt-0.5">{metrics.topPerformingTyre.revenue}</p>
-        </div>
-      </div>
-
-      {/* KPI 3 */}
-      <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-        <div className="flex items-center gap-1">
-          <div className="w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-          </div>
-          <p
-            className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5 whitespace-nowrap overflow-hidden"
-            title="Leading Region"
-          >
-            Leading Region
-          </p>
-        </div>
-        <div className="min-w-0">
-          <h3 className="text-lg font-black text-purple-600 leading-tight my-1 uppercase">
-            {metrics.leadingRegion.name}
-          </h3>
-
-          <p className="text-[10px] text-slate-400 mt-0.5">{metrics.leadingRegion.revenue}</p>
-        </div>
-      </div>
-
-      {/* KPI 4 */}
-      <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
-        <div className="flex items-center gap-1">
-          <div className="w-6 h-6 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              />
-            </svg>
-          </div>
-          <p
-            className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5 whitespace-nowrap overflow-hidden"
-            title="Year-Over-Year"
-          >
-            Year-Over-Year
-          </p>
-        </div>
-        <div className="min-w-0">
-          <h3 className="text-lg font-black text-slate-700 leading-tight my-1">
-            {metrics.yearOverYear.change}
-          </h3>
-
-          <p className="text-[10px] text-slate-400 mt-0.5">
-            {metrics.yearOverYear.subtext}
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
