@@ -7,9 +7,10 @@ export interface ApiConfig {
 }
 
 export const defaultConfig: ApiConfig = {
-  baseUrl: 'http://122.163.121.176:3019',
+  // baseUrl: 'http://122.163.121.176:3019',
   // baseUrl: 'http://localhost:3019/',
   // baseUrl: 'http://157.173.221.226:3004',
+  baseUrl: 'http://187.127.163.17:3019',
   timeout: 10000,
 };
 
@@ -56,6 +57,7 @@ export const API_ENDPOINTS = {
     GET_USERS: '/users',
     CREATE_USER: '/create_user',
   },
+  // ─── FTP Connector ──────────────────────────────────────────────────────────
   FTP: {
     CONNECT: '/ftp/connect',
     FETCH: '/ftp/fetch',
@@ -65,10 +67,4 @@ export const API_ENDPOINTS = {
     SCHEDULE_DELETE: '/ftp/schedule',
     FETCH_LOG: '/ftp/fetch_log',
   },
-  ADMIN: {
-    GET_CHATS: '/api/admin/chats',
-    PUSH_TO_KG: '/api/admin/push_to_kg',
-    GET_STAGED_KNOWLEDGE: '/api/admin/staged_knowledge',
-    TRIGGER_INDEXING: '/api/admin/trigger_indexing'
-  }
 };
