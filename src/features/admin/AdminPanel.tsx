@@ -100,6 +100,21 @@ export const AdminPanel: React.FC = () => {
         }
     };
 
+    const handleDeleteWorkspace = async (workspaceId: number) => {
+        if (!window.confirm('Are you sure you want to delete this workspace?')) return;
+        setIsLoading(true);
+        try {
+            await adminService.deleteWorkspace(workspaceId);
+            toast.success('Workspace deleted successfully');
+            await fetchData(); // Refresh list
+        } catch (err: any) {
+            console.error('Failed to delete workspace:', err);
+            setError(err.message || 'Failed to delete workspace');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleAssignWorkspace = async () => {
         if (selectedUserIdsForAssignment.length === 0 || !selectedWorkspaceForAssignment) return;
         setIsAssigning(true);
@@ -264,6 +279,7 @@ export const AdminPanel: React.FC = () => {
                                         newWorkspaceName={newWorkspaceName}
                                         setNewWorkspaceName={setNewWorkspaceName}
                                         handleCreateWorkspace={handleCreateWorkspace}
+                                        handleDeleteWorkspace={handleDeleteWorkspace}
                                         isLoading={isLoading}
                                     />
                                 )}

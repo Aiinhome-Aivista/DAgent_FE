@@ -3,7 +3,7 @@ import { ApiConfig, defaultConfig } from './api.config';
 export interface IApiService {
   get<T>(endpoint: string): Promise<T>;
   post<T>(endpoint: string, data: any): Promise<T>;
-  delete<T>(endpoint: string): Promise<T>;
+  delete<T>(endpoint: string, data?: any): Promise<T>;
 }
 
 class ApiService implements IApiService {
@@ -77,11 +77,12 @@ class ApiService implements IApiService {
     }
   }
 
-  async delete<T>(endpoint: string): Promise<T> {
+  async delete<T>(endpoint: string, data?: any): Promise<T> {
     try {
       const response = await fetch(`${this.config.baseUrl}${endpoint}`, {
         method: 'DELETE',
         headers: this.getHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
       });
       return this.handleResponse<T>(response);
     } catch (error) {

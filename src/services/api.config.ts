@@ -7,8 +7,8 @@ export interface ApiConfig {
 }
 
 export const defaultConfig: ApiConfig = {
-  // baseUrl: 'http://122.163.121.176:3019',
-  baseUrl: 'http://localhost:3019/',
+  baseUrl: 'http://122.163.121.176:3019',
+  // baseUrl: 'http://localhost:3019/',
   // baseUrl: 'http://157.173.221.226:3004',
   timeout: 10000,
 };
@@ -43,6 +43,7 @@ export const API_ENDPOINTS = {
     SET_ACTIVE_WORKSPACE: '/set-active-workspace',
     ASSIGN_WORKSPACE_USERS: '/assign_workspace_users',
     WORKSPACE_USERS: '/workspace_users',
+    DELETE: '/delete_workspace',
   },
   FILE_UPLOAD: {
     CSV_UPLOAD: '/upload_csv',
