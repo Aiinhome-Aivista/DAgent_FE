@@ -105,6 +105,11 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
       setMessages((prev) => [...prev, assistantMessage]);
       setFollowUpQuestions(followUps);
 
+      // Dispatch event to update dashboard metrics
+      window.dispatchEvent(new CustomEvent('chat-metrics-update', {
+        detail: { question: content, answer: answerText }
+      }));
+
       if (isDefaultChat && onNewSessionCreated) {
         // Trigger sidebar refresh so the new chat shows up and gets selected
         setTimeout(() => {
