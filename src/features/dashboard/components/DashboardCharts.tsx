@@ -214,7 +214,7 @@ export const DashboardKPIs = () => {
   const fetchMetrics = async (question: string, answer: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://122.163.121.176:3019/graph-metrics", {
+      const response = await fetch("http://187.127.163.17:3019/graph-metrics", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -225,7 +225,7 @@ export const DashboardKPIs = () => {
       if (data.status === "success" && data.data) {
         // Map either the new format (metric_1, metric_2) or the old format
         const newMetrics = Object.values(data.data).filter(Boolean) as Array<{ label?: string, name?: string, value?: string, revenue?: string, change?: string, subtext?: string }>;
-        
+
         if (newMetrics.length > 0) {
           setMetrics(prev => {
             const updated = [...prev];
@@ -284,7 +284,7 @@ export const DashboardKPIs = () => {
     <div className="flex flex-col gap-3 w-full">
       <div className="flex justify-between items-center px-1">
         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Key Metrics</h3>
-        <button 
+        <button
           onClick={handleRefresh}
           disabled={isLoading}
           className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
@@ -306,7 +306,8 @@ export const DashboardKPIs = () => {
               </p>
               <div className="min-w-0">
                 <h3 className="text-lg font-black text-slate-700 leading-tight my-1 uppercase">
-                  {metric.value}
+                  {typeof metric.value === 'string' && /^\s*[\d,.]+/.test(metric.value) && !metric.value.includes('₹') && !metric.value.includes('%') ? `₹${metric.value.replace(/\$/g, '').trim()}` : typeof metric.value === 'string' ? metric.value.replace(/\$/g, '₹') : typeof metric.value === 'number' ? `₹${metric.value}` : metric.value}
+
                 </h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">{metric.subtext}</p>
               </div>
@@ -761,11 +762,10 @@ export const DashboardGraphs = () => {
                     <button
                       key={year}
                       onClick={() => toggleYear(year)}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
-                        isSelected
-                          ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
-                          : "border-transparent text-slate-500 hover:bg-slate-100"
-                      }`}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${isSelected
+                        ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
+                        : "border-transparent text-slate-500 hover:bg-slate-100"
+                        }`}
                     >
                       {year}
                     </button>
@@ -779,33 +779,30 @@ export const DashboardGraphs = () => {
             <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
               <button
                 onClick={() => setChartType("column")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  chartType === "column"
-                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "column"
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+                  }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
                 Column
               </button>
               <button
                 onClick={() => setChartType("line")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  chartType === "line"
-                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "line"
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+                  }`}
               >
                 <LineChartIcon className="w-3.5 h-3.5" />
                 Line
               </button>
               <button
                 onClick={() => setChartType("area")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  chartType === "area"
-                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "area"
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+                  }`}
               >
                 <AreaChartIcon className="w-3.5 h-3.5" />
                 Area

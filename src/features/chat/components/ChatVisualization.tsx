@@ -164,11 +164,21 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             <tbody className="divide-y divide-[var(--border)]/50">
               {sortedData.map((row, i) => (
                 <tr key={i} className="hover:bg-[var(--accent)]/5 transition-colors group">
-                  {tableColumns.map(col => (
-                    <td key={`${i}-${col.key}`} className="px-4 py-2.5 font-mono text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
-                      {row[col.key]}
-                    </td>
-                  ))}
+                  {tableColumns.map(col => {
+                    const isMonetary = /(value|revenue|sales|price|cost|amount|invoice|margin)/i.test(col.label || col.key);
+                    let cellVal = row[col.key];
+                    if (isMonetary && typeof cellVal === 'number') cellVal = `₹${cellVal.toLocaleString()}`;
+                    else if (isMonetary && typeof cellVal === 'string' && /^\s*[\d,.]+/.test(cellVal) && !cellVal.includes('₹') && !cellVal.includes('%')) {
+                      cellVal = `₹${cellVal.replace(/\$/g, '').trim()}`;
+                    } else if (typeof cellVal === 'string') {
+                      cellVal = cellVal.replace(/\$/g, '₹');
+                    }
+                    return (
+                      <td key={`${i}-${col.key}`} className="px-4 py-2.5 font-mono text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                        {cellVal}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
