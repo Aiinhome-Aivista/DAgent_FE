@@ -40,6 +40,7 @@ import {
   Marker,
   ZoomableGroup,
 } from "react-simple-maps";
+import { defaultConfig } from "@/src/services/api.config";
 
 export const dummyYoYData = [
   { name: "JAIPUR", y2026: 65.5, y2025: 59.5 },
@@ -205,16 +206,24 @@ export const DashboardKPIs = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastQuery, setLastQuery] = useState({ question: "", answer: "" });
   const [metrics, setMetrics] = useState([
-    { label: "Total Sales Revenue", value: "₹43.82 Cr", subtext: "6.71 Lac units sold" },
+    {
+      label: "Total Sales Revenue",
+      value: "₹43.82 Cr",
+      subtext: "6.71 Lac units sold",
+    },
     { label: "Top Performing Tyre", value: "TRUCK", subtext: "₹27.53 cr" },
     { label: "Leading Region", value: "JAIPUR", subtext: "₹3.83 cr" },
-    { label: "Year-Over-Year", value: "+0.0%", subtext: "vs same period last year" },
+    {
+      label: "Year-Over-Year",
+      value: "+0.0%",
+      subtext: "vs same period last year",
+    },
   ]);
 
   const fetchMetrics = async (question: string, answer: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://187.127.163.17:3019/graph-metrics", {
+      const response = await fetch(`${defaultConfig.baseUrl}/graph-metrics`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -224,10 +233,17 @@ export const DashboardKPIs = () => {
       const data = await response.json();
       if (data.status === "success" && data.data) {
         // Map either the new format (metric_1, metric_2) or the old format
-        const newMetrics = Object.values(data.data).filter(Boolean) as Array<{ label?: string, name?: string, value?: string, revenue?: string, change?: string, subtext?: string }>;
+        const newMetrics = Object.values(data.data).filter(Boolean) as Array<{
+          label?: string;
+          name?: string;
+          value?: string;
+          revenue?: string;
+          change?: string;
+          subtext?: string;
+        }>;
 
         if (newMetrics.length > 0) {
-          setMetrics(prev => {
+          setMetrics((prev) => {
             const updated = [...prev];
             newMetrics.forEach((m, i) => {
               if (i < 4 && m) {
@@ -256,9 +272,15 @@ export const DashboardKPIs = () => {
       fetchMetrics(question, answer);
     };
 
-    window.addEventListener("chat-metrics-update", handleChatMetricsUpdate as EventListener);
+    window.addEventListener(
+      "chat-metrics-update",
+      handleChatMetricsUpdate as EventListener,
+    );
     return () => {
-      window.removeEventListener("chat-metrics-update", handleChatMetricsUpdate as EventListener);
+      window.removeEventListener(
+        "chat-metrics-update",
+        handleChatMetricsUpdate as EventListener,
+      );
     };
   }, []);
 
@@ -269,7 +291,10 @@ export const DashboardKPIs = () => {
   const renderSkeleton = () => (
     <div className="flex flex-col gap-3 w-full">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
+        <div
+          key={i}
+          className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2"
+        >
           <div className="h-2.5 bg-slate-200 rounded w-24 mt-1.5 animate-pulse"></div>
           <div className="min-w-0">
             <div className="h-5 bg-slate-200 rounded w-20 my-1 animate-pulse"></div>
@@ -283,21 +308,30 @@ export const DashboardKPIs = () => {
   return (
     <div className="flex flex-col gap-3 w-full">
       <div className="flex justify-between items-center px-1">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Key Metrics</h3>
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          Key Metrics
+        </h3>
         <button
           onClick={handleRefresh}
           disabled={isLoading}
           className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           title="Refresh Metrics"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`}
+          />
         </button>
       </div>
 
-      {isLoading ? renderSkeleton() : (
+      {isLoading ? (
+        renderSkeleton()
+      ) : (
         <div className="flex flex-col gap-3 w-full">
           {metrics.map((metric, index) => (
-            <div key={index} className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
+            <div
+              key={index}
+              className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2"
+            >
               <p
                 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5"
                 title={metric.label}
@@ -306,10 +340,20 @@ export const DashboardKPIs = () => {
               </p>
               <div className="min-w-0">
                 <h3 className="text-lg font-black text-slate-700 leading-tight my-1 uppercase">
-                  {typeof metric.value === 'string' && /^\s*[\d,.]+/.test(metric.value) && !metric.value.includes('₹') && !metric.value.includes('%') ? `₹${metric.value.replace(/\$/g, '').trim()}` : typeof metric.value === 'string' ? metric.value.replace(/\$/g, '₹') : typeof metric.value === 'number' ? `₹${metric.value}` : metric.value}
-
+                  {typeof metric.value === "string" &&
+                  /^\s*[\d,.]+/.test(metric.value) &&
+                  !metric.value.includes("₹") &&
+                  !metric.value.includes("%")
+                    ? `₹${metric.value.replace(/\$/g, "").trim()}`
+                    : typeof metric.value === "string"
+                      ? metric.value.replace(/\$/g, "₹")
+                      : typeof metric.value === "number"
+                        ? `₹${metric.value}`
+                        : metric.value}
                 </h3>
-                <p className="text-[10px] text-slate-400 mt-0.5">{metric.subtext}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {metric.subtext}
+                </p>
               </div>
             </div>
           ))}
@@ -762,10 +806,11 @@ export const DashboardGraphs = () => {
                     <button
                       key={year}
                       onClick={() => toggleYear(year)}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${isSelected
-                        ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
-                        : "border-transparent text-slate-500 hover:bg-slate-100"
-                        }`}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
+                        isSelected
+                          ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
+                          : "border-transparent text-slate-500 hover:bg-slate-100"
+                      }`}
                     >
                       {year}
                     </button>
@@ -779,30 +824,33 @@ export const DashboardGraphs = () => {
             <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
               <button
                 onClick={() => setChartType("column")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "column"
-                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  chartType === "column"
+                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
                 Column
               </button>
               <button
                 onClick={() => setChartType("line")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "line"
-                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  chartType === "line"
+                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
               >
                 <LineChartIcon className="w-3.5 h-3.5" />
                 Line
               </button>
               <button
                 onClick={() => setChartType("area")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "area"
-                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  chartType === "area"
+                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
               >
                 <AreaChartIcon className="w-3.5 h-3.5" />
                 Area
@@ -1475,7 +1523,6 @@ const YearComparisonGraph = () => {
           </div>
 
           <div className="text-slate-300 text-xs hidden sm:block">|</div>
-
         </div>
         <button
           onClick={handleDownload}

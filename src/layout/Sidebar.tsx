@@ -100,7 +100,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {/* Workspace nav item */}
               <div className="px-3 mb-1">
                 <button
-                  onClick={() => isSidebarOpen && setIsWorkspaceOpen(o => !o)}
+                  onClick={() => {
+                    if (!isSidebarOpen) {
+                      setSidebarOpen(true);
+                      setIsWorkspaceOpen(true);
+                    } else {
+                      setIsWorkspaceOpen(o => !o);
+                    }
+                  }}
                   className={`
                     w-full flex items-center justify-between overflow-hidden p-1.5 px-3 rounded-xl border border-[var(--border)]/20 bg-[var(--bg)]/50
                     hover:bg-[var(--surface-hover)] transition-all duration-200 group cursor-pointer text-[var(--text-secondary)] hover:text-[var(--text-primary)]
