@@ -68,12 +68,13 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
     });
   }, [data, resolvedXKey]);
 
-  const getLabel = (key: string) => {
+  const getLabel = (key?: string) => {
+    if (!key) return '';
     if (columns) {
       const col = columns.find(c => c.key === key);
       if (col) return col.label;
     }
-    return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return String(key).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const xLabel = getLabel(resolvedXKey);
