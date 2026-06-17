@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { toPng } from "html-to-image";
+import toast from "react-hot-toast";
 import {
   BarChart,
   Bar,
@@ -206,24 +207,30 @@ export const DashboardKPIs = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastQuery, setLastQuery] = useState({ question: "", answer: "" });
   const [metrics, setMetrics] = useState([
-    // {
-    //   label: "Total Sales Revenue",
-    //   value: "₹43.82 Cr",
-    //   subtext: "6.71 Lac units sold",
-    // },
-    // { label: "Top Performing Tyre", value: "TRUCK", subtext: "₹27.53 cr" },
-    // { label: "Leading Region", value: "JAIPUR", subtext: "₹3.83 cr" },
-    // {
-    //   label: "Year-Over-Year",
-    //   value: "+0.0%",
-    //   subtext: "vs same period last year",
-    // },
+    {
+      label: "Total Sales Revenue",
+      value: "",
+      subtext: "",
+    },
+    { label: "Top Performing Tyre",
+      value: "", 
+      subtext: ""
+    },
+    { label: "Leading Region",
+      
+      value: "", subtext: "" 
+      },
+    {
+      label: "Year-Over-Year",
+      value: "",
+      subtext: "",
+    },
   ]);
 
   const fetchMetrics = async (question: string, answer: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${defaultConfig.baseUrl}graph-metrics`, {
+      const response = await fetch(`${defaultConfig.baseUrl}/graph-metrics`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -268,7 +275,7 @@ export const DashboardKPIs = () => {
   const fetchDefaultMetrics = async (sessionId: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${defaultConfig.baseUrl}default-dashboard-metrics`, {
+      const response = await fetch(`${defaultConfig.baseUrl}/default-dashboard-metrics`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -298,9 +305,12 @@ export const DashboardKPIs = () => {
             return updated;
           });
         }
+      } else if (data.status === "error") {
+        toast.error(data.message || data.details || "Failed to fetch default metrics");
       }
     } catch (error) {
       console.error("Failed to fetch default metrics:", error);
+      toast.error("Failed to fetch default metrics");
     } finally {
       setIsLoading(false);
     }
@@ -1033,25 +1043,25 @@ export const graphPanelItems = [
     icon: PieChartIcon,
     color: "text-amber-500 bg-amber-50",
   },
-  // {
-  //   id: "map",
-  //   name: "India Coverage",
-  //   icon: Map,
-  //   color: "text-cyan-500 bg-cyan-50",
-  // },
-  // {
-  //   id: "yoy",
-  //   name: "YoY Growth",
-  //   icon: TrendingUp,
-  //   color: "text-blue-500 bg-blue-50",
-  // },
+  {
+    id: "map",
+    name: "India Coverage",
+    icon: Map,
+    color: "text-cyan-500 bg-cyan-50",
+  },
+  {
+    id: "yoy",
+    name: "YoY Growth",
+    icon: TrendingUp,
+    color: "text-blue-500 bg-blue-50",
+  },
 
-  // {
-  //   id: "tyre",
-  //   name: "Tyre Sales",
-  //   icon: BarChart2,
-  //   color: "text-emerald-500 bg-emerald-50",
-  // },
+  {
+    id: "tyre",
+    name: "Tyre Sales",
+    icon: BarChart2,
+    color: "text-emerald-500 bg-emerald-50",
+  },
 ];
 
 // Individual graph renderers for the side panel
