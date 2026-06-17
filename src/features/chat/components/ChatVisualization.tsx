@@ -165,7 +165,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
               {sortedData.map((row, i) => (
                 <tr key={i} className="hover:bg-[var(--accent)]/5 transition-colors group">
                   {tableColumns.map(col => {
-                    const isMonetary = /(value|revenue|sales|price|cost|amount|invoice|margin)/i.test(col.label || col.key);
+                    const isMonetary = /(value|revenue|sales|price|cost|amount|margin)/i.test(col.label || col.key);
                     let cellVal = row[col.key];
                     if (isMonetary && typeof cellVal === 'number') cellVal = `₹${cellVal.toLocaleString()}`;
                     else if (isMonetary && typeof cellVal === 'string' && /^\s*[\d,.]+/.test(cellVal) && !cellVal.includes('₹') && !cellVal.includes('%')) {

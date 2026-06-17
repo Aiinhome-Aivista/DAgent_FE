@@ -7,10 +7,10 @@ export interface ApiConfig {
 }
 
 export const defaultConfig: ApiConfig = {
-  // baseUrl: 'http://122.163.121.176:3019',
+  baseUrl: 'http://122.163.121.176:3019',
   // baseUrl: 'http://localhost:3019/',
   // baseUrl: 'http://157.173.221.226:3004',
-  baseUrl: 'http://187.127.163.17:3019',
+  // baseUrl: 'http://187.127.163.17:3019',
   timeout: 10000,
 };
 
@@ -36,6 +36,7 @@ export const API_ENDPOINTS = {
   },
   CHAT: {
     CHAT: '/session-chat',
+    DEFAULT_METRICS: '/default-dashboard-metrics',
   },
   WORKSPACE: {
     CREATE: '/create_workspace',
@@ -75,3 +76,16 @@ export const API_ENDPOINTS = {
   }
 
 };
+
+// top 2 customers
+
+// top 2 dealers
+
+// top 2 customers with 3 months sales
+
+// worst 2 customers
+
+// worst performers along with their monthly sales value
+
+// worst 2 performers along with their product categoy wise sales breakup
+

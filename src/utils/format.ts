@@ -14,9 +14,6 @@ export const formatChatMessage = (text: string, isAssistant: boolean): string =>
   // Replace dollar sign with rupee sign in the chat response
   text = text.replace(/\$/g, '₹');
 
-  // Heuristic to prepend ₹ to bare numbers that look like formatted monetary amounts 
-  // (e.g. 110,639.99 or 258,308.59) to fix missing currency symbols from the API.
-  text = text.replace(/(^|[^\w₹,.])(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+\.\d{2})(?!\s*%)/g, '$1₹$2');
 
   // Tailored classes based on message owner/theme to ensure high-end aesthetics
   const linkClass = isAssistant 

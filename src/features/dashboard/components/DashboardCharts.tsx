@@ -206,24 +206,24 @@ export const DashboardKPIs = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastQuery, setLastQuery] = useState({ question: "", answer: "" });
   const [metrics, setMetrics] = useState([
-    {
-      label: "Total Sales Revenue",
-      value: "₹43.82 Cr",
-      subtext: "6.71 Lac units sold",
-    },
-    { label: "Top Performing Tyre", value: "TRUCK", subtext: "₹27.53 cr" },
-    { label: "Leading Region", value: "JAIPUR", subtext: "₹3.83 cr" },
-    {
-      label: "Year-Over-Year",
-      value: "+0.0%",
-      subtext: "vs same period last year",
-    },
+    // {
+    //   label: "Total Sales Revenue",
+    //   value: "₹43.82 Cr",
+    //   subtext: "6.71 Lac units sold",
+    // },
+    // { label: "Top Performing Tyre", value: "TRUCK", subtext: "₹27.53 cr" },
+    // { label: "Leading Region", value: "JAIPUR", subtext: "₹3.83 cr" },
+    // {
+    //   label: "Year-Over-Year",
+    //   value: "+0.0%",
+    //   subtext: "vs same period last year",
+    // },
   ]);
 
   const fetchMetrics = async (question: string, answer: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${defaultConfig.baseUrl}/graph-metrics`, {
+      const response = await fetch(`${defaultConfig.baseUrl}graph-metrics`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -265,6 +265,54 @@ export const DashboardKPIs = () => {
     }
   };
 
+  const fetchDefaultMetrics = async (sessionId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${defaultConfig.baseUrl}default-dashboard-metrics`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ session_id: sessionId }),
+      });
+      const data = await response.json();
+      if (data.status === "success" && data.data) {
+        const newMetrics = Object.values(data.data).filter(Boolean) as Array<{
+          label?: string;
+          value?: string;
+          subtext?: string;
+        }>;
+
+        if (newMetrics.length > 0) {
+          setMetrics((prev) => {
+            const updated = [...prev];
+            newMetrics.forEach((m, i) => {
+              if (i < 4 && m) {
+                updated[i] = {
+                  label: m.label ?? updated[i].label,
+                  value: m.value ?? updated[i].value,
+                  subtext: m.subtext ?? updated[i].subtext,
+                };
+              }
+            });
+            return updated;
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch default metrics:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const sessionId = localStorage.getItem('DAgent_session_id');
+    if (sessionId) {
+      fetchDefaultMetrics(sessionId);
+    }
+  }, []);
+
   useEffect(() => {
     const handleChatMetricsUpdate = (event: CustomEvent) => {
       const { question, answer } = event.detail;
@@ -285,7 +333,8 @@ export const DashboardKPIs = () => {
   }, []);
 
   const handleRefresh = () => {
-    fetchMetrics(lastQuery.question, lastQuery.answer);
+    const sessionId = localStorage.getItem('DAgent_session_id');
+    if (sessionId) fetchDefaultMetrics(sessionId);
   };
 
   const renderSkeleton = () => (
@@ -341,9 +390,9 @@ export const DashboardKPIs = () => {
               <div className="min-w-0">
                 <h3 className="text-lg font-black text-slate-700 leading-tight my-1 uppercase">
                   {typeof metric.value === "string" &&
-                  /^\s*[\d,.]+/.test(metric.value) &&
-                  !metric.value.includes("₹") &&
-                  !metric.value.includes("%")
+                    /^\s*[\d,.]+/.test(metric.value) &&
+                    !metric.value.includes("₹") &&
+                    !metric.value.includes("%")
                     ? `₹${metric.value.replace(/\$/g, "").trim()}`
                     : typeof metric.value === "string"
                       ? metric.value.replace(/\$/g, "₹")
@@ -806,11 +855,10 @@ export const DashboardGraphs = () => {
                     <button
                       key={year}
                       onClick={() => toggleYear(year)}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
-                        isSelected
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${isSelected
                           ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
                           : "border-transparent text-slate-500 hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       {year}
                     </button>
@@ -824,33 +872,30 @@ export const DashboardGraphs = () => {
             <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
               <button
                 onClick={() => setChartType("column")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  chartType === "column"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "column"
                     ? "bg-yellow-100 text-yellow-800 shadow-sm"
                     : "text-slate-500 hover:text-slate-700"
-                }`}
+                  }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
                 Column
               </button>
               <button
                 onClick={() => setChartType("line")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  chartType === "line"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "line"
                     ? "bg-yellow-100 text-yellow-800 shadow-sm"
                     : "text-slate-500 hover:text-slate-700"
-                }`}
+                  }`}
               >
                 <LineChartIcon className="w-3.5 h-3.5" />
                 Line
               </button>
               <button
                 onClick={() => setChartType("area")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  chartType === "area"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "area"
                     ? "bg-yellow-100 text-yellow-800 shadow-sm"
                     : "text-slate-500 hover:text-slate-700"
-                }`}
+                  }`}
               >
                 <AreaChartIcon className="w-3.5 h-3.5" />
                 Area
