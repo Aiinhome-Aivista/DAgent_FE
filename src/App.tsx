@@ -62,6 +62,7 @@ function AppContent() {
         if (activeWS) {
           setSelectedWorkspace(activeWS);
           localStorage.setItem('DAgent_session_id', activeWS.session_id);
+          window.dispatchEvent(new CustomEvent('session-id-updated', { detail: { sessionId: activeWS.session_id } }));
         }
       }
     } catch (err) {

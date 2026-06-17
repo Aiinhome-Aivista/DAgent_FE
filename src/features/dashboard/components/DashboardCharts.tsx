@@ -321,6 +321,16 @@ export const DashboardKPIs = () => {
     if (sessionId) {
       fetchDefaultMetrics(sessionId);
     }
+
+    const handleSessionIdUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail?.sessionId) {
+        fetchDefaultMetrics(customEvent.detail.sessionId);
+      }
+    };
+
+    window.addEventListener('session-id-updated', handleSessionIdUpdated);
+    return () => window.removeEventListener('session-id-updated', handleSessionIdUpdated);
   }, []);
 
   useEffect(() => {

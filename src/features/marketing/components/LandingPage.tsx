@@ -104,9 +104,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Badge variant="outline" className="bg-accent/5 text-accent border-accent/10 mb-6 px-4 py-1 rounded-full">
+            {/* <Badge variant="outline" className="bg-accent/5 text-accent border-accent/10 mb-6 px-4 py-1 rounded-full">
               New: DAgent Business Plan →
-            </Badge>
+            </Badge> */}
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1]">
              Ask your data anything. Get insights instantly.
             </h1>
@@ -380,7 +380,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Product</h4>
             <ul className="space-y-4 text-sm text-slate-600">
               <li>Pricing</li>
-              <li onClick={onDashboardClick} className="cursor-pointer hover:text-accent">Connectors</li>
+              <li>Connectors</li>
               <li>Slack Agent</li>
               <li>DAgent for Labs</li>
             </ul>

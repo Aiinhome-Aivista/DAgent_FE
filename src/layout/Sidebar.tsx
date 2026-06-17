@@ -224,6 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                         "DAgent_session_id",
                                         newWS.session_id,
                                       );
+                                      window.dispatchEvent(new CustomEvent('session-id-updated', { detail: { sessionId: newWS.session_id } }));
                                       setWorkspaceSearch("");
                                       setIsCreatingWorkspace(false);
                                       setNewWorkspaceName("");
@@ -273,6 +274,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                         "DAgent_session_id",
                                         newWS.session_id,
                                       );
+                                      window.dispatchEvent(new CustomEvent('session-id-updated', { detail: { sessionId: newWS.session_id } }));
                                       setWorkspaceSearch("");
                                       setIsCreatingWorkspace(false);
                                       setNewWorkspaceName("");
@@ -382,6 +384,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             "DAgent_session_id",
                                             workspace.session_id,
                                           );
+                                          window.dispatchEvent(new CustomEvent('session-id-updated', { detail: { sessionId: workspace.session_id } }));
                                           setWorkflowKey((prev) =>
                                             typeof prev === "number"
                                               ? prev + 1
