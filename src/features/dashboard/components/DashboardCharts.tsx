@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { toPng } from "html-to-image";
+import toast from "react-hot-toast";
 import {
   BarChart,
   Bar,
@@ -208,20 +209,21 @@ export const DashboardKPIs = () => {
   const [metrics, setMetrics] = useState([
     {
       label: "Total Sales Revenue",
-      // value: "₹43.82 Cr",
-      // subtext: "6.71 Lac units sold",
+      value: "",
+      subtext: "",
     },
-    { label: "Top Performing Tyre"
-      // value: "TRUCK", subtext: "₹27.53 cr" },
+    { label: "Top Performing Tyre",
+      value: "", 
+      subtext: ""
     },
     { label: "Leading Region",
       
-      // value: "JAIPUR", subtext: "₹3.83 cr" 
+      value: "", subtext: "" 
       },
     {
       label: "Year-Over-Year",
-      // value: "+0.0%",
-      // subtext: "vs same period last year",
+      value: "",
+      subtext: "",
     },
   ]);
 
@@ -303,9 +305,12 @@ export const DashboardKPIs = () => {
             return updated;
           });
         }
+      } else if (data.status === "error") {
+        toast.error(data.message || data.details || "Failed to fetch default metrics");
       }
     } catch (error) {
       console.error("Failed to fetch default metrics:", error);
+      toast.error("Failed to fetch default metrics");
     } finally {
       setIsLoading(false);
     }
