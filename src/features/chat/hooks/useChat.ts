@@ -147,7 +147,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
               id: `user-${idx}`,
               role: 'user',
               content: item.question,
-              timestamp: new Date()
+              timestamp: item.timestamp ? new Date(item.timestamp) : (item.created_at ? new Date(item.created_at) : new Date())
             });
           }
 
@@ -155,7 +155,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
             id: `assistant-${idx}`,
             role: 'assistant',
             content: item.answer,
-            timestamp: new Date(),
+            timestamp: item.timestamp ? new Date(item.timestamp) : (item.created_at ? new Date(item.created_at) : new Date()),
             visualizations: item.visualizations || []
           });
         });

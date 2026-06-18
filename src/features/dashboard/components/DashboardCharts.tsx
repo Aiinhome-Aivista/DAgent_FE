@@ -41,7 +41,7 @@ import {
   Marker,
   ZoomableGroup,
 } from "react-simple-maps";
-import { defaultConfig } from "@/src/services/api.config";
+import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
 export const dummyYoYData = [
   { name: "JAIPUR", y2026: 65.5, y2025: 59.5 },
@@ -625,6 +625,36 @@ const IndiaCoverageMap = ({ year, month, region }: { year?: string, month?: stri
 
 export const DashboardGraphs = () => {
   const [selectedYears, setSelectedYears] = useState<number[]>([2024, 2025]);
+  const [tyreData, setTyreData] = useState(dummyTyreData);
+
+  useEffect(() => {
+    const fetchTyreData = async () => {
+      try {
+        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            question: "Top 10 Tyre Types by Sales ",
+            user_id: 22
+          })
+        });
+        const data = await response.json();
+        if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
+          const mappedData = data.visualizations[0].data.map((item: any) => ({
+            name: item.category,
+            value: Number(item.sales_value)
+          }));
+          setTyreData(mappedData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch tyre sales data:", err);
+      }
+    };
+    fetchTyreData();
+  }, []);
+
   const [chartType, setChartType] = useState<"column" | "line" | "area">(
     "column",
   );
@@ -1111,9 +1141,9 @@ export const DashboardGraphs = () => {
           <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={dummyTyreData}
+                data={tyreData}
                 layout="vertical"
-                margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
+                margin={{ top: 5, right: 30, left: 60, bottom: 20 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -1122,11 +1152,13 @@ export const DashboardGraphs = () => {
                 />
                 <XAxis
                   type="number"
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
-                  tickFormatter={(val) => `$${val} M`}
-                />
+                  tickFormatter={(val) => val}
+                >
+                  <Label value="Sales Value" offset={5} position="bottom" style={{ fill: "#64748b", fontSize: 11 }} />
+                </XAxis>
                 <YAxis
                   type="category"
                   dataKey="name"
@@ -1134,7 +1166,9 @@ export const DashboardGraphs = () => {
                   axisLine={false}
                   tickLine={false}
                   width={80}
-                />
+                >
+                  <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11 }} />
+                </YAxis>
                 <RechartsTooltip
                   wrapperStyle={{ zIndex: 1000 }}
                   cursor={{ fill: "#f8fafc" }}
@@ -1144,10 +1178,10 @@ export const DashboardGraphs = () => {
                     border: "1px solid #e2e8f0",
                     boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                   }}
-                  formatter={(val) => [`$${val} M`, "Sales"]}
+                  formatter={(val: number) => [val, "Sales"]}
                 />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
-                  {dummyTyreData.map((entry, index) => (
+                  {tyreData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
@@ -1524,6 +1558,35 @@ const ZonePieGraph = () => {
 
 const TyreSalesGraph = () => {
   const chartRef = useRef<HTMLDivElement>(null);
+  const [tyreData, setTyreData] = useState(dummyTyreData);
+
+  useEffect(() => {
+    const fetchTyreData = async () => {
+      try {
+        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            question: "Top 10 Tyre Types by Sales ",
+            user_id: 22
+          })
+        });
+        const data = await response.json();
+        if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
+          const mappedData = data.visualizations[0].data.map((item: any) => ({
+            name: item.category,
+            value: Number(item.sales_value)
+          }));
+          setTyreData(mappedData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch tyre sales data:", err);
+      }
+    };
+    fetchTyreData();
+  }, []);
 
   const handleDownload = async () => {
     if (!chartRef.current) return;
@@ -1560,7 +1623,7 @@ const TyreSalesGraph = () => {
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={dummyTyreData}
+            data={tyreData}
             layout="vertical"
             margin={{ top: 5, right: 30, left: 60, bottom: 25 }}
           >
@@ -1574,10 +1637,10 @@ const TyreSalesGraph = () => {
               tick={{ fontSize: 10 }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(val) => `₹${val} Cr`}
+              tickFormatter={(val) => val}
             >
               <Label
-                value="Sales (₹)"
+                value="Sales Value"
                 offset={5}
                 position="bottom"
                 style={{ fill: "#64748b", fontSize: 11 }}
@@ -1590,7 +1653,9 @@ const TyreSalesGraph = () => {
               axisLine={false}
               tickLine={false}
               width={80}
-            />
+            >
+              <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11 }} />
+            </YAxis>
             <RechartsTooltip
               wrapperStyle={{ zIndex: 1000 }}
               cursor={{ fill: "#f8fafc" }}
@@ -1600,10 +1665,10 @@ const TyreSalesGraph = () => {
                 border: "1px solid #e2e8f0",
                 boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
               }}
-              formatter={(val: number) => [`₹${val} Cr`, "Sales"]}
+              formatter={(val: number) => [val, "Sales"]}
             />
             <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
-              {dummyTyreData.map((entry, index) => (
+              {tyreData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={COLORS[index % COLORS.length]}

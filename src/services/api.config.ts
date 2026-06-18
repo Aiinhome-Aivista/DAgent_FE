@@ -38,6 +38,13 @@ export const API_ENDPOINTS = {
     CHAT: '/session-chat',
     DEFAULT_METRICS: '/default-dashboard-metrics',
   },
+
+  DASHBOARD: {
+    TYRE_SALES_DATA: '/tyre-sales-data',
+    SALES_BY_ZONE: '/sales-by-zone',
+    FILTERS: '/dashboard-filters',
+  },
+
   WORKSPACE: {
     CREATE: '/create_workspace',
     GET_WORKSPACES: '/workspaces',
