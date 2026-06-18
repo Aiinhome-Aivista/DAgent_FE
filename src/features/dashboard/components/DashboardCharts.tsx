@@ -593,6 +593,9 @@ export const DashboardGraphs = () => {
   const [chartType, setChartType] = useState<"column" | "line" | "area">(
     "column",
   );
+  const [zoneProductType, setZoneProductType] = useState("All");
+  const [zoneConstructionType, setZoneConstructionType] = useState("All");
+  const [zoneTyreType, setZoneTyreType] = useState("All");
 
   const availableYears = [2022, 2023, 2024, 2025, 2026];
 
@@ -938,10 +941,47 @@ export const DashboardGraphs = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[400px]">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">
-            Sales by Zone
-          </h3>
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
+          <div className="flex flex-col xl:flex-row xl:items-start justify-between mb-4 gap-4">
+            <h3 className="text-lg font-bold text-slate-800 whitespace-nowrap">
+              Sales by Zone
+            </h3>
+            <div className="flex items-center gap-2 flex-wrap xl:justify-end">
+              <select
+                value={zoneProductType}
+                onChange={(e) => setZoneProductType(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Product Type: All</option>
+                <option value="Type A">Type A</option>
+                <option value="Type B">Type B</option>
+              </select>
+              <select
+                value={zoneConstructionType}
+                onChange={(e) => setZoneConstructionType(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Construction Type: All</option>
+                <option value="Radial">Radial</option>
+                <option value="Bias">Bias</option>
+              </select>
+              <select
+                value={zoneTyreType}
+                onChange={(e) => setZoneTyreType(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Tyre Type: All</option>
+                <option value="TRUCK">TRUCK</option>
+                <option value="CAR">CAR</option>
+                <option value="LCV">LCV</option>
+                <option value="Motor Cycle">Motor Cycle</option>
+                <option value="SCV">SCV</option>
+                <option value="TRACTOR REAR">TRACTOR REAR</option>
+                <option value="OTR">OTR</option>
+                <option value="SCOOTER">SCOOTER</option>
+              </select>
+            </div>
+          </div>
           <div className="flex-1 min-h-0 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -1235,6 +1275,9 @@ const YoYGrowthGraph = () => {
 
 const ZonePieGraph = () => {
   const chartRef = useRef<HTMLDivElement>(null);
+  const [productType, setProductType] = useState("All");
+  const [constructionType, setConstructionType] = useState("All");
+  const [tyreType, setTyreType] = useState("All");
 
   const handleDownload = async () => {
     if (!chartRef.current) return;
@@ -1256,15 +1299,52 @@ const ZonePieGraph = () => {
       ref={chartRef}
       className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]"
     >
-      <div className="flex items-center justify-between mb-4 gap-2">
-        <h3 className="text-lg font-bold text-slate-800">Sales by Zone</h3>
-        <button
-          onClick={handleDownload}
-          className="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
-          title="Download Graph"
-        >
-          <Download className="w-5 h-5" />
-        </button>
+      <div className="flex flex-col mb-4 gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-lg font-bold text-slate-800">Sales by Zone</h3>
+          <button
+            onClick={handleDownload}
+            className="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-100 cursor-pointer shrink-0"
+            title="Download Graph"
+          >
+            <Download className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            value={productType}
+            onChange={(e) => setProductType(e.target.value)}
+            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
+          >
+            <option value="All">Product Type: All</option>
+            <option value="Type A">Type A</option>
+            <option value="Type B">Type B</option>
+          </select>
+          <select
+            value={constructionType}
+            onChange={(e) => setConstructionType(e.target.value)}
+            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
+          >
+            <option value="All">Construction Type: All</option>
+            <option value="Radial">Radial</option>
+            <option value="Bias">Bias</option>
+          </select>
+          <select
+            value={tyreType}
+            onChange={(e) => setTyreType(e.target.value)}
+            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
+          >
+            <option value="All">Tyre Type: All</option>
+            <option value="TRUCK">TRUCK</option>
+            <option value="CAR">CAR</option>
+            <option value="LCV">LCV</option>
+            <option value="Motor Cycle">Motor Cycle</option>
+            <option value="SCV">SCV</option>
+            <option value="TRACTOR REAR">TRACTOR REAR</option>
+            <option value="OTR">OTR</option>
+            <option value="SCOOTER">SCOOTER</option>
+          </select>
+        </div>
       </div>
       <div className="flex-1 min-h-0 flex items-center justify-center">
         <ResponsiveContainer width="100%" height="100%">
