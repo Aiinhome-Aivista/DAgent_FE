@@ -136,7 +136,6 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
       const storedSession = localStorage.getItem('selected_query_session');
       if (storedSession) {
         const querySessionHistory = JSON.parse(storedSession);
-        localStorage.removeItem('selected_query_session'); // Clear it so refresh = new chat
 
         const historyMessages: Message[] = [];
         querySessionHistory.forEach((item: any, idx: number) => {

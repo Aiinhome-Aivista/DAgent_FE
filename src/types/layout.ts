@@ -60,4 +60,5 @@ export interface MainContentProps {
   handleCreateWorkspaceFromSummary?: (summary: string) => void;
   onNewSessionCreated?: () => void;
   sessionId?: string;
+  workspaceName?: string;
 }

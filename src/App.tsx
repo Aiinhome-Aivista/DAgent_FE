@@ -49,7 +49,7 @@ function AppContent() {
   const [queryHistories, setQueryHistories] = useState<Record<number, QuerySession[]>>({});
   const [isQueryLoading, setIsQueryLoading] = useState<Record<number, boolean>>({});
 
-  const fetchWorkspaces = async () => {
+  const fetchWorkspaces = async (isInitialLoad = false) => {
     setIsWorkspacesLoading(true);
     try {
       const response = await workspaceService.getWorkspaces(userId || 6);
@@ -63,6 +63,56 @@ function AppContent() {
           setSelectedWorkspace(activeWS);
           localStorage.setItem('DAgent_session_id', activeWS.session_id);
           window.dispatchEvent(new CustomEvent('session-id-updated', { detail: { sessionId: activeWS.session_id } }));
+
+          if (isInitialLoad) {
+            try {
+              const queryResponse = await chatHistoryService.getSessionChatHistory(activeWS.session_id, userId);
+              if (queryResponse && queryResponse.status === 'success' && queryResponse.querySessions) {
+                setQueryHistories(prev => ({ ...prev, [activeWS.id]: queryResponse.querySessions }));
+                
+                const sessions = queryResponse.querySessions;
+                
+                const currentVisit = localStorage.getItem('current_visit_number');
+                const hasSelectedSession = localStorage.getItem('selected_query_session');
+
+                if (sessions.length > 0) {
+                  // Restore missing session data if we have a current_visit_number but no actual data
+                  if (currentVisit && !hasSelectedSession) {
+                    const targetSession = sessions.find((s: any) => s.querySessionId === `session_visit_${currentVisit}`);
+                    if (targetSession && targetSession.querySessionHistory) {
+                      localStorage.setItem('selected_query_session', JSON.stringify(targetSession.querySessionHistory));
+                      if (targetSession.querySessionName) {
+                        localStorage.setItem('selected_query_session_name', targetSession.querySessionName);
+                      }
+                      setChatKey(prev => prev + 1);
+                    }
+                  } 
+                  // Fresh auto-select for initial load
+                  else if (!hasSelectedSession && !currentVisit) {
+                    const firstSession = sessions[0];
+                    if (firstSession.querySessionHistory) {
+                      localStorage.setItem('selected_query_session', JSON.stringify(firstSession.querySessionHistory));
+                    }
+                    if (firstSession.querySessionId) {
+                      localStorage.setItem('current_visit_number', firstSession.querySessionId.replace('session_visit_', ''));
+                    }
+                    if (firstSession.querySessionName) {
+                      localStorage.setItem('selected_query_session_name', firstSession.querySessionName);
+                    }
+                    if (firstSession.querySessionName && firstSession.querySessionName.startsWith('default_')) {
+                      localStorage.setItem('is_default_chat', 'true');
+                    } else {
+                      localStorage.removeItem('is_default_chat');
+                    }
+                    setExpandedWorkspaceId(activeWS.id);
+                    setChatKey(prev => prev + 1);
+                  }
+                }
+              }
+            } catch (err) {
+              console.error('Failed to auto-fetch workspace history:', err);
+            }
+          }
         }
       }
     } catch (err) {
@@ -104,7 +154,12 @@ function AppContent() {
 
   useEffect(() => {
     if (userId || viewMode === 'app') {
-      fetchWorkspaces();
+      // Force default chat session selection on reload by clearing current selections
+      localStorage.removeItem('current_visit_number');
+      localStorage.removeItem('selected_query_session');
+      localStorage.removeItem('selected_query_session_name');
+      
+      fetchWorkspaces(true);
     }
   }, [userId, viewMode]);
 
@@ -298,6 +353,7 @@ function AppContent() {
       // Set local storage so chat window and sidebar consider it active
       localStorage.setItem('selected_query_session', JSON.stringify(newSessionHistory));
       localStorage.setItem('current_visit_number', nextVisitNumber.toString());
+      localStorage.setItem('selected_query_session_name', defaultName);
 
       // Now switch to chat tab
       changeTab('chat');
@@ -391,6 +447,7 @@ function AppContent() {
           handleCreateWorkspaceFromSummary={handleCreateWorkspaceFromSummary}
           onNewSessionCreated={handleNewSessionCreated}
           sessionId={selectedWorkspace?.session_id}
+          workspaceName={selectedWorkspace?.workspace_name}
         />
       </main>
     </div>

@@ -23,6 +23,7 @@ interface AgentWorkflowProps {
   onNewSessionCreated?: () => void;
   initialChatMessage?: string;
   sessionId?: string;
+  workspaceName?: string;
 }
 
 import { HistoryItemCard } from './HistoryItemCard';
@@ -105,7 +106,8 @@ export const AgentWorkflow = ({
   onCreateWorkspaceFromSummary,
   onNewSessionCreated,
   initialChatMessage,
-  sessionId
+  sessionId,
+  workspaceName
 }: AgentWorkflowProps) => {
   const {
     selectedConnector: activeConnector,
@@ -741,6 +743,7 @@ export const AgentWorkflow = ({
                           onOpenDataSource={onChangeTab ? () => onChangeTab('connectors') : undefined}
                           onNewSessionCreated={onNewSessionCreated}
                           sessionId={sessionId}
+                          workspaceName={workspaceName}
                         />
                       </div>
 

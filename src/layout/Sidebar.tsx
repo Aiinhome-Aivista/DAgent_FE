@@ -224,7 +224,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                         "DAgent_session_id",
                                         newWS.session_id,
                                       );
-                                      window.dispatchEvent(new CustomEvent('session-id-updated', { detail: { sessionId: newWS.session_id } }));
+                                      window.dispatchEvent(
+                                        new CustomEvent("session-id-updated", {
+                                          detail: {
+                                            sessionId: newWS.session_id,
+                                          },
+                                        }),
+                                      );
                                       setWorkspaceSearch("");
                                       setIsCreatingWorkspace(false);
                                       setNewWorkspaceName("");
@@ -274,7 +280,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                         "DAgent_session_id",
                                         newWS.session_id,
                                       );
-                                      window.dispatchEvent(new CustomEvent('session-id-updated', { detail: { sessionId: newWS.session_id } }));
+                                      window.dispatchEvent(
+                                        new CustomEvent("session-id-updated", {
+                                          detail: {
+                                            sessionId: newWS.session_id,
+                                          },
+                                        }),
+                                      );
                                       setWorkspaceSearch("");
                                       setIsCreatingWorkspace(false);
                                       setNewWorkspaceName("");
@@ -369,6 +381,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                   <button
                                     onClick={async (e) => {
                                       e.stopPropagation();
+                                      fetchWorkspaceHistory(workspace.id, workspace.session_id);
                                       try {
                                         if (
                                           selectedWorkspace?.id !== workspace.id
@@ -384,7 +397,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             "DAgent_session_id",
                                             workspace.session_id,
                                           );
-                                          window.dispatchEvent(new CustomEvent('session-id-updated', { detail: { sessionId: workspace.session_id } }));
+                                          window.dispatchEvent(
+                                            new CustomEvent(
+                                              "session-id-updated",
+                                              {
+                                                detail: {
+                                                  sessionId:
+                                                    workspace.session_id,
+                                                },
+                                              },
+                                            ),
+                                          );
                                           setWorkflowKey((prev) =>
                                             typeof prev === "number"
                                               ? prev + 1
@@ -455,13 +478,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             localStorage.removeItem(
                                               "current_visit_number",
                                             );
+                                            localStorage.removeItem(
+                                              "selected_query_session_name",
+                                            );
                                             setInitialChatMessage(undefined);
                                             setActiveTab("chat");
                                             setChatKey(
                                               (prev: number) => prev + 1,
                                             );
                                           }}
-                                          className="w-full flex items-center gap-2 p-2 rounded-lg  text-[var(--text-secondary)]  transition-all text-[11px] font-bold bg-[var(--accent)]/10 cursor-pointer"
+                                          className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all text-[11px] font-bold cursor-pointer ${
+                                            !localStorage.getItem("current_visit_number")
+                                              ? "text-[var(--accent)] bg-[var(--accent)]/10"
+                                              : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+                                          }`}
                                         >
                                           New Query
                                         </button>
@@ -561,6 +591,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                         );
                                                       }
                                                       if (
+                                                        session.querySessionName
+                                                      ) {
+                                                        localStorage.setItem(
+                                                          "selected_query_session_name",
+                                                          session.querySessionName,
+                                                        );
+                                                      }
+                                                      if (
                                                         session.querySessionName &&
                                                         session.querySessionName.startsWith(
                                                           "default_",
@@ -582,44 +620,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                       );
                                                     }}
                                                     className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer group flex items-center gap-3 ${
-                                                      session.querySessionId &&
-                                                      localStorage.getItem(
-                                                        "current_visit_number",
-                                                      ) ===
-                                                        session.querySessionId.replace(
-                                                          "session_visit_",
-                                                          "",
-                                                        )
+                                                      (session.querySessionId &&
+                                                        localStorage.getItem("current_visit_number") ===
+                                                          String(session.querySessionId).replace("session_visit_", "").trim()) ||
+                                                      (session.querySessionName &&
+                                                        localStorage.getItem("selected_query_session_name") ===
+                                                          session.querySessionName)
                                                         ? "border-[var(--accent)] bg-[var(--accent)]/10 shadow-sm"
                                                         : "border-[var(--border)] bg-[var(--bg)]/50 hover:bg-[var(--surface-hover)]"
                                                     }`}
                                                   >
                                                     <MessageSquare
                                                       className={`w-4 h-4 shrink-0 transition-colors ${
-                                                        session.querySessionId &&
-                                                        localStorage.getItem(
-                                                          "current_visit_number",
-                                                        ) ===
-                                                          session.querySessionId.replace(
-                                                            "session_visit_",
-                                                            "",
-                                                          )
+                                                        (session.querySessionId &&
+                                                          localStorage.getItem("current_visit_number") ===
+                                                            String(session.querySessionId).replace("session_visit_", "").trim()) ||
+                                                        (session.querySessionName &&
+                                                          localStorage.getItem("selected_query_session_name") ===
+                                                            session.querySessionName)
                                                           ? "text-[var(--accent)]"
                                                           : "text-[var(--text-secondary)] group-hover:text-[var(--accent)]"
                                                       }`}
                                                     />
                                                     <div
                                                       className={`text-[11px] font-semibold truncate transition-colors ${
-                                                        session.querySessionId &&
-                                                        localStorage.getItem(
-                                                          "current_visit_number",
-                                                        ) ===
-                                                          session.querySessionId.replace(
-                                                            "session_visit_",
-                                                            "",
-                                                          )
+                                                        (session.querySessionId &&
+                                                          localStorage.getItem("current_visit_number") ===
+                                                            String(session.querySessionId).replace("session_visit_", "").trim()) ||
+                                                        (session.querySessionName &&
+                                                          localStorage.getItem("selected_query_session_name") ===
+                                                            session.querySessionName)
                                                           ? "text-[var(--text-primary)]"
-                                                          : "text-[var(--text-primary)] group-hover:text-[var(--accent)]"
+                                                          : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
                                                       }`}
                                                     >
                                                       {session.querySessionName}
