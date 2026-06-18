@@ -212,14 +212,16 @@ export const DashboardKPIs = () => {
       value: "",
       subtext: "",
     },
-    { label: "Top Performing Tyre",
-      value: "", 
+    {
+      label: "Top Performing Tyre",
+      value: "",
       subtext: ""
     },
-    { label: "Leading Region",
-      
-      value: "", subtext: "" 
-      },
+    {
+      label: "Leading Region",
+
+      value: "", subtext: ""
+    },
     {
       label: "Year-Over-Year",
       value: "",
@@ -409,16 +411,38 @@ export const DashboardKPIs = () => {
               </p>
               <div className="min-w-0">
                 <h3 className="text-lg font-black text-slate-700 leading-tight my-1 uppercase">
-                  {typeof metric.value === "string" &&
-                    /^\s*[\d,.]+/.test(metric.value) &&
-                    !metric.value.includes("₹") &&
-                    !metric.value.includes("%")
-                    ? `₹${metric.value.replace(/\$/g, "").trim()}`
-                    : typeof metric.value === "string"
-                      ? metric.value.replace(/\$/g, "₹")
-                      : typeof metric.value === "number"
-                        ? `₹${metric.value}`
-                        : metric.value}
+                  {(() => {
+                    let formattedVal: React.ReactNode = "";
+                    if (
+                      typeof metric.value === "string" &&
+                      /^\s*[\d,.]+/.test(metric.value) &&
+                      !metric.value.includes("₹") &&
+                      !metric.value.includes("%")
+                    ) {
+                      formattedVal = `₹${metric.value.replace(/\$/g, "").trim()}`;
+                    } else if (typeof metric.value === "string") {
+                      formattedVal = metric.value.replace(/\$/g, "₹");
+                    } else if (typeof metric.value === "number") {
+                      formattedVal = `₹${metric.value}`;
+                    } else {
+                      return metric.value as React.ReactNode;
+                    }
+
+                    if (typeof formattedVal === "string") {
+                      const parts = formattedVal.split(/\b(CR|Cr|cr)\b/i);
+                      return parts.map((part, index) => {
+                        if (/^(CR|Cr|cr)$/i.test(part)) {
+                          return (
+                            <span key={index}>
+                              C<span className="lowercase">r</span>
+                            </span>
+                          );
+                        }
+                        return <React.Fragment key={index}>{part}</React.Fragment>;
+                      });
+                    }
+                    return formattedVal;
+                  })()}
                 </h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">
                   {metric.subtext}
@@ -549,25 +573,25 @@ const IndiaCoverageMap = ({ year, month, region }: { year?: string, month?: stri
           {coverageMarkers
             .filter((m) => !region || region === "All" || m.region === region)
             .map(({ name, coordinates, coverage, color }) => (
-            <Marker
-              key={name}
-              coordinates={coordinates as [number, number]}
-              onMouseEnter={() => {
-                setTooltipContent(`${name} - ${coverage}% Coverage`);
-              }}
-              onMouseLeave={() => {
-                setTooltipContent("");
-              }}
-            >
-              <circle
-                r={5}
-                fill={color}
-                stroke="#fff"
-                strokeWidth={1.5}
-                className="cursor-pointer transition-all duration-300"
-              />
-            </Marker>
-          ))}
+              <Marker
+                key={name}
+                coordinates={coordinates as [number, number]}
+                onMouseEnter={() => {
+                  setTooltipContent(`${name} - ${coverage}% Coverage`);
+                }}
+                onMouseLeave={() => {
+                  setTooltipContent("");
+                }}
+              >
+                <circle
+                  r={5}
+                  fill={color}
+                  stroke="#fff"
+                  strokeWidth={1.5}
+                  className="cursor-pointer transition-all duration-300"
+                />
+              </Marker>
+            ))}
         </ZoomableGroup>
       </ComposableMap>
 
@@ -940,8 +964,8 @@ export const DashboardGraphs = () => {
                       key={year}
                       onClick={() => toggleYear(year)}
                       className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${isSelected
-                          ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
-                          : "border-transparent text-slate-500 hover:bg-slate-100"
+                        ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
+                        : "border-transparent text-slate-500 hover:bg-slate-100"
                         }`}
                     >
                       {year}
@@ -957,8 +981,8 @@ export const DashboardGraphs = () => {
               <button
                 onClick={() => setChartType("column")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "column"
-                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
@@ -967,8 +991,8 @@ export const DashboardGraphs = () => {
               <button
                 onClick={() => setChartType("line")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "line"
-                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 <LineChartIcon className="w-3.5 h-3.5" />
@@ -977,8 +1001,8 @@ export const DashboardGraphs = () => {
               <button
                 onClick={() => setChartType("area")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "area"
-                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 <AreaChartIcon className="w-3.5 h-3.5" />

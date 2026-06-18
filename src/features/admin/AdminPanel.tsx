@@ -103,7 +103,6 @@ export const AdminPanel: React.FC = () => {
     };
 
     const handleDeleteWorkspace = async (workspaceId: number) => {
-        if (!window.confirm('Are you sure you want to delete this workspace?')) return;
         setIsLoading(true);
         try {
             await adminService.deleteWorkspace(workspaceId);
