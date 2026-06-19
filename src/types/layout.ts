@@ -33,7 +33,7 @@ export interface SidebarProps {
   chatKey: number;
   setChatKey: (key: number | ((prev: number) => number)) => void;
   fetchWorkspaces: () => Promise<void>;
-  fetchWorkspaceHistory: (workspaceId: number, sessionId: string, force?: boolean) => Promise<void>;
+  fetchWorkspaceHistory: (workspaceId: number, sessionId: string, force?: boolean) => Promise<QuerySession[] | null>;
   handleLogout: () => void;
   resetConnectorState: () => void;
   agentService: any;

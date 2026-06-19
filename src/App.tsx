@@ -126,7 +126,7 @@ function AppContent() {
     // If clicking the already expanded one, close it immediately
     if (!force && expandedWorkspaceId === workspaceId) {
       setExpandedWorkspaceId(null);
-      return;
+      return null;
     }
 
     // Toggle expansion state IMMEDIATELY for zero-delay UX
@@ -134,7 +134,7 @@ function AppContent() {
 
     // If we already have query history, we might not need to fetch again
     if (!force && queryHistories[workspaceId]) {
-      return;
+      return queryHistories[workspaceId];
     }
 
     setIsQueryLoading(prev => ({ ...prev, [workspaceId]: true }));
@@ -144,12 +144,14 @@ function AppContent() {
 
       if (queryResponse && queryResponse.status === 'success' && queryResponse.querySessions) {
         setQueryHistories(prev => ({ ...prev, [workspaceId]: queryResponse.querySessions }));
+        return queryResponse.querySessions;
       }
     } catch (err) {
       console.error('Failed to fetch workspace history:', err);
     } finally {
       setIsQueryLoading(prev => ({ ...prev, [workspaceId]: false }));
     }
+    return null;
   };
 
   useEffect(() => {
