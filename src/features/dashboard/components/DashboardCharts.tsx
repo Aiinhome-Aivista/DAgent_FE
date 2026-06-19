@@ -215,12 +215,13 @@ export const DashboardKPIs = () => {
     {
       label: "Top Performing Tyre",
       value: "",
-      subtext: ""
+      subtext: "",
     },
     {
       label: "Leading Region",
 
-      value: "", subtext: ""
+      value: "",
+      subtext: "",
     },
     {
       label: "Year-Over-Year",
@@ -277,13 +278,16 @@ export const DashboardKPIs = () => {
   const fetchDefaultMetrics = async (sessionId: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${defaultConfig.baseUrl}/default-dashboard-metrics`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${defaultConfig.baseUrl}/default-dashboard-metrics`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ session_id: sessionId }),
         },
-        body: JSON.stringify({ session_id: sessionId }),
-      });
+      );
       const data = await response.json();
       if (data.status === "success" && data.data) {
         const newMetrics = Object.values(data.data).filter(Boolean) as Array<{
@@ -308,7 +312,9 @@ export const DashboardKPIs = () => {
           });
         }
       } else if (data.status === "error") {
-        toast.error(data.message || data.details || "Failed to fetch default metrics");
+        toast.error(
+          data.message || data.details || "Failed to fetch default metrics",
+        );
       }
     } catch (error) {
       console.error("Failed to fetch default metrics:", error);
@@ -319,7 +325,7 @@ export const DashboardKPIs = () => {
   };
 
   useEffect(() => {
-    const sessionId = localStorage.getItem('DAgent_session_id');
+    const sessionId = localStorage.getItem("DAgent_session_id");
     if (sessionId) {
       fetchDefaultMetrics(sessionId);
     }
@@ -331,8 +337,9 @@ export const DashboardKPIs = () => {
       }
     };
 
-    window.addEventListener('session-id-updated', handleSessionIdUpdated);
-    return () => window.removeEventListener('session-id-updated', handleSessionIdUpdated);
+    window.addEventListener("session-id-updated", handleSessionIdUpdated);
+    return () =>
+      window.removeEventListener("session-id-updated", handleSessionIdUpdated);
   }, []);
 
   useEffect(() => {
@@ -355,7 +362,7 @@ export const DashboardKPIs = () => {
   }, []);
 
   const handleRefresh = () => {
-    const sessionId = localStorage.getItem('DAgent_session_id');
+    const sessionId = localStorage.getItem("DAgent_session_id");
     if (sessionId) fetchDefaultMetrics(sessionId);
   };
 
@@ -438,7 +445,9 @@ export const DashboardKPIs = () => {
                             </span>
                           );
                         }
-                        return <React.Fragment key={index}>{part}</React.Fragment>;
+                        return (
+                          <React.Fragment key={index}>{part}</React.Fragment>
+                        );
                       });
                     }
                     return formattedVal;
@@ -522,8 +531,16 @@ const coverageMarkers = [
   },
 ];
 
-const IndiaCoverageMap = ({ year, month, region }: { year?: string, month?: string, region?: string }) => {
-  const [position, setPosition] = useState({ coordinates: [80, 23], zoom: 1 });
+const IndiaCoverageMap = ({
+  year,
+  month,
+  region,
+}: {
+  year?: string;
+  month?: string;
+  region?: string;
+}) => {
+  const [position, setPosition] = useState({ coordinates: [82, 23], zoom: 1 });
   const [tooltipContent, setTooltipContent] = useState("");
 
   const handleZoomIn = () => {
@@ -544,7 +561,12 @@ const IndiaCoverageMap = ({ year, month, region }: { year?: string, month?: stri
     <div className="relative w-full h-full bg-white overflow-hidden">
       <ComposableMap
         projection="geoMercator"
-        projectionConfig={{ scale: 1000 }}
+        projectionConfig={{
+          scale: 850,
+          center: [82, 23],
+        }}
+        width={500}
+        height={580}
         style={{ width: "100%", height: "100%" }}
       >
         <ZoomableGroup
@@ -552,22 +574,31 @@ const IndiaCoverageMap = ({ year, month, region }: { year?: string, month?: stri
           center={position.coordinates as [number, number]}
           onMoveEnd={handleMoveEnd}
         >
-          <Geographies geography="/india-states-official.geojson">
+          <Geographies geography="/india-states-combined.geojson">
             {({ geographies }) =>
-              geographies.map((geo) => (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  fill="#f8fafc"
-                  stroke="#cbd5e1"
-                  strokeWidth={0.5}
-                  style={{
-                    default: { outline: "none" },
-                    hover: { fill: "#f1f5f9", outline: "none" },
-                    pressed: { fill: "#e2e8f0", outline: "none" },
-                  }}
-                />
-              ))
+              geographies.map((geo) => {
+                const isOutline = geo.properties._isOutline === true;
+                return (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    fill={isOutline ? "#f8fafc" : "#f8fafc"}
+                    stroke={isOutline ? "#475569" : "#64748b"}
+                    strokeWidth={isOutline ? 1 : 0.5}
+                    style={{
+                      default: { outline: "none" },
+                      hover: {
+                        fill: isOutline ? "#f8fafc" : "#f1f5f9",
+                        outline: "none",
+                      },
+                      pressed: {
+                        fill: isOutline ? "#f8fafc" : "#e2e8f0",
+                        outline: "none",
+                      },
+                    }}
+                  />
+                );
+              })
             }
           </Geographies>
           {coverageMarkers
@@ -630,21 +661,31 @@ export const DashboardGraphs = () => {
   useEffect(() => {
     const fetchTyreData = async () => {
       try {
-        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
-        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            session_id: sessionId,
-            question: "Top 10 Tyre Types by Sales ",
-            user_id: 22
-          })
-        });
+        const sessionId =
+          localStorage.getItem("DAgent_session_id") ||
+          "d9ba485e-863b-4516-9fe0-84d23a6dab55";
+        const response = await fetch(
+          `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              session_id: sessionId,
+              question: "Top 10 Tyre Types by Sales ",
+              user_id: 22,
+            }),
+          },
+        );
         const data = await response.json();
-        if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
+        if (
+          data.status === "success" &&
+          data.visualizations &&
+          data.visualizations[0] &&
+          data.visualizations[0].data
+        ) {
           const mappedData = data.visualizations[0].data.map((item: any) => ({
             name: item.category,
-            value: Number(item.sales_value)
+            value: Number(item.sales_value),
           }));
           setTyreData(mappedData);
         }
@@ -837,7 +878,11 @@ export const DashboardGraphs = () => {
             </div>
           </div>
           <div className="flex-1 flex items-center justify-center relative overflow-hidden">
-            <IndiaCoverageMap year={mapYear} month={mapMonth} region={mapRegion} />
+            <IndiaCoverageMap
+              year={mapYear}
+              month={mapMonth}
+              region={mapRegion}
+            />
           </div>
         </div>
 
@@ -993,10 +1038,11 @@ export const DashboardGraphs = () => {
                     <button
                       key={year}
                       onClick={() => toggleYear(year)}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${isSelected
-                        ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
-                        : "border-transparent text-slate-500 hover:bg-slate-100"
-                        }`}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
+                        isSelected
+                          ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
+                          : "border-transparent text-slate-500 hover:bg-slate-100"
+                      }`}
                     >
                       {year}
                     </button>
@@ -1010,30 +1056,33 @@ export const DashboardGraphs = () => {
             <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
               <button
                 onClick={() => setChartType("column")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "column"
-                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  chartType === "column"
+                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
                 Column
               </button>
               <button
                 onClick={() => setChartType("line")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "line"
-                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  chartType === "line"
+                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
               >
                 <LineChartIcon className="w-3.5 h-3.5" />
                 Line
               </button>
               <button
                 onClick={() => setChartType("area")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "area"
-                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  chartType === "area"
+                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
               >
                 <AreaChartIcon className="w-3.5 h-3.5" />
                 Area
@@ -1157,7 +1206,12 @@ export const DashboardGraphs = () => {
                   tickLine={false}
                   tickFormatter={(val) => val}
                 >
-                  <Label value="Sales Value" offset={5} position="bottom" style={{ fill: "#64748b", fontSize: 11 }} />
+                  <Label
+                    value="Sales Value"
+                    offset={5}
+                    position="bottom"
+                    style={{ fill: "#64748b", fontSize: 11 }}
+                  />
                 </XAxis>
                 <YAxis
                   type="category"
@@ -1167,7 +1221,12 @@ export const DashboardGraphs = () => {
                   tickLine={false}
                   width={80}
                 >
-                  <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11 }} />
+                  <Label
+                    value="Tyre Type"
+                    angle={-90}
+                    position="insideLeft"
+                    style={{ fill: "#64748b", fontSize: 11 }}
+                  />
                 </YAxis>
                 <RechartsTooltip
                   wrapperStyle={{ zIndex: 1000 }}
@@ -1563,21 +1622,31 @@ const TyreSalesGraph = () => {
   useEffect(() => {
     const fetchTyreData = async () => {
       try {
-        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
-        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            session_id: sessionId,
-            question: "Top 10 Tyre Types by Sales ",
-            user_id: 22
-          })
-        });
+        const sessionId =
+          localStorage.getItem("DAgent_session_id") ||
+          "d9ba485e-863b-4516-9fe0-84d23a6dab55";
+        const response = await fetch(
+          `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              session_id: sessionId,
+              question: "Top 10 Tyre Types by Sales ",
+              user_id: 22,
+            }),
+          },
+        );
         const data = await response.json();
-        if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
+        if (
+          data.status === "success" &&
+          data.visualizations &&
+          data.visualizations[0] &&
+          data.visualizations[0].data
+        ) {
           const mappedData = data.visualizations[0].data.map((item: any) => ({
             name: item.category,
-            value: Number(item.sales_value)
+            value: Number(item.sales_value),
           }));
           setTyreData(mappedData);
         }
@@ -1654,7 +1723,12 @@ const TyreSalesGraph = () => {
               tickLine={false}
               width={80}
             >
-              <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11 }} />
+              <Label
+                value="Tyre Type"
+                angle={-90}
+                position="insideLeft"
+                style={{ fill: "#64748b", fontSize: 11 }}
+              />
             </YAxis>
             <RechartsTooltip
               wrapperStyle={{ zIndex: 1000 }}
