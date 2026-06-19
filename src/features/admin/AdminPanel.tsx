@@ -10,6 +10,8 @@ import { MangeUser } from './components/MangeUsers';
 import { MangeWorkspace } from './components/MangeWorkspaces';
 import { AssignWorkspace } from './components/AssignWorkspaces';
 import { WorkspaceUsers } from './components/WorkspaceUsers';
+import { AdminChats } from './components/AdminChats'; // forces TS refresh
+import { AdminPendingKnowledge } from './components/AdminPendingKnowledge';
 
 
 
@@ -100,6 +102,20 @@ export const AdminPanel: React.FC = () => {
         }
     };
 
+    const handleDeleteWorkspace = async (workspaceId: number) => {
+        setIsLoading(true);
+        try {
+            await adminService.deleteWorkspace(workspaceId);
+            toast.success('Workspace deleted successfully');
+            await fetchData(); // Refresh list
+        } catch (err: any) {
+            console.error('Failed to delete workspace:', err);
+            setError(err.message || 'Failed to delete workspace');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleAssignWorkspace = async () => {
         if (selectedUserIdsForAssignment.length === 0 || !selectedWorkspaceForAssignment) return;
         setIsAssigning(true);
@@ -111,7 +127,7 @@ export const AdminPanel: React.FC = () => {
                 selectedWorkspaceForAssignment,
                 selectedUserIdsForAssignment
             );
-            
+
             toast.success('Workspace assigned successfully');
             // clear selections
             setSelectedUserIdsForAssignment([]);
@@ -139,7 +155,9 @@ export const AdminPanel: React.FC = () => {
         users: 'Users',
         workspaces: 'Workspaces',
         assignUsers: 'Assignments',
-        workspaceUsers: 'Workspace Users'
+        workspaceUsers: 'Workspace Users',
+        adminChats: 'Chat Views',
+        pendingKnowledge: 'KG History'
     };
 
     return (
@@ -158,8 +176,8 @@ export const AdminPanel: React.FC = () => {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-[var(--border)] px-6 shrink-0 bg-[var(--bg)]/30">
-                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers'] as AdminTab[]).map((tab) => (
+            <div className="flex border-b border-[var(--border)] px-6 shrink-0 bg-[var(--bg)]/30 overflow-x-auto custom-scrollbar">
+                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge'] as AdminTab[]).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => {
@@ -179,7 +197,9 @@ export const AdminPanel: React.FC = () => {
                         {tab === 'workspaces' && <Layout className="w-4 h-4" />}
                         {tab === 'assignUsers' && <ShieldAlert className="w-4 h-4" />}
                         {tab === 'workspaceUsers' && <Layout className="w-4 h-4" />}
-                        {tab === 'assignUsers' ? 'Assign Users' : (tab === 'workspaceUsers' ? 'Workspace Users' : tab)}
+                        {tab === 'adminChats' && <Users className="w-4 h-4" />}
+                        {tab === 'pendingKnowledge' && <Layout className="w-4 h-4" />}
+                        {tabDisplayNames[tab]}
                     </button>
                 ))}
             </div>
@@ -264,6 +284,7 @@ export const AdminPanel: React.FC = () => {
                                         newWorkspaceName={newWorkspaceName}
                                         setNewWorkspaceName={setNewWorkspaceName}
                                         handleCreateWorkspace={handleCreateWorkspace}
+                                        handleDeleteWorkspace={handleDeleteWorkspace}
                                         isLoading={isLoading}
                                     />
                                 )}
@@ -286,6 +307,14 @@ export const AdminPanel: React.FC = () => {
                                         workspaces={filteredWorkspaces}
                                         searchQuery={searchQuery}
                                     />
+                                )}
+
+                                {activeTab === 'adminChats' && (
+                                    <AdminChats />
+                                )}
+
+                                {activeTab === 'pendingKnowledge' && (
+                                    <AdminPendingKnowledge />
                                 )}
                             </motion.div>
                         </AnimatePresence>

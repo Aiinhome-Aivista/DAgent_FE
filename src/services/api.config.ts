@@ -36,7 +36,15 @@ export const API_ENDPOINTS = {
   },
   CHAT: {
     CHAT: '/session-chat',
+    DEFAULT_METRICS: '/default-dashboard-metrics',
   },
+
+  DASHBOARD: {
+    TYRE_SALES_DATA: '/tyre-sales-data',
+    SALES_BY_ZONE: '/sales-by-zone',
+    FILTERS: '/dashboard-filters',
+  },
+
   WORKSPACE: {
     CREATE: '/create_workspace',
     GET_WORKSPACES: '/workspaces',
@@ -44,6 +52,7 @@ export const API_ENDPOINTS = {
     SET_ACTIVE_WORKSPACE: '/set-active-workspace',
     ASSIGN_WORKSPACE_USERS: '/assign_workspace_users',
     WORKSPACE_USERS: '/workspace_users',
+    DELETE: '/delete_workspace',
   },
   FILE_UPLOAD: {
     CSV_UPLOAD: '/upload_csv',
@@ -66,4 +75,24 @@ export const API_ENDPOINTS = {
     SCHEDULE_DELETE: '/ftp/schedule',
     FETCH_LOG: '/ftp/fetch_log',
   },
+  ADMIN: {
+    GET_CHATS: '/api/admin/chats',
+    PUSH_TO_KG: '/api/admin/push_to_kg',
+    GET_STAGED_KNOWLEDGE: '/api/admin/staged_knowledge',
+    TRIGGER_INDEXING: '/api/admin/trigger_indexing'
+  }
+
 };
+
+// top 2 customers
+
+// top 2 dealers
+
+// top 2 customers with 3 months sales
+
+// worst 2 customers
+
+// worst performers along with their monthly sales value
+
+// worst 2 performers along with their product categoy wise sales breakup
+

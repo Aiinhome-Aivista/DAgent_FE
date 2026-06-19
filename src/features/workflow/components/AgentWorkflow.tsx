@@ -23,11 +23,13 @@ interface AgentWorkflowProps {
   onNewSessionCreated?: () => void;
   initialChatMessage?: string;
   sessionId?: string;
+  workspaceName?: string;
 }
 
 import { HistoryItemCard } from './HistoryItemCard';
 import { AgentStepper, getAgentIcon } from './AgentStepper';
 import { IngestDataView } from './IngestDataView';
+import { DashboardKPIs, graphPanelItems, GraphSidePanel } from '../../dashboard/components/DashboardCharts';
 
 const formatInsightsText = (text: string) => {
   if (typeof text !== 'string') return JSON.stringify(text, null, 2);
@@ -104,7 +106,8 @@ export const AgentWorkflow = ({
   onCreateWorkspaceFromSummary,
   onNewSessionCreated,
   initialChatMessage,
-  sessionId
+  sessionId,
+  workspaceName
 }: AgentWorkflowProps) => {
   const {
     selectedConnector: activeConnector,
@@ -126,6 +129,7 @@ export const AgentWorkflow = ({
   const [agents, setAgents] = useState<AgentData[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>(defaultAgentId);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeGraphId, setActiveGraphId] = useState<string | null>(null);
 
   useEffect(() => {
     setSelectedAgentId(defaultAgentId);
@@ -649,7 +653,7 @@ export const AgentWorkflow = ({
       {/* Main Content - Agent History & Actions */}
       <div className="flex-1 flex flex-col min-h-0">
         {selectedAgent && (
-          <Card className={`flex-1 flex flex-col border-[var(--border)] shadow-xl overflow-hidden bg-[var(--surface)]/50 ${compact ? 'border-none shadow-none bg-transparent' : ''}`}>
+          <Card className={`flex-1 flex flex-col ${(compact || selectedAgent.id === 'query') ? 'border-none shadow-none bg-transparent' : 'border-[var(--border)] shadow-xl overflow-hidden bg-[var(--surface)]/50'}`}>
             {selectedAgent.id !== 'query' && (
               <CardHeader className={`${compact ? 'px-0 pt-1 pb-3' : 'bg-[var(--surface)] p-4 border-b border-[var(--border)]'} shrink-0`}>
                 <div className="flex items-center justify-between">
@@ -730,16 +734,59 @@ export const AgentWorkflow = ({
                   )}
 
                   {selectedAgent.id === 'query' ? (
-                    <div className="flex-1 h-full flex flex-col">
-                      <div className="h-full overflow-hidden">
+                    <div className="flex-1 flex overflow-hidden">
+                      {/* Chat - fills remaining space, no page scroll */}
+                      <div className="flex-1 min-w-0 flex flex-col">
                         <ChatWindow
                           initialMode="chat"
                           initialMessage={initialChatMessage}
                           onOpenDataSource={onChangeTab ? () => onChangeTab('connectors') : undefined}
                           onNewSessionCreated={onNewSessionCreated}
                           sessionId={sessionId}
+                          workspaceName={workspaceName}
                         />
                       </div>
+
+                      {/* Right side strip - scrollable KPIs + Graph buttons */}
+                      {!activeGraphId && (
+                        <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                          <div className="p-3 space-y-3">
+                          {/* KPIs */}
+                          <DashboardKPIs />
+
+                          {/* Divider */}
+                          <div className="flex items-center gap-2 pt-1">
+                            <div className="flex-1 h-px bg-slate-200" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Charts</span>
+                            <div className="flex-1 h-px bg-slate-200" />
+                          </div>
+
+                          {/* Graph icon buttons */}
+                          <div className="space-y-1.5">
+                            {graphPanelItems.map(item => (
+                              <button
+                                key={item.id}
+                                onClick={() => setActiveGraphId(item.id)}
+                                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border transition-all duration-200 cursor-pointer group ${
+                                  activeGraphId === item.id
+                                    ? 'border-[var(--accent)]/30 bg-[var(--accent)]/5 shadow-sm'
+                                    : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm'
+                                }`}
+                              >
+                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${item.color}`}>
+                                  <item.icon className="w-3.5 h-3.5" />
+                                </div>
+                                <span className="text-[11px] font-semibold text-slate-700 group-hover:text-slate-900 truncate">
+                                  {item.name}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        </div>
+                      )}
+                      {/* Graph Side Panel overlay */}
+                      <GraphSidePanel activeGraphId={activeGraphId} onClose={() => setActiveGraphId(null)} inline={true} />
                     </div>
                   ) : (
                     (() => {

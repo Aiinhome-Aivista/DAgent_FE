@@ -15,6 +15,7 @@ interface ChatWindowProps {
   onOpenDataSource?: () => void;
   onNewSessionCreated?: () => void;
   sessionId?: string;
+  workspaceName?: string;
 }
 
 export const ChatWindow = ({
@@ -24,12 +25,18 @@ export const ChatWindow = ({
   suggestedQuestions = [],
   onOpenDataSource,
   onNewSessionCreated,
-  sessionId
+  sessionId,
+  workspaceName
 }: ChatWindowProps) => {
   const { messages, sendMessage, isLoading, processingSteps, scrollRef, mode, completeWorkflow, startChat, followUpQuestions, isFetchingSuggestions } = useChat(initialMode, initialMessage, sessionId, onNewSessionCreated);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [isLoadingConnectors, setIsLoadingConnectors] = useState(true);
   const [chatInput, setChatInput] = useState('');
+  const [chatSessionName, setChatSessionName] = useState<string | null>(null);
+
+  useEffect(() => {
+    setChatSessionName(localStorage.getItem('selected_query_session_name'));
+  }, []);
 
   useEffect(() => {
     if (mode === 'landing') {
@@ -47,14 +54,23 @@ export const ChatWindow = ({
           <div className="w-8 h-8 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20 shadow-inner">
             <Sparkles className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="font-black text-base tracking-tight">DAgent AI Assistant</h3>
+          <div className="flex flex-col gap-1">
+            <h3 className="font-black text-base tracking-tight leading-none">DAgent AI Assistant</h3>
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-[0.2em] font-black">Active Session</span>
+              <div className="flex items-center gap-2 text-[10px] text-[var(--text-secondary)] tracking-[0.1em] font-black">
+                <span className="uppercase">Active Session</span>
+                {workspaceName && (
+                  <div className="flex items-center gap-1.5 text-[var(--text-secondary)] tracking-normal font-bold">
+                    <span>{workspaceName}</span>
+                    <span className="opacity-50">•</span>
+                    <span>{chatSessionName || 'New Query'}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

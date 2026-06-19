@@ -18,7 +18,8 @@ export const MainContent: React.FC<MainContentProps> = ({
   handleForwardWithContext,
   handleCreateWorkspaceFromSummary,
   onNewSessionCreated,
-  sessionId
+  sessionId,
+  workspaceName
 }) => {
   return (
     <div className={`p-4 w-full ${activeTab === 'chat' ? 'max-w-none' : 'max-w-6xl mx-auto'}`}>
@@ -40,6 +41,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               initialChatMessage={initialChatMessage}
               onNewSessionCreated={onNewSessionCreated}
               sessionId={sessionId}
+              workspaceName={workspaceName}
             />
           </motion.div>
         ) : activeTab === 'new-connector' ? (
@@ -70,6 +72,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               defaultAgentId="ingest"
               onChangeTab={changeTab}
               sessionId={sessionId}
+              workspaceName={workspaceName}
             />
           </motion.div>
         ) : activeTab === 'analysis' ? (
@@ -89,6 +92,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               onForwardWithContext={handleForwardWithContext}
               onCreateWorkspaceFromSummary={handleCreateWorkspaceFromSummary}
               sessionId={sessionId}
+              workspaceName={workspaceName}
             />
           </motion.div>
         ) : activeTab === 'connectors' ? (
@@ -107,6 +111,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               onChangeTab={changeTab}
               onNewConnector={() => changeTab('new-connector')}
               sessionId={sessionId}
+              workspaceName={workspaceName}
             />
           </motion.div>
         ) : activeTab === 'admin' ? (

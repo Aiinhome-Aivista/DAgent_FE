@@ -34,6 +34,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, selectedConnect
     }
   };
 
+  const displayUserName = userName || 'aiinhome';
+  const truncatedUserName = displayUserName.length > 6 ? `${displayUserName.slice(0, 6)}...` : displayUserName;
+
   return (
     <header className="h-14 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-40 px-6 flex items-center justify-between">
       <div>
@@ -45,11 +48,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, selectedConnect
         </p>
       </div>
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" className="flex items-center gap-2.5 rounded-full pr-4 pl-1.5 h-9 border-[var(--border)] hover:bg-[var(--surface-hover)] transition-all">
+        <Button variant="outline" size="sm" className="flex items-center gap-2.5 rounded-full pr-4 pl-1.5 h-9 border-[var(--border)] hover:bg-[var(--surface-hover)] transition-all cursor-pointer">
           <div className="w-6 h-6 rounded-full bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
             <User className="w-4 h-4" />
           </div>
-          <span className="text-sm font-medium">Welcome {userName || 'aiinhome'}</span>
+          <span className="text-sm font-medium" title={displayUserName}>Welcome {truncatedUserName}</span>
+          
         </Button>
       </div>
     </header>

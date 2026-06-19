@@ -105,6 +105,11 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
       setMessages((prev) => [...prev, assistantMessage]);
       setFollowUpQuestions(followUps);
 
+      // Dispatch event to update dashboard metrics
+      window.dispatchEvent(new CustomEvent('chat-metrics-update', {
+        detail: { question: content, answer: answerText }
+      }));
+
       if (isDefaultChat && onNewSessionCreated) {
         // Trigger sidebar refresh so the new chat shows up and gets selected
         setTimeout(() => {
@@ -131,7 +136,6 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
       const storedSession = localStorage.getItem('selected_query_session');
       if (storedSession) {
         const querySessionHistory = JSON.parse(storedSession);
-        localStorage.removeItem('selected_query_session'); // Clear it so refresh = new chat
 
         const historyMessages: Message[] = [];
         querySessionHistory.forEach((item: any, idx: number) => {
@@ -142,7 +146,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
               id: `user-${idx}`,
               role: 'user',
               content: item.question,
-              timestamp: new Date()
+              timestamp: item.timestamp ? new Date(item.timestamp) : (item.created_at ? new Date(item.created_at) : new Date())
             });
           }
 
@@ -150,7 +154,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
             id: `assistant-${idx}`,
             role: 'assistant',
             content: item.answer,
-            timestamp: new Date(),
+            timestamp: item.timestamp ? new Date(item.timestamp) : (item.created_at ? new Date(item.created_at) : new Date()),
             visualizations: item.visualizations || []
           });
         });
@@ -158,18 +162,20 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
         if (historyMessages.length > 0) {
           setMessages(historyMessages);
 
+          let hasFollowUps = false;
           const lastItem = querySessionHistory[querySessionHistory.length - 1];
-          if (lastItem && lastItem.follow_up_questions && Array.isArray(lastItem.follow_up_questions)) {
+          if (lastItem && lastItem.follow_up_questions && Array.isArray(lastItem.follow_up_questions) && lastItem.follow_up_questions.length > 0) {
             setFollowUpQuestions(lastItem.follow_up_questions);
+            hasFollowUps = true;
           }
 
-          return true; // Indicates history was loaded
+          return { hasHistory: true, hasFollowUps };
         }
       }
-      return false;
+      return { hasHistory: false, hasFollowUps: false };
     } catch (error) {
       console.error('Failed to parse selected chat history:', error);
-      return false;
+      return { hasHistory: false, hasFollowUps: false };
     }
   }, []);
 
@@ -196,9 +202,10 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
 
   useEffect(() => {
     if (mode === 'chat') {
-      fetchChatHistory().then((hasHistory) => {
-        // If there's no history and no existing messages, fetch suggestions
-        if (!hasHistory && messages.length <= 1) {
+      fetchChatHistory().then((result) => {
+        // Fetch suggestions if there are no existing follow-ups
+        // or if there's no history
+        if (!result.hasFollowUps || (!result.hasHistory && messages.length <= 1)) {
           fetchSuggestedQuestions();
         }
       });

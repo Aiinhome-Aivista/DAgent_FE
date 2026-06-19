@@ -11,6 +11,10 @@
 export const formatChatMessage = (text: string, isAssistant: boolean): string => {
   if (typeof text !== 'string') return '';
 
+  // Replace dollar sign with rupee sign in the chat response
+  text = text.replace(/\$/g, '₹');
+
+
   // Tailored classes based on message owner/theme to ensure high-end aesthetics
   const linkClass = isAssistant 
     ? 'text-[var(--accent)] hover:underline inline-flex items-center gap-1 font-medium break-all' 
