@@ -397,6 +397,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             "DAgent_session_id",
                                             workspace.session_id,
                                           );
+                                          
+                                          // Clear selected chat session from previous workspace
+                                          localStorage.removeItem("selected_query_session");
+                                          localStorage.removeItem("selected_query_session_name");
+                                          localStorage.removeItem("current_visit_number");
+                                          localStorage.removeItem("is_default_chat");
+                                          
+                                          // Fetch and expand the workspace history
+                                          const sessions = await fetchWorkspaceHistory(workspace.id, workspace.session_id, true);
+                                          
+                                          // Auto-select the first session if available
+                                          if (sessions && sessions.length > 0) {
+                                            const firstSession = sessions[0];
+                                            if (firstSession.querySessionHistory) {
+                                              localStorage.setItem("selected_query_session", JSON.stringify(firstSession.querySessionHistory));
+                                            }
+                                            if (firstSession.querySessionId) {
+                                              localStorage.setItem("current_visit_number", firstSession.querySessionId.replace("session_visit_", ""));
+                                            }
+                                            if (firstSession.querySessionName) {
+                                              localStorage.setItem("selected_query_session_name", firstSession.querySessionName);
+                                            }
+                                            if (firstSession.querySessionName && firstSession.querySessionName.startsWith("default_")) {
+                                              localStorage.setItem("is_default_chat", "true");
+                                            }
+                                          }
+                                          
+                                          setChatKey((prev: number) => prev + 1);
+
                                           window.dispatchEvent(
                                             new CustomEvent(
                                               "session-id-updated",
@@ -489,7 +518,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                           }}
                                           className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all text-[11px] font-bold cursor-pointer ${
                                             !localStorage.getItem("current_visit_number")
-                                              ? "text-[var(--accent)] bg-[var(--accent)]/10"
+                                              ? "bg-[var(--accent)]/10 text-[var(--accent)]"
                                               : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
                                           }`}
                                         >
