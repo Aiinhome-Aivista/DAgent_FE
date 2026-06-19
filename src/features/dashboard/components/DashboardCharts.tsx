@@ -33,6 +33,7 @@ import {
   X,
   Download,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import {
   ComposableMap,
@@ -558,13 +559,13 @@ const IndiaCoverageMap = ({ year, month, region }: { year?: string, month?: stri
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  fill="#f8fafc"
-                  stroke="#cbd5e1"
-                  strokeWidth={0.5}
+                  fill="#f1f5f9"
+                  stroke="#94a3b8"
+                  strokeWidth={0.75}
                   style={{
                     default: { outline: "none" },
-                    hover: { fill: "#f1f5f9", outline: "none" },
-                    pressed: { fill: "#e2e8f0", outline: "none" },
+                    hover: { fill: "#e2e8f0", outline: "none" },
+                    pressed: { fill: "#cbd5e1", outline: "none" },
                   }}
                 />
               ))
@@ -583,11 +584,10 @@ const IndiaCoverageMap = ({ year, month, region }: { year?: string, month?: stri
                   setTooltipContent("");
                 }}
               >
+              
                 <circle
                   r={5}
                   fill={color}
-                  stroke="#fff"
-                  strokeWidth={1.5}
                   className="cursor-pointer transition-all duration-300"
                 />
               </Marker>
@@ -623,12 +623,45 @@ const IndiaCoverageMap = ({ year, month, region }: { year?: string, month?: stri
   );
 };
 
+const useDashboardFilters = () => {
+  const [filters, setFilters] = useState<{ categories: string[]; constructions: string[]; tyreTypes: string[] }>({
+    categories: [],
+    constructions: [],
+    tyreTypes: []
+  });
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.FILTERS}?session_id=${sessionId}`);
+        const data = await response.json();
+        if (data.status === "success") {
+          setFilters({
+            categories: data.categories || [],
+            constructions: data.constructions || [],
+            tyreTypes: data.tyreTypes || []
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard filters:", err);
+      }
+    };
+    fetchFilters();
+  }, []);
+
+  return filters;
+};
+
 export const DashboardGraphs = () => {
+  const filters = useDashboardFilters();
   const [selectedYears, setSelectedYears] = useState<number[]>([2024, 2025]);
-  const [tyreData, setTyreData] = useState(dummyTyreData);
+  const [tyreData, setTyreData] = useState<any[]>(dummyTyreData);
+  const [isTyreLoading, setIsTyreLoading] = useState(true);
 
   useEffect(() => {
     const fetchTyreData = async () => {
+      setIsTyreLoading(true);
       try {
         const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`, {
@@ -642,14 +675,22 @@ export const DashboardGraphs = () => {
         });
         const data = await response.json();
         if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
-          const mappedData = data.visualizations[0].data.map((item: any) => ({
-            name: item.category,
-            value: Number(item.sales_value)
-          }));
+          const mappedData = data.visualizations[0].data.map((item: any) => {
+            let val = Number(item.sales_value);
+            if (val >= 100000) {
+              val = val / 10000000;
+            }
+            return {
+              name: item.category,
+              value: Number(val.toFixed(2))
+            };
+          });
           setTyreData(mappedData);
         }
       } catch (err) {
         console.error("Failed to fetch tyre sales data:", err);
+      } finally {
+        setIsTyreLoading(false);
       }
     };
     fetchTyreData();
@@ -661,6 +702,40 @@ export const DashboardGraphs = () => {
   const [zoneProductType, setZoneProductType] = useState("All");
   const [zoneConstructionType, setZoneConstructionType] = useState("All");
   const [zoneTyreType, setZoneTyreType] = useState("All");
+  const [zoneData, setZoneData] = useState<any[]>(dummyZoneData);
+  const [isZoneLoading, setIsZoneLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchZoneData = async () => {
+      setIsZoneLoading(true);
+      try {
+        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.SALES_BY_ZONE}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            product_type: zoneProductType,
+            construction_type: zoneConstructionType,
+            tyre_type: zoneTyreType
+          })
+        });
+        const data = await response.json();
+        if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
+          const mappedData = data.visualizations[0].data.map((item: any) => ({
+            name: item.name || item.zone,
+            value: Number(item.percentage || item.value)
+          }));
+          setZoneData(mappedData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch zone sales data:", err);
+      } finally {
+        setIsZoneLoading(false);
+      }
+    };
+    fetchZoneData();
+  }, [zoneProductType, zoneConstructionType, zoneTyreType]);
   const [mapYear, setMapYear] = useState("All");
   const [mapMonth, setMapMonth] = useState("All");
   const [mapRegion, setMapRegion] = useState("All");
@@ -1068,8 +1143,9 @@ export const DashboardGraphs = () => {
                 className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
               >
                 <option value="All">Product Type: All</option>
-                <option value="Type A">Type A</option>
-                <option value="Type B">Type B</option>
+                {filters.categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
               <select
                 value={zoneConstructionType}
@@ -1077,8 +1153,9 @@ export const DashboardGraphs = () => {
                 className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
               >
                 <option value="All">Construction Type: All</option>
-                <option value="Radial">Radial</option>
-                <option value="Bias">Bias</option>
+                {filters.constructions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
               <select
                 value={zoneTyreType}
@@ -1086,51 +1163,50 @@ export const DashboardGraphs = () => {
                 className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
               >
                 <option value="All">Tyre Type: All</option>
-                <option value="TRUCK">TRUCK</option>
-                <option value="CAR">CAR</option>
-                <option value="LCV">LCV</option>
-                <option value="Motor Cycle">Motor Cycle</option>
-                <option value="SCV">SCV</option>
-                <option value="TRACTOR REAR">TRACTOR REAR</option>
-                <option value="OTR">OTR</option>
-                <option value="SCOOTER">SCOOTER</option>
+                {filters.tyreTypes.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
             </div>
           </div>
           <div className="flex-1 min-h-0 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={dummyZoneData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={120}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(1)}%`
-                  }
-                  labelLine={true}
-                  stroke="none"
-                >
-                  {dummyZoneData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <RechartsTooltip
-                  wrapperStyle={{ zIndex: 1000 }}
-                  contentStyle={{
-                    backgroundColor: "#ffffff",
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {isZoneLoading ? (
+              <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={zoneData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(1)}%`
+                    }
+                    labelLine={true}
+                    stroke="none"
+                  >
+                    {zoneData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    wrapperStyle={{ zIndex: 1000 }}
+                    contentStyle={{
+                      backgroundColor: "#ffffff",
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -1139,57 +1215,65 @@ export const DashboardGraphs = () => {
             Top 10 Tyre Types by Sales
           </h3>
           <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={tyreData}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 60, bottom: 20 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={false}
-                  stroke="#e2e8f0"
-                />
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 10 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(val) => val}
+            {isTyreLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={tyreData}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 60, bottom: 20 }}
                 >
-                  <Label value="Sales Value" offset={5} position="bottom" style={{ fill: "#64748b", fontSize: 11 }} />
-                </XAxis>
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={{ fontSize: 10, fill: "#64748b" }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={80}
-                >
-                  <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11 }} />
-                </YAxis>
-                <RechartsTooltip
-                  wrapperStyle={{ zIndex: 1000 }}
-                  cursor={{ fill: "#f8fafc" }}
-                  contentStyle={{
-                    backgroundColor: "#ffffff",
-                    borderRadius: "8px",
-                    border: "1px solid #e2e8f0",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                  formatter={(val: number) => [val, "Sales"]}
-                />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
-                  {tyreData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                  <CartesianGrid
+                    vertical={true}
+                    horizontal={false}
+                    stroke="#e2e8f0"
+                  />
+                  <XAxis
+                    type="number"
+                    padding={{ left: 1 }}
+                    tick={{ fontSize: 10, fontWeight: 600 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(val) => val === 0 ? "₹0" : `₹${Math.round(val)} Cr`}
+                  >
+                    <Label value="Sales (₹)" offset={5} position="bottom" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} />
+                  </XAxis>
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 10, fill: "#334155", fontWeight: 700 }}
+                    axisLine={{ stroke: "#475569", strokeWidth: 1 }}
+                    tickLine={false}
+                    tickMargin={10}
+                    width={100}
+                  >
+                    <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} offset={-10} />
+                  </YAxis>
+                  <RechartsTooltip
+                    wrapperStyle={{ zIndex: 1000 }}
+                    cursor={{ fill: "#f8fafc" }}
+                    contentStyle={{
+                      backgroundColor: "#ffffff",
+                      borderRadius: "8px",
+                      border: "1px solid #e2e8f0",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                    formatter={(val: number) => [`₹${val} Cr`, "Sales"]}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
+                    {tyreData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>
@@ -1443,10 +1527,45 @@ const YoYGrowthGraph = () => {
 };
 
 const ZonePieGraph = () => {
+  const filters = useDashboardFilters();
   const chartRef = useRef<HTMLDivElement>(null);
   const [productType, setProductType] = useState("All");
   const [constructionType, setConstructionType] = useState("All");
   const [tyreType, setTyreType] = useState("All");
+  const [zoneData, setZoneData] = useState<any[]>(dummyZoneData);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchZoneData = async () => {
+      setIsLoading(true);
+      try {
+        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.SALES_BY_ZONE}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            product_type: productType,
+            construction_type: constructionType,
+            tyre_type: tyreType
+          })
+        });
+        const data = await response.json();
+        if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
+          const mappedData = data.visualizations[0].data.map((item: any) => ({
+            name: item.name || item.zone,
+            value: Number(item.percentage || item.value)
+          }));
+          setZoneData(mappedData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch zone pie graph data:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchZoneData();
+  }, [productType, constructionType, tyreType]);
 
   const handleDownload = async () => {
     if (!chartRef.current) return;
@@ -1486,8 +1605,9 @@ const ZonePieGraph = () => {
             className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
           >
             <option value="All">Product Type: All</option>
-            <option value="Type A">Type A</option>
-            <option value="Type B">Type B</option>
+            {filters.categories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
           <select
             value={constructionType}
@@ -1495,8 +1615,9 @@ const ZonePieGraph = () => {
             className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
           >
             <option value="All">Construction Type: All</option>
-            <option value="Radial">Radial</option>
-            <option value="Bias">Bias</option>
+            {filters.constructions.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
           <select
             value={tyreType}
@@ -1504,53 +1625,52 @@ const ZonePieGraph = () => {
             className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
           >
             <option value="All">Tyre Type: All</option>
-            <option value="TRUCK">TRUCK</option>
-            <option value="CAR">CAR</option>
-            <option value="LCV">LCV</option>
-            <option value="Motor Cycle">Motor Cycle</option>
-            <option value="SCV">SCV</option>
-            <option value="TRACTOR REAR">TRACTOR REAR</option>
-            <option value="OTR">OTR</option>
-            <option value="SCOOTER">SCOOTER</option>
+            {filters.tyreTypes.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
         </div>
       </div>
       <div className="flex-1 min-h-0 flex items-center justify-center">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={dummyZoneData}
-              cx="50%"
-              cy="50%"
-              outerRadius={120}
-              fill="#8884d8"
-              dataKey="value"
-              label={({ name, percent }) =>
-                `${name}: ${(percent * 100).toFixed(1)}%`
-              }
-              labelLine={true}
-              stroke="#ffffff"
-              strokeWidth={3}
-              paddingAngle={2}
-            >
-              {dummyZoneData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <RechartsTooltip
-              wrapperStyle={{ zIndex: 1000 }}
-              contentStyle={{
-                backgroundColor: "#ffffff",
-                borderRadius: "8px",
-                border: "none",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+        {isLoading ? (
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={zoneData}
+                cx="50%"
+                cy="50%"
+                outerRadius={120}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percent }) =>
+                  `${name}: ${(percent * 100).toFixed(1)}%`
+                }
+                labelLine={true}
+                stroke="#ffffff"
+                strokeWidth={3}
+                paddingAngle={2}
+              >
+                {zoneData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <RechartsTooltip
+                wrapperStyle={{ zIndex: 1000 }}
+                contentStyle={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: "8px",
+                  border: "none",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
@@ -1558,10 +1678,12 @@ const ZonePieGraph = () => {
 
 const TyreSalesGraph = () => {
   const chartRef = useRef<HTMLDivElement>(null);
-  const [tyreData, setTyreData] = useState(dummyTyreData);
+  const [tyreData, setTyreData] = useState<any[]>(dummyTyreData);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTyreData = async () => {
+      setIsLoading(true);
       try {
         const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`, {
@@ -1575,14 +1697,22 @@ const TyreSalesGraph = () => {
         });
         const data = await response.json();
         if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
-          const mappedData = data.visualizations[0].data.map((item: any) => ({
-            name: item.category,
-            value: Number(item.sales_value)
-          }));
+          const mappedData = data.visualizations[0].data.map((item: any) => {
+            let val = Number(item.sales_value);
+            if (val >= 100000) {
+              val = val / 10000000;
+            }
+            return {
+              name: item.category,
+              value: Number(val.toFixed(2))
+            };
+          });
           setTyreData(mappedData);
         }
       } catch (err) {
         console.error("Failed to fetch tyre sales data:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchTyreData();
@@ -1621,62 +1751,70 @@ const TyreSalesGraph = () => {
         </button>
       </div>
       <div className="flex-1 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={tyreData}
-            layout="vertical"
-            margin={{ top: 5, right: 30, left: 60, bottom: 25 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              horizontal={false}
-              stroke="#e2e8f0"
-            />
-            <XAxis
-              type="number"
-              tick={{ fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(val) => val}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={tyreData}
+              layout="vertical"
+              margin={{ top: 5, right: 30, left: 60, bottom: 25 }}
             >
-              <Label
-                value="Sales Value"
-                offset={5}
-                position="bottom"
-                style={{ fill: "#64748b", fontSize: 11 }}
+              <CartesianGrid
+                vertical={true}
+                horizontal={false}
+                stroke="#e2e8f0"
               />
-            </XAxis>
-            <YAxis
-              type="category"
-              dataKey="name"
-              tick={{ fontSize: 10, fill: "#64748b" }}
-              axisLine={false}
-              tickLine={false}
-              width={80}
-            >
-              <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11 }} />
-            </YAxis>
-            <RechartsTooltip
-              wrapperStyle={{ zIndex: 1000 }}
-              cursor={{ fill: "#f8fafc" }}
-              contentStyle={{
-                backgroundColor: "#ffffff",
-                borderRadius: "8px",
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-              }}
-              formatter={(val: number) => [val, "Sales"]}
-            />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
-              {tyreData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
+              <XAxis
+                type="number"
+                padding={{ left: 1 }}
+                tick={{ fontSize: 10, fontWeight: 600 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(val) => val === 0 ? "₹0" : `₹${Math.round(val)} Cr`}
+              >
+                <Label
+                  value="Sales (₹)"
+                  offset={5}
+                  position="bottom"
+                  style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
                 />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+              </XAxis>
+              <YAxis
+                type="category"
+                dataKey="name"
+                tick={{ fontSize: 10, fill: "#334155", fontWeight: 700 }}
+                axisLine={{ stroke: "#475569", strokeWidth: 1 }}
+                tickLine={false}
+                tickMargin={10}
+                width={100}
+              >
+                <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} offset={-10} />
+              </YAxis>
+              <RechartsTooltip
+                wrapperStyle={{ zIndex: 1000 }}
+                cursor={{ fill: "#f8fafc" }}
+                contentStyle={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: "8px",
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                }}
+                formatter={(val: number) => [`₹${val} Cr`, "Sales"]}
+              />
+              <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
+                {tyreData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
