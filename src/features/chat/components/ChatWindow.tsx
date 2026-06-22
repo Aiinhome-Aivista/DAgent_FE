@@ -82,184 +82,191 @@ export const ChatWindow = ({
         </div>
       </CardHeader>
 
-      <CardContent
-        ref={scrollRef}
-        className="flex-1 h-full overflow-y-auto px-3 scroll-smooth space-y-1 bg-[var(--bg)]/10 relative"
-      >
-        <AnimatePresence mode="wait">
-          {mode === 'landing' ? (
-            <motion.div
-              key="landing"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col items-center justify-center h-full max-w-md mx-auto text-center space-y-8 py-8"
-            >
-              <div className="w-20 h-20 rounded-3xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20">
-                <Database className="w-10 h-10" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold mb-2">Welcome to DAgent AI</h2>
-                <p className="text-[var(--text-secondary)]">To get started, select an existing data connector or set up a new one.</p>
-              </div>
-
-              <div className="w-full space-y-3 text-left">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Available Connectors</h4>
-                  <Badge variant="outline" className="text-[10px]">{connectors.length} Active</Badge>
-                </div>
-
-                {isLoadingConnectors ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
-                  </div>
-                ) : (
-                  connectors.map((conn) => (
-                    <div key={conn.id} className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)]">
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-between h-auto py-4 px-6 rounded-none hover:bg-[var(--surface-hover)] transition-all"
-                        onClick={startChat}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Database className="w-5 h-5 text-[var(--accent)]" />
-                          <div className="flex flex-col items-start">
-                            <span className="font-bold text-[var(--text-primary)]">{conn.name}</span>
-                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-tighter">{conn.type}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            <span className="text-[10px] font-bold text-emerald-500 uppercase">Ready</span>
-                          </div>
-                          <ArrowRight className="w-4 h-4 text-[var(--text-secondary)]" />
-                        </div>
-                      </Button>
-                    </div>
-                  ))
-                )}
-
-                <Button
-                  className="w-full h-auto py-4 rounded-xl mt-6 bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white font-bold shadow-lg shadow-[var(--accent)]/20"
-                  onClick={onNewConnector}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Connect New Data Source
-                </Button>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="chat"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-4"
-            >
-              {messages.map((msg) => (
-                <ChatMessage key={msg.id} message={msg} />
-              ))}
-
-              {isLoading && (
+      <div className={`flex-1 flex min-h-0 ${mode === 'chat' ? 'flex-row' : 'flex-col'}`}>
+        <div className={`flex flex-col min-w-0 ${mode === 'chat' ? 'w-2/3 border-r border-[var(--border)]' : 'w-full h-full'}`}>
+          <CardContent
+            ref={scrollRef}
+            className="flex-1 h-full overflow-y-auto px-3 scroll-smooth space-y-1 bg-[var(--bg)]/10 relative"
+          >
+            <AnimatePresence mode="wait">
+              {mode === 'landing' ? (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
+                  key="landing"
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-col mb-4"
+                  exit={{ opacity: 0, y: -20 }}
+                  className="flex flex-col items-center justify-center h-full max-w-md mx-auto text-center space-y-8 py-8"
                 >
-                  <div className="flex justify-start mb-2">
-                    <div className="bg-[var(--surface)] border border-[var(--border)] px-4 py-3 rounded-2xl rounded-tl-none flex gap-1.5 items-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)]/40 animate-bounce [animation-delay:-0.3s]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)]/40 animate-bounce [animation-delay:-0.15s]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)]/40 animate-bounce" />
-                    </div>
+                  <div className="w-20 h-20 rounded-3xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20">
+                    <Database className="w-10 h-10" />
                   </div>
-                  {processingSteps.length > 0 && (
-                    <div className="pl-4 border-l-2 border-[var(--border)] ml-4 mt-2 space-y-2">
-                      {processingSteps.map((step, idx) => (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="flex items-center gap-2 text-xs font-mono text-[var(--text-secondary)]"
-                        >
-                          {idx === processingSteps.length - 1 ? (
-                            <Loader2 className="w-3 h-3 text-[var(--accent)] animate-spin" />
-                          ) : (
-                            <div className="w-3 h-3 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            </div>
-                          )}
-                          {step}
-                        </motion.div>
-                      ))}
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Welcome to DAgent AI</h2>
+                    <p className="text-[var(--text-secondary)]">To get started, select an existing data connector or set up a new one.</p>
+                  </div>
+
+                  <div className="w-full space-y-3 text-left">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Available Connectors</h4>
+                      <Badge variant="outline" className="text-[10px]">{connectors.length} Active</Badge>
                     </div>
+
+                    {isLoadingConnectors ? (
+                      <div className="flex justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
+                      </div>
+                    ) : (
+                      connectors.map((conn) => (
+                        <div key={conn.id} className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)]">
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-between h-auto py-4 px-6 rounded-none hover:bg-[var(--surface-hover)] transition-all"
+                            onClick={startChat}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Database className="w-5 h-5 text-[var(--accent)]" />
+                              <div className="flex flex-col items-start">
+                                <span className="font-bold text-[var(--text-primary)]">{conn.name}</span>
+                                <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-tighter">{conn.type}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span className="text-[10px] font-bold text-emerald-500 uppercase">Ready</span>
+                              </div>
+                              <ArrowRight className="w-4 h-4 text-[var(--text-secondary)]" />
+                            </div>
+                          </Button>
+                        </div>
+                      ))
+                    )}
+
+                    <Button
+                      className="w-full h-auto py-4 rounded-xl mt-6 bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white font-bold shadow-lg shadow-[var(--accent)]/20"
+                      onClick={onNewConnector}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Connect New Data Source
+                    </Button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="chat"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="space-y-4"
+                >
+                  {messages.map((msg) => (
+                    <ChatMessage key={msg.id} message={msg} />
+                  ))}
+
+                  {isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex flex-col mb-4"
+                    >
+                      <div className="flex justify-start mb-2">
+                        <div className="bg-[var(--surface)] border border-[var(--border)] px-4 py-3 rounded-2xl rounded-tl-none flex gap-1.5 items-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)]/40 animate-bounce [animation-delay:-0.3s]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)]/40 animate-bounce [animation-delay:-0.15s]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)]/40 animate-bounce" />
+                        </div>
+                      </div>
+                      {processingSteps.length > 0 && (
+                        <div className="pl-4 border-l-2 border-[var(--border)] ml-4 mt-2 space-y-2">
+                          {processingSteps.map((step, idx) => (
+                            <motion.div
+                              key={idx}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="flex items-center gap-2 text-xs font-mono text-[var(--text-secondary)]"
+                            >
+                              {idx === processingSteps.length - 1 ? (
+                                <Loader2 className="w-3 h-3 text-[var(--accent)] animate-spin" />
+                              ) : (
+                                <div className="w-3 h-3 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                </div>
+                              )}
+                              {step}
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
                   )}
                 </motion.div>
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </CardContent>
+            </AnimatePresence>
+          </CardContent>
 
-      <CardFooter className="bg-[var(--surface)]/80 backdrop-blur-md border-t border-[var(--border)] relative z-30">
-        <div className="w-full px-3">
-          {/* Show loader while fetching suggested questions */}
-          {isFetchingSuggestions && !isLoading && (
-            <div className="flex items-center justify-center gap-2 mb-4 text-base text-[var(--text-secondary)]">
-              <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
-              <span>Fetching suggested questions…</span>
+          <CardFooter className="bg-[var(--surface)]/80 backdrop-blur-md border-t border-[var(--border)] relative z-30 w-full min-w-0">
+            <div className="w-full px-3 min-w-0 flex flex-col justify-center py-3">
+              <ChatInput
+                value={chatInput}
+                onChange={setChatInput}
+                onSend={sendMessage}
+                disabled={isLoading || mode !== 'chat'}
+                onOpenDataSource={onOpenDataSource}
+              />
+              <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-[var(--text-secondary)]/60 uppercase tracking-[0.2em] font-black">
+                <span className="w-1 h-1 rounded-full bg-[var(--border)]" />
+              </div>
             </div>
-          )}
-          {/* Show follow-up questions from API response */}
-          {followUpQuestions.length > 0 && !isLoading && !isFetchingSuggestions && (
-            <div className="mb-4 max-h-[90px] overflow-y-auto flex flex-wrap gap-2 justify-center pr-1 scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent">
-              {followUpQuestions.map((q, i) => (
-                <motion.button
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  onClick={() => { setChatInput(''); sendMessage(q); }}
-                  className="px-4 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-center gap-2 group flex-shrink-0"
-                >
-                  <Sparkles className="w-3 h-3 group-hover:scale-110 transition-transform flex-shrink-0" />
-                  <span className="truncate max-w-[250px]">{q}</span>
-                </motion.button>
-              ))}
-            </div>
-          )}
-          {/* Show static suggested questions on first load if no follow-ups yet */}
-          {followUpQuestions.length === 0 && mode === 'chat' && messages.length <= 1 && suggestedQuestions.length > 0 && !isLoading && !isFetchingSuggestions && (
-            <div className="mb-4 max-h-[90px] overflow-y-auto flex flex-wrap gap-2 justify-center pr-1 scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent">
-              {suggestedQuestions.map((q, i) => (
-                <motion.button
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  onClick={() => { setChatInput(''); sendMessage(q); }}
-                  className="px-4 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-center gap-2 group flex-shrink-0"
-                >
-                  <Sparkles className="w-3 h-3 group-hover:scale-110 transition-transform flex-shrink-0" />
-                  <span className="truncate max-w-[250px]">{q}</span>
-                </motion.button>
-              ))}
-            </div>
-          )}
-          <ChatInput
-            value={chatInput}
-            onChange={setChatInput}
-            onSend={sendMessage}
-            disabled={isLoading || mode !== 'chat'}
-            onOpenDataSource={onOpenDataSource}
-          />
-          <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-[var(--text-secondary)]/60 uppercase tracking-[0.2em] font-black">
-
-            <span className="w-1 h-1 rounded-full bg-[var(--border)]" />
-
-          </div>
+          </CardFooter>
         </div>
-      </CardFooter>
+
+        {/* Right Column: Critical Insights (1/3 width, only in chat mode) */}
+        {mode === 'chat' && (
+          <div className="w-1/3 bg-[var(--surface)]/50 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent flex flex-col relative z-30">
+            <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+              <Sparkles className="w-3 h-3 text-[var(--accent)]" /> Critical Insights
+            </h4>
+            
+            {isFetchingSuggestions && !isLoading && (
+              <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+                <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+                <span>Fetching insights…</span>
+              </div>
+            )}
+            
+            <div className="flex flex-col gap-2">
+              {followUpQuestions.length > 0 && !isLoading && !isFetchingSuggestions && (
+                followUpQuestions.map((q, i) => (
+                  <motion.button
+                    key={i}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    onClick={() => { setChatInput(''); sendMessage(q); }}
+                    className="w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
+                  >
+                    {q}
+                  </motion.button>
+                ))
+              )}
+              
+              {followUpQuestions.length === 0 && messages.length <= 1 && suggestedQuestions.length > 0 && !isLoading && !isFetchingSuggestions && (
+                suggestedQuestions.map((q, i) => (
+                  <motion.button
+                    key={i}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    onClick={() => { setChatInput(''); sendMessage(q); }}
+                    className="w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
+                  >
+                    {q}
+                  </motion.button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </Card>
   );
 };
