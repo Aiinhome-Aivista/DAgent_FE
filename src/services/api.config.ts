@@ -43,6 +43,10 @@ export const API_ENDPOINTS = {
     TYRE_SALES_DATA: '/tyre-sales-data',
     SALES_BY_ZONE: '/sales-by-zone',
     FILTERS: '/dashboard-filters',
+    YEAR_FILTER: '/available-years',
+    YEAR_WISE_FILTER: '/year-wise-sales-comparison'
+
+
   },
 
   WORKSPACE: {

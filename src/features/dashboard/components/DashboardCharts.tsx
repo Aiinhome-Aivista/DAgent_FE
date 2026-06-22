@@ -33,6 +33,7 @@ import {
   X,
   Download,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import {
   ComposableMap,
@@ -654,59 +655,201 @@ const IndiaCoverageMap = ({
   );
 };
 
+const useDashboardFilters = () => {
+  const [filters, setFilters] = useState<{ categories: string[]; constructions: string[]; tyreTypes: string[] }>({ 
+    categories: [], 
+    constructions: [], 
+    tyreTypes: [] 
+  });
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const sessionId = localStorage.getItem('DAgent_session_id');
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.FILTERS}?session_id=${sessionId}`);
+        const data = await response.json();
+        if (data.status === "success") {
+          setFilters({
+            categories: data.categories || [],
+            constructions: data.constructions || [],
+            tyreTypes: data.tyreTypes || []
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard filters:", err);
+      }
+    };
+    fetchFilters();
+  }, []);
+
+  return filters;
+};
+
+
+const useAvailableYears = () => {
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  useEffect(() => {
+    const fetchAvaliableYears = async () => {
+      try {
+        const sessionId = localStorage.getItem('DAgent_session_id');
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.YEAR_FILTER}?session_id=${sessionId}`);
+        const data = await response.json();
+        if (data.status === "success") {
+          setAvailableYears(data.years || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch available years:", err);
+      }
+    };
+    fetchAvaliableYears();
+  }, []);
+
+  return availableYears;
+};
+
+
+
+
+
+
 export const DashboardGraphs = () => {
+  const filters = useDashboardFilters();
+  const apiAvailableYears = useAvailableYears();
   const [selectedYears, setSelectedYears] = useState<number[]>([2024, 2025]);
-  const [tyreData, setTyreData] = useState(dummyTyreData);
+
+  useEffect(() => {
+    if (apiAvailableYears.length > 0) {
+      setSelectedYears([apiAvailableYears[0]]);
+    }
+  }, [apiAvailableYears]);
+  const [tyreData, setTyreData] = useState<any[]>(dummyTyreData);
+  const [isTyreLoading, setIsTyreLoading] = useState(true);
 
   useEffect(() => {
     const fetchTyreData = async () => {
+      setIsTyreLoading(true);
       try {
-        const sessionId =
-          localStorage.getItem("DAgent_session_id") ||
-          "d9ba485e-863b-4516-9fe0-84d23a6dab55";
-        const response = await fetch(
-          `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              session_id: sessionId,
-              question: "Top 10 Tyre Types by Sales ",
-              user_id: 22,
-            }),
-          },
-        );
+        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            question: "Top 10 Tyre Types by Sales ",
+            user_id: 22
+          })
+        });
         const data = await response.json();
-        if (
-          data.status === "success" &&
-          data.visualizations &&
-          data.visualizations[0] &&
-          data.visualizations[0].data
-        ) {
-          const mappedData = data.visualizations[0].data.map((item: any) => ({
-            name: item.category,
-            value: Number(item.sales_value),
-          }));
+        if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
+          const mappedData = data.visualizations[0].data.map((item: any) => {
+            let val = Number(item.sales_value);
+            let plotValue = val;
+            if (val >= 100000) {
+              plotValue = val / 10000000;
+            }
+            return {
+              name: item.category,
+              value: plotValue,
+              sales_value: item.sales_value
+            };
+          });
           setTyreData(mappedData);
         }
       } catch (err) {
         console.error("Failed to fetch tyre sales data:", err);
+      } finally {
+        setIsTyreLoading(false);
       }
     };
     fetchTyreData();
   }, []);
 
-  const [chartType, setChartType] = useState<"column" | "line" | "area">(
-    "column",
-  );
+  const [chartType, setChartType] = useState<"column" | "line" | "area">("column");
   const [zoneProductType, setZoneProductType] = useState("All");
   const [zoneConstructionType, setZoneConstructionType] = useState("All");
   const [zoneTyreType, setZoneTyreType] = useState("All");
+  const [zoneData, setZoneData] = useState<any[]>(dummyZoneData);
+  const [isZoneLoading, setIsZoneLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchZoneData = async () => {
+      setIsZoneLoading(true);
+      try {
+        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.SALES_BY_ZONE}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            product_type: zoneProductType,
+            construction_type: zoneConstructionType,
+            tyre_type: zoneTyreType
+          })
+        });
+        const data = await response.json();
+        if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
+          const mappedData = data.visualizations[0].data.map((item: any) => ({
+            name: item.name || item.zone,
+            value: Number(item.percentage || item.value),
+            sales_value: item.sales_value
+          }));
+          setZoneData(mappedData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch zone sales data:", err);
+      } finally {
+        setIsZoneLoading(false);
+      }
+    };
+    fetchZoneData();
+  }, [zoneProductType, zoneConstructionType, zoneTyreType]);
+
+  const [yearComparisonData, setYearComparisonData] = useState<any[]>(dummyYearComparisonData);
+  const [isYearComparisonLoading, setIsYearComparisonLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchYearComparisonData = async () => {
+      if (selectedYears.length === 0) return;
+      setIsYearComparisonLoading(true);
+      try {
+        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.YEAR_WISE_FILTER}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            question: "Year-wise Sales Comparison",
+            user_id: 22,
+            selected_years: selectedYears
+          })
+        });
+        const data = await response.json();
+        if (data.status === "success" && data.visualization) {
+          const map: any = {};
+          data.visualization.forEach((item: any) => {
+            let month = item.month.substring(0, 3).toUpperCase();
+            if (!map[month]) map[month] = { month };
+            map[month][`y${item.year}`] = item.sales_value / 10000000;
+            map[month][`sales_value_${item.year}`] = item.sales_value;
+          });
+          const MONTH_ORDER = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+          const pivoted = Object.values(map).sort((a: any, b: any) => MONTH_ORDER.indexOf(a.month) - MONTH_ORDER.indexOf(b.month));
+          setYearComparisonData(pivoted);
+        }
+      } catch (err) {
+        console.error("Failed to fetch year comparison data:", err);
+      } finally {
+        setIsYearComparisonLoading(false);
+      }
+    };
+    fetchYearComparisonData();
+  }, [selectedYears]);
+
   const [mapYear, setMapYear] = useState("All");
   const [mapMonth, setMapMonth] = useState("All");
   const [mapRegion, setMapRegion] = useState("All");
 
-  const availableYears = [2022, 2023, 2024, 2025, 2026];
+  const availableYears = apiAvailableYears.length > 0 ? apiAvailableYears : [2022, 2023, 2024, 2025, 2026];
 
   // Dynamic colors for different years to ensure they are visually distinct
   const yearColors: Record<number, string> = {
@@ -727,7 +870,7 @@ export const DashboardGraphs = () => {
 
   const renderChart = () => {
     const commonProps = {
-      data: dummyYearComparisonData,
+      data: yearComparisonData,
       margin: { top: 20, right: 30, left: 20, bottom: 5 },
     };
 
@@ -748,7 +891,7 @@ export const DashboardGraphs = () => {
           tick={{ fontSize: 12 }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(val) => `$${val} M`}
+          tickFormatter={(val) => `₹${val} Cr`}
         />
         <RechartsTooltip
           wrapperStyle={{ zIndex: 1000 }}
@@ -758,6 +901,14 @@ export const DashboardGraphs = () => {
             borderRadius: "8px",
             border: "1px solid #e2e8f0",
             boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+          }}
+          formatter={(value: any, name: any, props: any) => {
+            const yearStr = String(name);
+            const originalVal = props.payload[`sales_value_${yearStr}`];
+            if (originalVal) {
+              return [`₹${(Number(originalVal) / 10000000)} Cr`, name];
+            }
+            return [`₹${value} Cr`, name];
           }}
         />
         <Legend iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
@@ -1096,7 +1247,11 @@ export const DashboardGraphs = () => {
         </div>
 
         <div className="flex-1 min-h-0">
-          {selectedYears.length === 0 ? (
+          {isYearComparisonLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+            </div>
+          ) : selectedYears.length === 0 ? (
             <div className="h-full flex items-center justify-center text-slate-400 font-medium text-sm">
               Please select at least one year to view the comparison.
             </div>
@@ -1121,8 +1276,9 @@ export const DashboardGraphs = () => {
                 className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
               >
                 <option value="All">Product Type: All</option>
-                <option value="Type A">Type A</option>
-                <option value="Type B">Type B</option>
+                {filters.categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
               <select
                 value={zoneConstructionType}
@@ -1130,8 +1286,9 @@ export const DashboardGraphs = () => {
                 className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
               >
                 <option value="All">Construction Type: All</option>
-                <option value="Radial">Radial</option>
-                <option value="Bias">Bias</option>
+                {filters.constructions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
               <select
                 value={zoneTyreType}
@@ -1139,51 +1296,59 @@ export const DashboardGraphs = () => {
                 className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
               >
                 <option value="All">Tyre Type: All</option>
-                <option value="TRUCK">TRUCK</option>
-                <option value="CAR">CAR</option>
-                <option value="LCV">LCV</option>
-                <option value="Motor Cycle">Motor Cycle</option>
-                <option value="SCV">SCV</option>
-                <option value="TRACTOR REAR">TRACTOR REAR</option>
-                <option value="OTR">OTR</option>
-                <option value="SCOOTER">SCOOTER</option>
+                {filters.tyreTypes.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
             </div>
           </div>
           <div className="flex-1 min-h-0 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={dummyZoneData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={120}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(1)}%`
-                  }
-                  labelLine={true}
-                  stroke="none"
-                >
-                  {dummyZoneData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <RechartsTooltip
-                  wrapperStyle={{ zIndex: 1000 }}
-                  contentStyle={{
-                    backgroundColor: "#ffffff",
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {isZoneLoading ? (
+              <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={zoneData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(1)}%`
+                    }
+                    labelLine={true}
+                    stroke="none"
+                  >
+                    {zoneData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    wrapperStyle={{ zIndex: 1000 }}
+                    contentStyle={{
+                      backgroundColor: "#ffffff",
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                    formatter={(value: any, name: any, props: any) => {
+                      const salesValue = props.payload.sales_value;
+                      if (salesValue) {
+                        let val = Number(salesValue);
+                        let formatted = `₹${(val / 10000000)} Cr`;
+                        return [`${value}% | Sales: ${formatted}`, name];
+                      }
+                      return [`${value}%`, name];
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -1192,67 +1357,73 @@ export const DashboardGraphs = () => {
             Top 10 Tyre Types by Sales
           </h3>
           <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={tyreData}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 60, bottom: 20 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={false}
-                  stroke="#e2e8f0"
-                />
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 10 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(val) => val}
+            {isTyreLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={tyreData}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 60, bottom: 20 }}
                 >
-                  <Label
-                    value="Sales Value"
-                    offset={5}
-                    position="bottom"
-                    style={{ fill: "#64748b", fontSize: 11 }}
+                  <CartesianGrid
+                    vertical={true}
+                    horizontal={false}
+                    stroke="#e2e8f0"
                   />
-                </XAxis>
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={{ fontSize: 10, fill: "#64748b" }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={80}
-                >
-                  <Label
-                    value="Tyre Type"
-                    angle={-90}
-                    position="insideLeft"
-                    style={{ fill: "#64748b", fontSize: 11 }}
+                  <XAxis
+                    type="number"
+                    padding={{ left: 1 }}
+                    tick={{ fontSize: 10, fontWeight: 600 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(val) => val === 0 ? "₹0" : `₹${val} Cr`}
+                  >
+                    <Label value="Sales (₹)" offset={5} position="bottom" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} />
+                  </XAxis>
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 10, fill: "#334155", fontWeight: 700 }}
+                    axisLine={{ stroke: "#475569", strokeWidth: 1 }}
+                    tickLine={false}
+                    tickMargin={10}
+                    width={100}
+                  >
+                    <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} offset={-10} />
+                  </YAxis>
+                  <RechartsTooltip
+                    wrapperStyle={{ zIndex: 1000 }}
+                    cursor={{ fill: "#f8fafc" }}
+                    contentStyle={{
+                      backgroundColor: "#ffffff",
+                      borderRadius: "8px",
+                      border: "1px solid #e2e8f0",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                    formatter={(value: any, name: any, props: any) => {
+                      const salesValue = props.payload.sales_value;
+                      if (salesValue) {
+                        let val = Number(salesValue);
+                        let formatted = `₹${(val / 10000000)} Cr`;
+                        return [formatted, "Sales"];
+                      }
+                      return [`₹${value} Cr`, "Sales"];
+                    }}
                   />
-                </YAxis>
-                <RechartsTooltip
-                  wrapperStyle={{ zIndex: 1000 }}
-                  cursor={{ fill: "#f8fafc" }}
-                  contentStyle={{
-                    backgroundColor: "#ffffff",
-                    borderRadius: "8px",
-                    border: "1px solid #e2e8f0",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                  formatter={(val: number) => [val, "Sales"]}
-                />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
-                  {tyreData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
+                    {tyreData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>
