@@ -273,8 +273,8 @@ export const ChatWindow = ({
             </h4>
 
             {isFetchingSuggestions && !isLoading && (
-              <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-                <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+              <div className="flex flex-col items-center justify-center w-full h-full flex-1 gap-3 text-xs text-[var(--text-secondary)] opacity-70">
+                <Loader2 className="w-5 h-5 animate-spin text-[var(--accent)]" />
                 <span>Fetching insights…</span>
               </div>
             )}
