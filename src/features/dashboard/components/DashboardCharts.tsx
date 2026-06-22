@@ -581,12 +581,14 @@ export const DashboardGraphs = () => {
   }, [apiAvailableYears]);
   const [tyreData, setTyreData] = useState<any[]>([]);
   const [isTyreLoading, setIsTyreLoading] = useState(true);
+  const [tyreAxisLabels, setTyreAxisLabels] = useState({ x: "Sales (₹)", y: "Tyre Type" });
+  const [tyreChartTitle, setTyreChartTitle] = useState("Top 10 Tyre Types by Sales");
 
   useEffect(() => {
     const fetchTyreData = async () => {
       setIsTyreLoading(true);
       try {
-        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const sessionId = localStorage.getItem('DAgent_session_id');
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -610,6 +612,18 @@ export const DashboardGraphs = () => {
               sales_value: item.sales_value
             };
           });
+          
+          const viz = data.visualizations[0];
+          const formatLabel = (key: string) => {
+            if (!key) return "";
+            return key.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+          };
+          let xLabel = formatLabel(viz.xKey) || "Sales Value";
+          if (xLabel === "Sales Value") xLabel += " (₹)";
+          let yLabel = formatLabel(viz.yKey) || "Tyre Type";
+          setTyreAxisLabels({ x: xLabel, y: yLabel });
+          if (viz.title) setTyreChartTitle(viz.title);
+
           setTyreData(mappedData);
         }
       } catch (err) {
@@ -627,12 +641,14 @@ export const DashboardGraphs = () => {
   const [zoneTyreType, setZoneTyreType] = useState("All");
   const [zoneData, setZoneData] = useState<any[]>([]);
   const [isZoneLoading, setIsZoneLoading] = useState(true);
+  const [zoneAxisLabels, setZoneAxisLabels] = useState({ x: "Name", y: "Sales Value (₹)" });
+  const [zoneChartTitle, setZoneChartTitle] = useState("Sales by Zone");
 
   useEffect(() => {
     const fetchZoneData = async () => {
       setIsZoneLoading(true);
       try {
-        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const sessionId = localStorage.getItem('DAgent_session_id');
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.SALES_BY_ZONE}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -645,6 +661,18 @@ export const DashboardGraphs = () => {
         });
         const data = await response.json();
         if (data.status === "success" && data.visualizations && data.visualizations[0] && data.visualizations[0].data) {
+          const viz = data.visualizations[0];
+          const formatLabel = (key: string) => {
+            if (!key) return "";
+            return key.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+          };
+          let xLabel = formatLabel(viz.xKey) || "Name";
+          let yLabel = formatLabel(viz.yKey) || "Sales Value";
+          if (yLabel === "Sales Value") yLabel += " (₹)";
+          // Pie chart doesn't have axes, but we'll use yLabel for tooltip value.
+          setZoneAxisLabels({ x: xLabel, y: yLabel });
+          if (viz.title) setZoneChartTitle(viz.title);
+
           const mappedData = data.visualizations[0].data.map((item: any) => ({
             name: item.name || item.zone,
             value: Number(item.percentage || item.value),
@@ -663,13 +691,15 @@ export const DashboardGraphs = () => {
 
   const [yearComparisonData, setYearComparisonData] = useState<any[]>([]);
   const [isYearComparisonLoading, setIsYearComparisonLoading] = useState(false);
+  const [yearComparisonAxisLabels, setYearComparisonAxisLabels] = useState({ x: "Month", y: "Sales Value (₹)" });
+  const [yearComparisonTitle, setYearComparisonTitle] = useState("Year-wise comparison");
 
   useEffect(() => {
     const fetchYearComparisonData = async () => {
       if (selectedYears.length === 0) return;
       setIsYearComparisonLoading(true);
       try {
-        const sessionId = localStorage.getItem('DAgent_session_id') || 'd9ba485e-863b-4516-9fe0-84d23a6dab55';
+        const sessionId = localStorage.getItem('DAgent_session_id');
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.YEAR_WISE_FILTER}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -682,6 +712,16 @@ export const DashboardGraphs = () => {
         });
         const data = await response.json();
         if (data && data.visualization) {
+          const formatLabel = (key: string) => {
+            if (!key) return "";
+            return key.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+          };
+          let xLabel = formatLabel(data.xKey) || "Month";
+          let yLabel = formatLabel(data.yKey) || "Sales Value";
+          if (yLabel === "Sales Value") yLabel += " (₹)";
+          setYearComparisonAxisLabels({ x: xLabel, y: yLabel });
+          if (data.title) setYearComparisonTitle(data.title);
+
           const map: any = {};
           data.visualization.forEach((item: any) => {
             let month = item.month.substring(0, 3).toUpperCase();
@@ -749,7 +789,9 @@ export const DashboardGraphs = () => {
           axisLine={false}
           tickLine={false}
           tickFormatter={(val) => `₹${val} Cr`}
-        />
+        >
+          <Label value={yearComparisonAxisLabels.y} angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} offset={-10} />
+        </YAxis>
         <RechartsTooltip
           wrapperStyle={{ zIndex: 1000 }}
           cursor={{ fill: "#f8fafc" }}
@@ -763,9 +805,9 @@ export const DashboardGraphs = () => {
             const yearStr = String(name);
             const originalVal = props.payload[`sales_value_${yearStr}`];
             if (originalVal) {
-              return [`₹${(Number(originalVal) / 10000000)} Cr`, name];
+              return [`₹${(Number(originalVal) / 10000000).toFixed(2)} Cr`, name];
             }
-            return [`₹${value} Cr`, name];
+            return [`₹${Number(value).toFixed(2)} Cr`, name];
           }}
         />
         <Legend iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
@@ -1037,7 +1079,7 @@ export const DashboardGraphs = () => {
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <h3 className="text-lg font-bold text-slate-800">
-            Year-wise comparison
+            {yearComparisonTitle}
           </h3>
 
           <div className="flex flex-wrap items-center gap-3 md:gap-4">
@@ -1124,7 +1166,7 @@ export const DashboardGraphs = () => {
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
           <div className="flex flex-col xl:flex-row xl:items-start justify-between mb-4 gap-4">
             <h3 className="text-lg font-bold text-slate-800 whitespace-nowrap">
-              Sales by Zone
+              {zoneChartTitle}
             </h3>
             <div className="flex items-center gap-2 flex-wrap xl:justify-end">
               <select
@@ -1197,8 +1239,8 @@ export const DashboardGraphs = () => {
                       const salesValue = props.payload.sales_value;
                       if (salesValue) {
                         let val = Number(salesValue);
-                        let formatted = `₹${(val / 10000000)} Cr`;
-                        return [`${value}% | Sales: ${formatted}`, name];
+                        let formatted = `₹${(val / 10000000).toFixed(2)} Cr`;
+                        return [`${value}% | ${zoneAxisLabels.y.replace(' (₹)', '')}: ${formatted}`, name];
                       }
                       return [`${value}%`, name];
                     }}
@@ -1211,7 +1253,7 @@ export const DashboardGraphs = () => {
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[400px]">
           <h3 className="text-lg font-bold text-slate-800 mb-4">
-            Top 10 Tyre Types by Sales
+            {tyreChartTitle}
           </h3>
           <div className="flex-1 min-h-0">
             {isTyreLoading ? (
@@ -1238,7 +1280,7 @@ export const DashboardGraphs = () => {
                     tickLine={false}
                     tickFormatter={(val) => val === 0 ? "₹0" : `₹${val} Cr`}
                   >
-                    <Label value="Sales (₹)" offset={5} position="bottom" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} />
+                    <Label value={tyreAxisLabels.x} offset={5} position="bottom" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} />
                   </XAxis>
                   <YAxis
                     type="category"
@@ -1249,7 +1291,7 @@ export const DashboardGraphs = () => {
                     tickMargin={10}
                     width={100}
                   >
-                    <Label value="Tyre Type" angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} offset={-10} />
+                    <Label value={tyreAxisLabels.y} angle={-90} position="insideLeft" style={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} offset={-10} />
                   </YAxis>
                   <RechartsTooltip
                     wrapperStyle={{ zIndex: 1000 }}
@@ -1264,10 +1306,10 @@ export const DashboardGraphs = () => {
                       const salesValue = props.payload.sales_value;
                       if (salesValue) {
                         let val = Number(salesValue);
-                        let formatted = `₹${(val / 10000000)} Cr`;
-                        return [formatted, "Sales"];
+                        let formatted = `₹${(val / 10000000).toFixed(2)} Cr`;
+                        return [formatted, tyreAxisLabels.x.replace(' (₹)', '')];
                       }
-                      return [`₹${value} Cr`, "Sales"];
+                      return [`₹${Number(value).toFixed(2)} Cr`, tyreAxisLabels.x.replace(' (₹)', '')];
                     }}
                   />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
