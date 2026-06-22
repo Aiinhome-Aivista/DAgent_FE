@@ -1,11 +1,29 @@
-import { useChat, ChatMode } from '../hooks/useChat';
-import { ChatMessage } from './ChatMessage';
-import { ChatInput } from './ChatInput';
-import { Card, CardContent, CardHeader, CardFooter, Badge, Button } from '@/src/ui-kit';
-import { MessageSquare, Sparkles, MoreVertical, Database, Plus, ArrowRight, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect } from 'react';
-import { Connector } from '../../connectors/types';
+import { useChat, ChatMode } from "../hooks/useChat";
+import { ChatMessage } from "./ChatMessage";
+import { ChatInput } from "./ChatInput";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardFooter,
+  Badge,
+  Button,
+} from "@/src/ui-kit";
+import {
+  MessageSquare,
+  Sparkles,
+  MoreVertical,
+  Database,
+  Plus,
+  ArrowRight,
+  Loader2,
+  ChevronDown,
+  ChevronRight,
+  Minus,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { useState, useEffect } from "react";
+import { Connector } from "../../connectors/types";
 
 interface ChatWindowProps {
   initialMode?: ChatMode;
@@ -16,30 +34,44 @@ interface ChatWindowProps {
   onNewSessionCreated?: () => void;
   sessionId?: string;
   workspaceName?: string;
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 
 export const ChatWindow = ({
-  initialMode = 'landing',
+  initialMode = "landing",
   onNewConnector,
   initialMessage,
   suggestedQuestions = [],
   onOpenDataSource,
   onNewSessionCreated,
   sessionId,
-  workspaceName
+  workspaceName,
+  onCollapseChange,
 }: ChatWindowProps) => {
-  const { messages, sendMessage, isLoading, processingSteps, scrollRef, mode, completeWorkflow, startChat, followUpQuestions, isFetchingSuggestions } = useChat(initialMode, initialMessage, sessionId, onNewSessionCreated);
+  const {
+    messages,
+    sendMessage,
+    isLoading,
+    processingSteps,
+    scrollRef,
+    mode,
+    completeWorkflow,
+    startChat,
+    followUpQuestions,
+    isFetchingSuggestions,
+  } = useChat(initialMode, initialMessage, sessionId, onNewSessionCreated);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [isLoadingConnectors, setIsLoadingConnectors] = useState(true);
-  const [chatInput, setChatInput] = useState('');
+  const [chatInput, setChatInput] = useState("");
   const [chatSessionName, setChatSessionName] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
-    setChatSessionName(localStorage.getItem('selected_query_session_name'));
+    setChatSessionName(localStorage.getItem("selected_query_session_name"));
   }, []);
 
   useEffect(() => {
-    if (mode === 'landing') {
+    if (mode === "landing") {
       setIsLoadingConnectors(true);
       // TODO: Fetch connected data sources from the backend
       setConnectors([]);
@@ -48,48 +80,55 @@ export const ChatWindow = ({
   }, [mode]);
 
   return (
-    <Card className="flex flex-col h-full shadow-2xl shadow-black/20 border-[var(--border)] overflow-hidden bg-[var(--surface)]/30 backdrop-blur-xl">
-      <CardHeader className="flex flex-row items-center justify-between py-2 px-2 bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] relative z-30 shadow-xs">
+    <Card className={`flex flex-col shadow-2xl shadow-black/20 border-[var(--border)] overflow-hidden bg-[var(--surface)]/30 backdrop-blur-xl transition-all duration-300 ${isCollapsed ? 'mt-auto' : 'h-full flex-1'}`}>
+      <CardHeader className="flex flex-row items-center justify-between py-1.5 px-3 bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] relative z-30 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20 shadow-inner">
-            <Sparkles className="w-4 h-4" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <h3 className="font-black text-base tracking-tight leading-none">DAgent AI Assistant</h3>
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <div className="flex items-center gap-2 text-[10px] text-[var(--text-secondary)] tracking-[0.1em] font-black">
-                <span className="uppercase">Active Session</span>
-                {workspaceName && (
-                  <div className="flex items-center gap-1.5 text-[var(--text-secondary)] tracking-normal font-bold">
-                    <span>{workspaceName}</span>
-                    <span className="opacity-50">•</span>
-                    <span>{chatSessionName || 'New Query'}</span>
-                  </div>
-                )}
+          <button 
+            onClick={() => {
+              const newState = !isCollapsed;
+              setIsCollapsed(newState);
+              if (onCollapseChange) onCollapseChange(newState);
+            }}
+            className="w-6 h-6 rounded-[10px] bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center text-slate-800 border border-slate-200 shadow-inner cursor-pointer"
+          >
+            {isCollapsed ? <Plus className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
+          </button>
+          <div className="flex items-center gap-3">
+            <h3 className="font-black text-base tracking-tight leading-none">
+              Speak to your data
+            </h3>
+            {workspaceName && (
+              <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)] tracking-normal font-bold">
+                <span>{workspaceName}</span>
+                <span className="opacity-50">•</span>
+                <span>{chatSessionName || "New Query"}</span>
               </div>
-            </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="px-3 py-1 font-mono text-[10px] border-[var(--accent)]/30 text-[var(--accent)]">AGENT_V2.4</Badge>
-          <button className="p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] transition-all hover:text-[var(--text-primary)]">
-            <MoreVertical className="w-5 h-5" />
-          </button>
+          <Badge
+            variant="outline"
+            className="px-3 py-1 font-mono text-[10px] border-[var(--accent)]/30 text-[var(--accent)]"
+          >
+            AGENT_V2.4
+          </Badge>
         </div>
       </CardHeader>
 
-      <div className={`flex-1 flex min-h-0 ${mode === 'chat' ? 'flex-row' : 'flex-col'}`}>
-        <div className={`flex flex-col min-w-0 ${mode === 'chat' ? 'w-2/3 border-r border-[var(--border)]' : 'w-full h-full'}`}>
+      {!isCollapsed && (
+        <div
+          className={`flex-1 flex min-h-0 ${mode === "chat" ? "flex-row" : "flex-col"}`}
+        >
+          <div
+            className={`flex flex-col min-w-0 ${mode === "chat" ? "w-2/3 border-r border-[var(--border)]" : "w-full h-full"}`}
+          >
           <CardContent
             ref={scrollRef}
             className="flex-1 h-full overflow-y-auto px-3 scroll-smooth space-y-1 bg-[var(--bg)]/10 relative"
           >
             <AnimatePresence mode="wait">
-              {mode === 'landing' ? (
+              {mode === "landing" ? (
                 <motion.div
                   key="landing"
                   initial={{ opacity: 0, y: 20 }}
@@ -101,14 +140,23 @@ export const ChatWindow = ({
                     <Database className="w-10 h-10" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Welcome to DAgent AI</h2>
-                    <p className="text-[var(--text-secondary)]">To get started, select an existing data connector or set up a new one.</p>
+                    <h2 className="text-2xl font-bold mb-2">
+                      Welcome to DAgent AI
+                    </h2>
+                    <p className="text-[var(--text-secondary)]">
+                      To get started, select an existing data connector or set
+                      up a new one.
+                    </p>
                   </div>
 
                   <div className="w-full space-y-3 text-left">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Available Connectors</h4>
-                      <Badge variant="outline" className="text-[10px]">{connectors.length} Active</Badge>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
+                        Available Connectors
+                      </h4>
+                      <Badge variant="outline" className="text-[10px]">
+                        {connectors.length} Active
+                      </Badge>
                     </div>
 
                     {isLoadingConnectors ? (
@@ -117,7 +165,10 @@ export const ChatWindow = ({
                       </div>
                     ) : (
                       connectors.map((conn) => (
-                        <div key={conn.id} className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)]">
+                        <div
+                          key={conn.id}
+                          className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)]"
+                        >
                           <Button
                             variant="ghost"
                             className="w-full justify-between h-auto py-4 px-6 rounded-none hover:bg-[var(--surface-hover)] transition-all"
@@ -126,14 +177,20 @@ export const ChatWindow = ({
                             <div className="flex items-center gap-3">
                               <Database className="w-5 h-5 text-[var(--accent)]" />
                               <div className="flex flex-col items-start">
-                                <span className="font-bold text-[var(--text-primary)]">{conn.name}</span>
-                                <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-tighter">{conn.type}</span>
+                                <span className="font-bold text-[var(--text-primary)]">
+                                  {conn.name}
+                                </span>
+                                <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-tighter">
+                                  {conn.type}
+                                </span>
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-1.5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                <span className="text-[10px] font-bold text-emerald-500 uppercase">Ready</span>
+                                <span className="text-[10px] font-bold text-emerald-500 uppercase">
+                                  Ready
+                                </span>
                               </div>
                               <ArrowRight className="w-4 h-4 text-[var(--text-secondary)]" />
                             </div>
@@ -209,64 +266,76 @@ export const ChatWindow = ({
                 value={chatInput}
                 onChange={setChatInput}
                 onSend={sendMessage}
-                disabled={isLoading || mode !== 'chat'}
+                disabled={isLoading || mode !== "chat"}
                 onOpenDataSource={onOpenDataSource}
               />
-              <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-[var(--text-secondary)]/60 uppercase tracking-[0.2em] font-black">
+              {/* <div className="mt-0 flex items-center justify-center gap-4 text-[10px] text-[var(--text-secondary)]/60 uppercase tracking-[0.2em] font-black">
                 <span className="w-1 h-1 rounded-full bg-[var(--border)]" />
-              </div>
+              </div> */}
             </div>
           </CardFooter>
         </div>
 
         {/* Right Column: Critical Insights (1/3 width, only in chat mode) */}
-        {mode === 'chat' && (
-          <div className="w-1/3 bg-[var(--surface)]/50 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent flex flex-col relative z-30">
-            <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-              <Sparkles className="w-3 h-3 text-[var(--accent)]" /> Critical Insights
+        {mode === "chat" && (
+          <div className="w-1/3 bg-[var(--surface)]/50 p-4 flex flex-col relative z-30 min-h-0">
+            <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] mb-3 flex items-center gap-2 flex-shrink-0">
+              <Sparkles className="w-3 h-3 text-[var(--accent)]" /> Critical
+              Insights
             </h4>
-            
+
             {isFetchingSuggestions && !isLoading && (
-              <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-                <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+              <div className="flex flex-col items-center justify-center w-full h-full flex-1 gap-3 text-xs text-[var(--text-secondary)] opacity-70">
+                <Loader2 className="w-5 h-5 animate-spin text-[var(--accent)]" />
                 <span>Fetching insights…</span>
               </div>
             )}
-            
-            <div className="flex flex-col gap-2">
-              {followUpQuestions.length > 0 && !isLoading && !isFetchingSuggestions && (
+
+            <div className="flex flex-col gap-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent flex-1 pr-2">
+              {followUpQuestions.length > 0 &&
+                !isLoading &&
+                !isFetchingSuggestions &&
                 followUpQuestions.map((q, i) => (
                   <motion.button
                     key={i}
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    onClick={() => { setChatInput(''); sendMessage(q); }}
-                    className="w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
+                    onClick={() => {
+                      setChatInput("");
+                      sendMessage(q);
+                    }}
+                    className="cursor-pointer w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
                   >
                     {q}
                   </motion.button>
-                ))
-              )}
-              
-              {followUpQuestions.length === 0 && messages.length <= 1 && suggestedQuestions.length > 0 && !isLoading && !isFetchingSuggestions && (
+                ))}
+
+              {followUpQuestions.length === 0 &&
+                messages.length <= 1 &&
+                suggestedQuestions.length > 0 &&
+                !isLoading &&
+                !isFetchingSuggestions &&
                 suggestedQuestions.map((q, i) => (
                   <motion.button
                     key={i}
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    onClick={() => { setChatInput(''); sendMessage(q); }}
-                    className="w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
+                    onClick={() => {
+                      setChatInput("");
+                      sendMessage(q);
+                    }}
+                    className="cursor-pointer w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
                   >
                     {q}
                   </motion.button>
-                ))
-              )}
+                ))}
             </div>
           </div>
         )}
       </div>
+      )}
     </Card>
   );
 };
