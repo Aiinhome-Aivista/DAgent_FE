@@ -212,7 +212,7 @@ export const ChatWindow = ({
           )}
           {/* Show follow-up questions from API response */}
           {followUpQuestions.length > 0 && !isLoading && !isFetchingSuggestions && (
-            <div className="mb-4 max-h-[160px] overflow-y-auto flex flex-wrap gap-2 justify-center pr-1 scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent">
+            <div className="mb-4 max-h-[90px] overflow-y-auto flex flex-wrap gap-2 justify-center pr-1 scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent">
               {followUpQuestions.map((q, i) => (
                 <motion.button
                   key={i}
@@ -222,15 +222,15 @@ export const ChatWindow = ({
                   onClick={() => { setChatInput(''); sendMessage(q); }}
                   className="px-4 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-center gap-2 group flex-shrink-0"
                 >
-                  <Sparkles className="w-3 h-3 group-hover:scale-110 transition-transform" />
-                  {q}
+                  <Sparkles className="w-3 h-3 group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span className="truncate max-w-[250px]">{q}</span>
                 </motion.button>
               ))}
             </div>
           )}
           {/* Show static suggested questions on first load if no follow-ups yet */}
           {followUpQuestions.length === 0 && mode === 'chat' && messages.length <= 1 && suggestedQuestions.length > 0 && !isLoading && !isFetchingSuggestions && (
-            <div className="mb-4 max-h-[160px] overflow-y-auto flex flex-wrap gap-2 justify-center pr-1 scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent">
+            <div className="mb-4 max-h-[90px] overflow-y-auto flex flex-wrap gap-2 justify-center pr-1 scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent">
               {suggestedQuestions.map((q, i) => (
                 <motion.button
                   key={i}
@@ -240,8 +240,8 @@ export const ChatWindow = ({
                   onClick={() => { setChatInput(''); sendMessage(q); }}
                   className="px-4 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-center gap-2 group flex-shrink-0"
                 >
-                  <Sparkles className="w-3 h-3 group-hover:scale-110 transition-transform" />
-                  {q}
+                  <Sparkles className="w-3 h-3 group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span className="truncate max-w-[250px]">{q}</span>
                 </motion.button>
               ))}
             </div>

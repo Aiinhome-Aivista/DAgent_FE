@@ -384,8 +384,8 @@ export const DashboardKPIs = () => {
   );
 
   return (
-    <div className="flex flex-col gap-3 w-full">
-      <div className="flex justify-between items-center px-1">
+    <div className="flex flex-col gap-3 w-full h-full">
+      <div className="flex justify-between items-center px-1 shrink-0">
         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
           Key Metrics
         </h3>
@@ -404,11 +404,11 @@ export const DashboardKPIs = () => {
       {isLoading ? (
         renderSkeleton()
       ) : (
-        <div className="flex flex-col gap-3 w-full">
+        <div className="flex flex-col gap-3 w-full flex-1 min-h-0">
           {metrics.map((metric, index) => (
             <div
               key={index}
-              className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2"
+              className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center gap-2 flex-1"
             >
               <p
                 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5"
@@ -823,9 +823,10 @@ export const DashboardGraphs = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
+      {/* 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Map Placeholder */}
+        Map Placeholder
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[550px]">
           <div className="flex flex-col xl:flex-row xl:items-start justify-between mb-4 gap-4">
             <h3 className="text-lg font-bold text-slate-800 whitespace-nowrap">
@@ -885,8 +886,9 @@ export const DashboardGraphs = () => {
             />
           </div>
         </div>
+        */}
 
-        {/* YoY Growth Bar Chart */}
+        {/* YoY Growth Bar Chart 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[550px]">
           <h3 className="text-lg font-bold text-slate-800 mb-4">
             YoY Growth by Region
@@ -1019,7 +1021,9 @@ export const DashboardGraphs = () => {
             </ResponsiveContainer>
           </div>
         </div>
+        </div>
       </div>
+      */}
 
       {/* Year-wise Comparison Filterable Chart */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
@@ -1104,7 +1108,7 @@ export const DashboardGraphs = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
           <div className="flex flex-col xl:flex-row xl:items-start justify-between mb-4 gap-4">
             <h3 className="text-lg font-bold text-slate-800 whitespace-nowrap">

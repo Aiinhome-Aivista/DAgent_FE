@@ -29,7 +29,7 @@ interface AgentWorkflowProps {
 import { HistoryItemCard } from './HistoryItemCard';
 import { AgentStepper, getAgentIcon } from './AgentStepper';
 import { IngestDataView } from './IngestDataView';
-import { DashboardKPIs, graphPanelItems, GraphSidePanel } from '../../dashboard/components/DashboardCharts';
+import { DashboardKPIs, graphPanelItems, GraphSidePanel, DashboardGraphs } from '../../dashboard/components/DashboardCharts';
 
 const formatInsightsText = (text: string) => {
   if (typeof text !== 'string') return JSON.stringify(text, null, 2);
@@ -735,34 +735,41 @@ export const AgentWorkflow = ({
 
                   {selectedAgent.id === 'query' ? (
                     <div className="flex-1 flex overflow-hidden">
-                      {/* Chat - fills remaining space, no page scroll */}
-                      <div className="flex-1 min-w-0 flex flex-col">
-                        <ChatWindow
-                          initialMode="chat"
-                          initialMessage={initialChatMessage}
-                          onOpenDataSource={onChangeTab ? () => onChangeTab('connectors') : undefined}
-                          onNewSessionCreated={onNewSessionCreated}
-                          sessionId={sessionId}
-                          workspaceName={workspaceName}
-                        />
+                      {/* Left Side: Split into Charts (upper) and Chat (lower) */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-4">
+                        {/* Upper portion: Charts */}
+                        <div className="flex-1 overflow-y-auto p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
+                          <DashboardGraphs />
+                        </div>
+                        {/* Lower portion: Chat */}
+                        <div className="h-[45%] min-h-[350px] shrink-0 flex flex-col">
+                          <ChatWindow
+                            initialMode="chat"
+                            initialMessage={initialChatMessage}
+                            onOpenDataSource={onChangeTab ? () => onChangeTab('connectors') : undefined}
+                            onNewSessionCreated={onNewSessionCreated}
+                            sessionId={sessionId}
+                            workspaceName={workspaceName}
+                          />
+                        </div>
                       </div>
 
                       {/* Right side strip - scrollable KPIs + Graph buttons */}
                       {!activeGraphId && (
                         <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                          <div className="p-3 space-y-3">
+                          <div className="p-3 flex flex-col h-full">
                           {/* KPIs */}
                           <DashboardKPIs />
 
                           {/* Divider */}
-                          <div className="flex items-center gap-2 pt-1">
+                          {/* <div className="flex items-center gap-2 pt-1">
                             <div className="flex-1 h-px bg-slate-200" />
                             <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Charts</span>
                             <div className="flex-1 h-px bg-slate-200" />
-                          </div>
+                          </div> */}
 
                           {/* Graph icon buttons */}
-                          <div className="space-y-1.5">
+                          {/* <div className="space-y-1.5">
                             {graphPanelItems.map(item => (
                               <button
                                 key={item.id}
@@ -781,7 +788,7 @@ export const AgentWorkflow = ({
                                 </span>
                               </button>
                             ))}
-                          </div>
+                          </div> */}
                         </div>
                         </div>
                       )}

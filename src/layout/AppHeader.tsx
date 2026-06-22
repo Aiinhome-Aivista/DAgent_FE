@@ -8,7 +8,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, selectedConnect
   const { userName } = useAuthContext();
   const getTabTitle = () => {
     switch (activeTab) {
-      case 'chat': return 'Query';
+      case 'chat': return 'EngageMent Zone';
       case 'new-connector': return 'Add Connector';
       case 'collection': return 'Import';
       case 'analysis': return 'Process';
@@ -20,7 +20,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, selectedConnect
   const getTabSubtitle = () => {
     switch (activeTab) {
       case 'chat':
-        return 'Ask anything to analyze your data and get insights';
+        return '';
       case 'new-connector':
         return `Set up connection for ${selectedConnector?.name || 'new server'} with DAgent Guide`;
       case 'collection':
