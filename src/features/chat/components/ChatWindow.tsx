@@ -19,6 +19,7 @@ import {
   Loader2,
   ChevronDown,
   ChevronRight,
+  Minus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect } from "react";
@@ -33,6 +34,7 @@ interface ChatWindowProps {
   onNewSessionCreated?: () => void;
   sessionId?: string;
   workspaceName?: string;
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 
 export const ChatWindow = ({
@@ -44,6 +46,7 @@ export const ChatWindow = ({
   onNewSessionCreated,
   sessionId,
   workspaceName,
+  onCollapseChange,
 }: ChatWindowProps) => {
   const {
     messages,
@@ -61,6 +64,7 @@ export const ChatWindow = ({
   const [isLoadingConnectors, setIsLoadingConnectors] = useState(true);
   const [chatInput, setChatInput] = useState("");
   const [chatSessionName, setChatSessionName] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     setChatSessionName(localStorage.getItem("selected_query_session_name"));
@@ -76,12 +80,19 @@ export const ChatWindow = ({
   }, [mode]);
 
   return (
-    <Card className="flex flex-col h-full shadow-2xl shadow-black/20 border-[var(--border)] overflow-hidden bg-[var(--surface)]/30 backdrop-blur-xl">
+    <Card className={`flex flex-col shadow-2xl shadow-black/20 border-[var(--border)] overflow-hidden bg-[var(--surface)]/30 backdrop-blur-xl transition-all duration-300 ${isCollapsed ? 'mt-auto' : 'h-full flex-1'}`}>
       <CardHeader className="flex flex-row items-center justify-between py-1.5 px-3 bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] relative z-30 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-[10px] bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20 shadow-inner">
-            <Sparkles className="w-3.5 h-3.5" />
-          </div>
+          <button 
+            onClick={() => {
+              const newState = !isCollapsed;
+              setIsCollapsed(newState);
+              if (onCollapseChange) onCollapseChange(newState);
+            }}
+            className="w-6 h-6 rounded-[10px] bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center text-slate-800 border border-slate-200 shadow-inner cursor-pointer"
+          >
+            {isCollapsed ? <Plus className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
+          </button>
           <div className="flex items-center gap-3">
             <h3 className="font-black text-base tracking-tight leading-none">
               Speak to your data
@@ -105,12 +116,13 @@ export const ChatWindow = ({
         </div>
       </CardHeader>
 
-      <div
-        className={`flex-1 flex min-h-0 ${mode === "chat" ? "flex-row" : "flex-col"}`}
-      >
+      {!isCollapsed && (
         <div
-          className={`flex flex-col min-w-0 ${mode === "chat" ? "w-2/3 border-r border-[var(--border)]" : "w-full h-full"}`}
+          className={`flex-1 flex min-h-0 ${mode === "chat" ? "flex-row" : "flex-col"}`}
         >
+          <div
+            className={`flex flex-col min-w-0 ${mode === "chat" ? "w-2/3 border-r border-[var(--border)]" : "w-full h-full"}`}
+          >
           <CardContent
             ref={scrollRef}
             className="flex-1 h-full overflow-y-auto px-3 scroll-smooth space-y-1 bg-[var(--bg)]/10 relative"
@@ -266,8 +278,8 @@ export const ChatWindow = ({
 
         {/* Right Column: Critical Insights (1/3 width, only in chat mode) */}
         {mode === "chat" && (
-          <div className="w-1/3 bg-[var(--surface)]/50 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent flex flex-col relative z-30">
-            <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+          <div className="w-1/3 bg-[var(--surface)]/50 p-4 flex flex-col relative z-30 min-h-0">
+            <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] mb-3 flex items-center gap-2 flex-shrink-0">
               <Sparkles className="w-3 h-3 text-[var(--accent)]" /> Critical
               Insights
             </h4>
@@ -279,7 +291,7 @@ export const ChatWindow = ({
               </div>
             )}
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--border)] scrollbar-track-transparent flex-1 pr-2">
               {followUpQuestions.length > 0 &&
                 !isLoading &&
                 !isFetchingSuggestions &&
@@ -293,7 +305,7 @@ export const ChatWindow = ({
                       setChatInput("");
                       sendMessage(q);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
+                    className="cursor-pointer w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
                   >
                     {q}
                   </motion.button>
@@ -314,7 +326,7 @@ export const ChatWindow = ({
                       setChatInput("");
                       sendMessage(q);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
+                    className="cursor-pointer w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
                   >
                     {q}
                   </motion.button>
@@ -323,6 +335,7 @@ export const ChatWindow = ({
           </div>
         )}
       </div>
+      )}
     </Card>
   );
 };

@@ -130,6 +130,7 @@ export const AgentWorkflow = ({
   const [selectedAgentId, setSelectedAgentId] = useState<string>(defaultAgentId);
   const [isLoading, setIsLoading] = useState(true);
   const [activeGraphId, setActiveGraphId] = useState<string | null>(null);
+  const [chatCollapsed, setChatCollapsed] = useState(false);
 
   useEffect(() => {
     setSelectedAgentId(defaultAgentId);
@@ -742,7 +743,7 @@ export const AgentWorkflow = ({
                           <DashboardGraphs />
                         </div>
                         {/* Lower portion: Chat */}
-                        <div className="h-[45%] min-h-[350px] shrink-0 flex flex-col">
+                        <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? 'h-auto' : 'h-[45%] min-h-[350px]'}`}>
                           <ChatWindow
                             initialMode="chat"
                             initialMessage={initialChatMessage}
@@ -750,6 +751,7 @@ export const AgentWorkflow = ({
                             onNewSessionCreated={onNewSessionCreated}
                             sessionId={sessionId}
                             workspaceName={workspaceName}
+                            onCollapseChange={setChatCollapsed}
                           />
                         </div>
                       </div>
