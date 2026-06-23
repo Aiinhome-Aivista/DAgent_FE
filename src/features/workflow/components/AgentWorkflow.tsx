@@ -739,7 +739,7 @@ export const AgentWorkflow = ({
                       {/* Left Side: Split into Charts (upper) and Chat (lower) */}
                       <div className="flex-1 min-w-0 flex flex-col gap-4">
                         {/* Upper portion: Charts */}
-                        <div className="flex-1 overflow-y-auto p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
                           <DashboardGraphs />
                         </div>
                         {/* Lower portion: Chat */}

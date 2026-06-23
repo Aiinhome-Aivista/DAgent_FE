@@ -114,4 +114,26 @@
     background: var(--text-secondary);
     opacity: 0.4;
   }
+
+  .custom-h-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .custom-h-scrollbar::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .custom-h-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-h-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  .custom-h-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
 }

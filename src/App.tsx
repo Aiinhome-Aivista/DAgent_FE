@@ -389,7 +389,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen flex text-[var(--text-primary)]">
+    <div className="h-screen flex overflow-hidden text-[var(--text-primary)]">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -427,7 +427,7 @@ function AppContent() {
       />
 
       <main
-        className="flex-1"
+        className="flex-1 flex flex-col overflow-hidden h-screen"
         style={{ marginLeft: isSidebarOpen ? 280 : 80 }}
       >
         <AppHeader

@@ -55,7 +55,10 @@ export const COLORS = [
 ];
 
 const FilterSelect = ({ label, value, onChange, options, defaultLabel = "All" }: { label: string, value: string | number, onChange: (e: any) => void, options: (string | number)[], defaultLabel?: string }) => (
-  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors focus-within:border-slate-300 focus-within:shadow-sm">
+  <div 
+    className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 hover:bg-slate-50 transition-colors focus-within:border-slate-300 focus-within:shadow-sm"
+    style={{ minWidth: "130px", flexShrink: 0 }}
+  >
     <span className="text-xs text-slate-400 font-medium whitespace-nowrap">{label}:</span>
     <select
       value={value}
@@ -1065,7 +1068,7 @@ export const DashboardGraphs = () => {
             fill={getYearColor(year)}
             name={`${year}`}
             radius={[4, 4, 0, 0]}
-            barSize={8}
+            barSize={22}
           />
         ))}
       </BarChart>
@@ -1073,7 +1076,7 @@ export const DashboardGraphs = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 overflow-x-hidden">
       {/* 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         Map Placeholder
@@ -1282,20 +1285,23 @@ export const DashboardGraphs = () => {
             {yearComparisonTitle}
           </h3>
 
-          <div className="flex flex-nowrap items-center gap-3 md:gap-4 overflow-x-auto pb-2 w-full md:w-auto scrollbar-hide">
+          <div 
+            className="flex flex-nowrap items-center gap-3 md:gap-4 overflow-x-auto pb-2 w-full md:w-auto custom-h-scrollbar"
+            style={{ minWidth: 0 }}
+          >
             <FilterSelect label="Zone" value={yearComparisonZone} onChange={(e) => setYearComparisonZone(e.target.value)} options={availableZones} />
             <FilterSelect label="Region" value={yearComparisonRegion} onChange={(e) => setYearComparisonRegion(e.target.value)} options={availableRegions} />
             <FilterSelect label="Month" value={yearComparisonMonth} onChange={(e) => setYearComparisonMonth(e.target.value)} options={availableMonths} />
             <FilterSelect label="Customer Type" value={yearComparisonCustomerType} onChange={(e) => setYearComparisonCustomerType(e.target.value)} options={availableCustomerTypes} />
 
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0" style={{ flexShrink: 0 }}>
               <span className="text-sm font-medium text-slate-400">Years</span>
-              <div className="flex items-center gap-1.5 min-h-[32px]">
+              <div className="flex items-center gap-1.5 min-h-[32px] shrink-0" style={{ flexShrink: 0 }}>
                 {isAvailableYearsLoading ? (
-                  <Loader2 className="w-4 h-4 text-slate-400 animate-spin mx-2" />
+                  <Loader2 className="w-4 h-4 text-slate-400 animate-spin mx-2 shrink-0" style={{ flexShrink: 0 }} />
                 ) : availableYears.length === 0 ? (
-                  <span className="text-xs text-slate-400 mx-2">
+                  <span className="text-xs text-slate-400 mx-2 shrink-0" style={{ flexShrink: 0 }}>
                     No years available
                   </span>
                 ) : (
@@ -1305,10 +1311,11 @@ export const DashboardGraphs = () => {
                       <button
                         key={year}
                         onClick={() => toggleYear(year)}
-                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${isSelected
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border shrink-0 ${isSelected
                           ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
                           : "border-transparent text-slate-500 hover:bg-slate-100"
                           }`}
+                        style={{ flexShrink: 0 }}
                       >
                         {year}
                       </button>
@@ -1318,9 +1325,9 @@ export const DashboardGraphs = () => {
               </div>
             </div>
 
-            <div className="w-px h-6 bg-slate-200 hidden md:block"></div>
+            <div className="w-px h-6 bg-slate-200 hidden md:block shrink-0" style={{ flexShrink: 0 }}></div>
 
-            <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
+            <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200 shrink-0" style={{ flexShrink: 0 }}>
               <button
                 onClick={() => setChartType("column")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "column"
@@ -1374,14 +1381,16 @@ export const DashboardGraphs = () => {
 
       <div className="grid grid-cols-1 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[450px]">
-          <div className="flex flex-col xl:flex-row xl:items-start justify-between mb-4 gap-4">
-            <h3 className="text-lg font-bold text-slate-800 whitespace-nowrap">
+          <div className="flex items-start justify-between mb-4 gap-4">
+            <h3 className="text-lg font-bold text-slate-800" style={{ flexShrink: 0 }}>
               {zoneChartTitle}
             </h3>
-            <div className="flex items-center gap-2 flex-wrap xl:justify-end">
+            <div 
+              className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-2 custom-h-scrollbar ml-auto"
+              style={{ minWidth: 0 }}
+            >
               <FilterSelect label="Year" value={zoneYear} onChange={(e) => setZoneYear(e.target.value)} options={filters.years} />
               <FilterSelect label="Month" value={zoneMonth} onChange={(e) => setZoneMonth(e.target.value)} options={filters.months} />
-
               <FilterSelect label="Product Type" value={zoneProductType} onChange={(e) => setZoneProductType(e.target.value)} options={filters.categories} />
               <FilterSelect label="Construction Type" value={zoneConstructionType} onChange={(e) => setZoneConstructionType(e.target.value)} options={filters.constructions} />
               <FilterSelect label="Tyre Type" value={zoneTyreType} onChange={(e) => setZoneTyreType(e.target.value)} options={filters.tyreTypes} />
@@ -1441,18 +1450,18 @@ export const DashboardGraphs = () => {
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[400px]">
-          <div className="flex flex-col xl:flex-row xl:items-start justify-between mb-4 gap-4">
-            <h3 className="text-lg font-bold text-slate-800 whitespace-nowrap">
+          <div className="flex items-start justify-between mb-4 gap-4">
+            <h3 className="text-lg font-bold text-slate-800" style={{ flexShrink: 0 }}>
               {tyreChartTitle}
             </h3>
-            <div className="flex items-center gap-2 flex-wrap xl:justify-end">
+            <div 
+              className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-2 custom-h-scrollbar ml-auto"
+              style={{ minWidth: 0 }}
+            >
               <FilterSelect label="Year" value={tyreYear} onChange={(e) => setTyreYear(e.target.value)} options={availableYears} />
-
               <FilterSelect label="Zone" value={tyreZone} onChange={(e) => setTyreZone(e.target.value)} options={availableZones} />
               <FilterSelect label="Region" value={tyreRegion} onChange={(e) => setTyreRegion(e.target.value)} options={availableRegions} />
-
               <FilterSelect label="Customer Category" value={tyreCustomerCategory} onChange={(e) => setTyreCustomerCategory(e.target.value)} options={availableCustomerTypes} />
-
               <FilterSelect label="Construction Type" value={tyreConstructionType} onChange={(e) => setTyreConstructionType(e.target.value)} options={availableConstructionTypes} />
             </div>
           </div>
@@ -1624,11 +1633,15 @@ const IndiaMapGraph = () => {
             <Download className="w-5 h-5" />
           </button>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div 
+          className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-2 w-full custom-h-scrollbar"
+          style={{ minWidth: 0 }}
+        >
           <select
             value={year}
             onChange={(e) => setYear(e.target.value)}
-            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
+            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none shrink-0"
+            style={{ flexShrink: 0, minWidth: "110px" }}
           >
             <option value="All">Year: All</option>
             <option value="2026">2026</option>
@@ -1640,7 +1653,8 @@ const IndiaMapGraph = () => {
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
+            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none shrink-0"
+            style={{ flexShrink: 0, minWidth: "110px" }}
           >
             <option value="All">Month: All</option>
             <option value="Jan">Jan</option>
@@ -1659,7 +1673,8 @@ const IndiaMapGraph = () => {
           <select
             value={region}
             onChange={(e) => setRegion(e.target.value)}
-            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
+            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none shrink-0"
+            style={{ flexShrink: 0, minWidth: "110px" }}
           >
             <option value="All">Region: All</option>
             <option value="North">North</option>
@@ -1830,11 +1845,15 @@ const ZonePieGraph = () => {
             <Download className="w-5 h-5" />
           </button>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div 
+          className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-2 w-full custom-h-scrollbar"
+          style={{ minWidth: 0 }}
+        >
           <select
             value={productType}
             onChange={(e) => setProductType(e.target.value)}
-            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
+            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none shrink-0"
+            style={{ flexShrink: 0, minWidth: "140px" }}
           >
             <option value="All">Product Type: All</option>
             <option value="Type A">Type A</option>
@@ -1843,7 +1862,8 @@ const ZonePieGraph = () => {
           <select
             value={constructionType}
             onChange={(e) => setConstructionType(e.target.value)}
-            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
+            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none shrink-0"
+            style={{ flexShrink: 0, minWidth: "150px" }}
           >
             <option value="All">Construction Type: All</option>
             <option value="Radial">Radial</option>
@@ -1852,7 +1872,8 @@ const ZonePieGraph = () => {
           <select
             value={tyreType}
             onChange={(e) => setTyreType(e.target.value)}
-            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none"
+            className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer flex-1 sm:flex-none shrink-0"
+            style={{ flexShrink: 0, minWidth: "130px" }}
           >
             <option value="All">Tyre Type: All</option>
             <option value="TRUCK">TRUCK</option>
@@ -2187,11 +2208,11 @@ const YearComparisonGraph = () => {
         {/* <h3 className="text-base font-bold text-slate-800 whitespace-nowrap">
           Year-wise comparison
         </h3> */}
-        <div
-          className="flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-1"
-          style={{ scrollbarWidth: "none" }}
+        <div 
+          className="flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-1.5 custom-h-scrollbar w-full"
+          style={{ minWidth: 0 }}
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0" style={{ flexShrink: 0 }}>
             <span className="text-xs font-medium text-slate-400">Years</span>
             <div className="flex items-center gap-1">
               {availableYears.map((year) => {
@@ -2200,7 +2221,8 @@ const YearComparisonGraph = () => {
                   <button
                     key={year}
                     onClick={() => toggleYear(year)}
-                    className={`px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-xs font-bold rounded-lg transition-all border ${isSelected ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
+                    className={`px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-xs font-bold rounded-lg transition-all border shrink-0 ${isSelected ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
+                    style={{ flexShrink: 0 }}
                   >
                     {year}
                   </button>
@@ -2209,30 +2231,33 @@ const YearComparisonGraph = () => {
             </div>
           </div>
 
-          <div className="text-slate-300 text-xs">|</div>
+          <div className="text-slate-300 text-xs shrink-0" style={{ flexShrink: 0 }}>|</div>
 
-          <div className="flex items-center bg-slate-50 p-0.5 rounded-xl border border-slate-200">
+          <div 
+            className="flex items-center bg-slate-50 p-0.5 rounded-xl border border-slate-200 shrink-0"
+            style={{ flexShrink: 0 }}
+          >
             <button
               onClick={() => setChartType("column")}
-              className={`flex items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs font-bold transition-all ${chartType === "column" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              className={`flex items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs font-bold transition-all shrink-0 ${chartType === "column" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
             >
               <BarChart3 className="w-3 h-3" /> Column
             </button>
             <button
               onClick={() => setChartType("line")}
-              className={`flex items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs font-bold transition-all ${chartType === "line" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              className={`flex items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs font-bold transition-all shrink-0 ${chartType === "line" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
             >
               <LineChartIcon className="w-3 h-3" /> Line
             </button>
             <button
               onClick={() => setChartType("area")}
-              className={`flex items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs font-bold transition-all ${chartType === "area" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              className={`flex items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg text-[10px] md:text-xs font-bold transition-all shrink-0 ${chartType === "area" ? "bg-yellow-100 text-yellow-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
             >
               <AreaChartIcon className="w-3.5 h-3.5" /> Area
             </button>
           </div>
 
-          <div className="text-slate-300 text-xs hidden sm:block">|</div>
+          <div className="text-slate-300 text-xs hidden sm:block shrink-0">|</div>
         </div>
         <button
           onClick={handleDownload}
