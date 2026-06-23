@@ -54,6 +54,24 @@ export const COLORS = [
   "#93C47D",
 ];
 
+const FilterSelect = ({ label, value, onChange, options, defaultLabel = "All" }: { label: string, value: string | number, onChange: (e: any) => void, options: (string | number)[], defaultLabel?: string }) => (
+  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors focus-within:border-slate-300 focus-within:shadow-sm">
+    <span className="text-xs text-slate-400 font-medium whitespace-nowrap">{label}:</span>
+    <select
+      value={value}
+      onChange={onChange}
+      className="text-xs font-medium text-slate-700 bg-transparent outline-none cursor-pointer w-full"
+    >
+      <option value="All">{defaultLabel}</option>
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
 export const DashboardKPIs = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastQuery, setLastQuery] = useState({ question: "", answer: "" });
@@ -1265,54 +1283,10 @@ export const DashboardGraphs = () => {
           </h3>
 
           <div className="flex flex-nowrap items-center gap-3 md:gap-4 overflow-x-auto pb-2 w-full md:w-auto scrollbar-hide">
-            <select
-              value={yearComparisonZone}
-              onChange={(e) => setYearComparisonZone(e.target.value)}
-              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-            >
-              <option value="All">Zone: All</option>
-              {availableZones.map((z) => (
-                <option key={z} value={z}>
-                  {z}
-                </option>
-              ))}
-            </select>
-            <select
-              value={yearComparisonRegion}
-              onChange={(e) => setYearComparisonRegion(e.target.value)}
-              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-            >
-              <option value="All">Region: All</option>
-              {availableRegions.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-            <select
-              value={yearComparisonMonth}
-              onChange={(e) => setYearComparisonMonth(e.target.value)}
-              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-            >
-              <option value="All">Month: All</option>
-              {availableMonths.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <select
-              value={yearComparisonCustomerType}
-              onChange={(e) => setYearComparisonCustomerType(e.target.value)}
-              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-            >
-              <option value="All">Customer Type: All</option>
-              {availableCustomerTypes.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <FilterSelect label="Zone" value={yearComparisonZone} onChange={(e) => setYearComparisonZone(e.target.value)} options={availableZones} />
+            <FilterSelect label="Region" value={yearComparisonRegion} onChange={(e) => setYearComparisonRegion(e.target.value)} options={availableRegions} />
+            <FilterSelect label="Month" value={yearComparisonMonth} onChange={(e) => setYearComparisonMonth(e.target.value)} options={availableMonths} />
+            <FilterSelect label="Customer Type" value={yearComparisonCustomerType} onChange={(e) => setYearComparisonCustomerType(e.target.value)} options={availableCustomerTypes} />
 
 
             <div className="flex items-center gap-2">
@@ -1405,67 +1379,12 @@ export const DashboardGraphs = () => {
               {zoneChartTitle}
             </h3>
             <div className="flex items-center gap-2 flex-wrap xl:justify-end">
-              <select
-                value={zoneYear}
-                onChange={(e) => setZoneYear(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Year: All</option>
-                {filters.years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={zoneMonth}
-                onChange={(e) => setZoneMonth(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Month: All</option>
-                {filters.months.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+              <FilterSelect label="Year" value={zoneYear} onChange={(e) => setZoneYear(e.target.value)} options={filters.years} />
+              <FilterSelect label="Month" value={zoneMonth} onChange={(e) => setZoneMonth(e.target.value)} options={filters.months} />
 
-              <select
-                value={zoneProductType}
-                onChange={(e) => setZoneProductType(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Product Type: All</option>
-                {filters.categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={zoneConstructionType}
-                onChange={(e) => setZoneConstructionType(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Construction Type: All</option>
-                {filters.constructions.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={zoneTyreType}
-                onChange={(e) => setZoneTyreType(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Tyre Type: All</option>
-                {filters.tyreTypes.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <FilterSelect label="Product Type" value={zoneProductType} onChange={(e) => setZoneProductType(e.target.value)} options={filters.categories} />
+              <FilterSelect label="Construction Type" value={zoneConstructionType} onChange={(e) => setZoneConstructionType(e.target.value)} options={filters.constructions} />
+              <FilterSelect label="Tyre Type" value={zoneTyreType} onChange={(e) => setZoneTyreType(e.target.value)} options={filters.tyreTypes} />
             </div>
           </div>
           <div className="flex-1 min-h-0 flex items-center justify-center">
@@ -1527,69 +1446,14 @@ export const DashboardGraphs = () => {
               {tyreChartTitle}
             </h3>
             <div className="flex items-center gap-2 flex-wrap xl:justify-end">
-              <select
-                value={tyreYear}
-                onChange={(e) => setTyreYear(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Year: All</option>
-                {availableYears.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+              <FilterSelect label="Year" value={tyreYear} onChange={(e) => setTyreYear(e.target.value)} options={availableYears} />
 
-              <select
-                value={tyreZone}
-                onChange={(e) => setTyreZone(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Zone: All</option>
-                {availableZones.map((z) => (
-                  <option key={z} value={z}>
-                    {z}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={tyreRegion}
-                onChange={(e) => setTyreRegion(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Region: All</option>
-                {availableRegions.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
+              <FilterSelect label="Zone" value={tyreZone} onChange={(e) => setTyreZone(e.target.value)} options={availableZones} />
+              <FilterSelect label="Region" value={tyreRegion} onChange={(e) => setTyreRegion(e.target.value)} options={availableRegions} />
 
-              <select
-                value={tyreCustomerCategory}
-                onChange={(e) => setTyreCustomerCategory(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Customer Category: All</option>
-                {availableCustomerTypes.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <FilterSelect label="Customer Category" value={tyreCustomerCategory} onChange={(e) => setTyreCustomerCategory(e.target.value)} options={availableCustomerTypes} />
 
-              <select
-                value={tyreConstructionType}
-                onChange={(e) => setTyreConstructionType(e.target.value)}
-                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-              >
-                <option value="All">Construction Type: All</option>
-                {availableConstructionTypes.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <FilterSelect label="Construction Type" value={tyreConstructionType} onChange={(e) => setTyreConstructionType(e.target.value)} options={availableConstructionTypes} />
             </div>
           </div>
           <div className="flex-1 min-h-0">
