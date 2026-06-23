@@ -1313,20 +1313,7 @@ export const DashboardGraphs = () => {
                 </option>
               ))}
             </select>
-            <select
-              value={yearComparisonConstructionType}
-              onChange={(e) =>
-                setYearComparisonConstructionType(e.target.value)
-              }
-              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
-            >
-              <option value="All">Construction: All</option>
-              {availableConstructionTypes.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+
 
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-400">Years</span>
@@ -1345,8 +1332,8 @@ export const DashboardGraphs = () => {
                         key={year}
                         onClick={() => toggleYear(year)}
                         className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${isSelected
-                            ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
-                            : "border-transparent text-slate-500 hover:bg-slate-100"
+                          ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
+                          : "border-transparent text-slate-500 hover:bg-slate-100"
                           }`}
                       >
                         {year}
@@ -1363,8 +1350,8 @@ export const DashboardGraphs = () => {
               <button
                 onClick={() => setChartType("column")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "column"
-                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
@@ -1373,8 +1360,8 @@ export const DashboardGraphs = () => {
               <button
                 onClick={() => setChartType("line")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "line"
-                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 <LineChartIcon className="w-3.5 h-3.5" />
@@ -1383,8 +1370,8 @@ export const DashboardGraphs = () => {
               <button
                 onClick={() => setChartType("area")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartType === "area"
-                    ? "bg-yellow-100 text-yellow-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                  ? "bg-yellow-100 text-yellow-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 <AreaChartIcon className="w-3.5 h-3.5" />
