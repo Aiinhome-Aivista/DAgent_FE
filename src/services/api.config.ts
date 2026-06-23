@@ -42,7 +42,7 @@ export const API_ENDPOINTS = {
   DASHBOARD: {
     TYRE_SALES_DATA: '/tyre-sales-data',
     SALES_BY_ZONE: '/sales-by-zone',
-    FILTERS: '/dashboard-filters',
+    FILTERS: '/dashboard-filters/',
     YEAR_FILTER: '/available-years',
     YEAR_WISE_FILTER: '/year-wise-sales-comparison'
 

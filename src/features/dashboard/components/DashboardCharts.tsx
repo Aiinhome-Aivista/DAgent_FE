@@ -523,6 +523,7 @@ const useDashboardFilters = () => {
     const fetchFilters = async () => {
       try {
         const sessionId = localStorage.getItem('DAgent_session_id');
+        if (!sessionId || sessionId === "null") return;
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.FILTERS}?session_id=${sessionId}`);
         const data = await response.json();
         if (data.status === "success") {
@@ -545,10 +546,14 @@ const useDashboardFilters = () => {
 
 const useAvailableYears = () => {
   const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [isAvailableYearsLoading, setIsAvailableYearsLoading] = useState(true);
+
   useEffect(() => {
     const fetchAvaliableYears = async () => {
+      setIsAvailableYearsLoading(true);
       try {
         const sessionId = localStorage.getItem('DAgent_session_id');
+        if (!sessionId || sessionId === "null") return;
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.YEAR_FILTER}?session_id=${sessionId}`);
         const data = await response.json();
         if (data.status === "success") {
@@ -556,12 +561,14 @@ const useAvailableYears = () => {
         }
       } catch (err) {
         console.error("Failed to fetch available years:", err);
+      } finally {
+        setIsAvailableYearsLoading(false);
       }
     };
     fetchAvaliableYears();
   }, []);
 
-  return availableYears;
+  return { availableYears, isAvailableYearsLoading };
 };
 
 
@@ -571,11 +578,11 @@ const useAvailableYears = () => {
 
 export const DashboardGraphs = () => {
   const filters = useDashboardFilters();
-  const apiAvailableYears = useAvailableYears();
-  const [selectedYears, setSelectedYears] = useState<number[]>([2024, 2025]);
+  const { availableYears: apiAvailableYears, isAvailableYearsLoading } = useAvailableYears();
+  const [selectedYears, setSelectedYears] = useState<number[]>([]);
 
   useEffect(() => {
-    if (apiAvailableYears.length > 0) {
+    if (apiAvailableYears.length > 0 && selectedYears.length === 0) {
       setSelectedYears([apiAvailableYears[0]]);
     }
   }, [apiAvailableYears]);
@@ -584,11 +591,18 @@ export const DashboardGraphs = () => {
   const [tyreAxisLabels, setTyreAxisLabels] = useState({ x: "Sales (₹)", y: "Tyre Type" });
   const [tyreChartTitle, setTyreChartTitle] = useState("Top 10 Tyre Types by Sales");
 
+  const [tyreYear, setTyreYear] = useState("All");
+  const [tyreCustomerCategory, setTyreCustomerCategory] = useState("All");
+  const [tyreZone, setTyreZone] = useState("All");
+  const [tyreRegion, setTyreRegion] = useState("All");
+  const [tyreConstructionType, setTyreConstructionType] = useState("All");
+
   useEffect(() => {
     const fetchTyreData = async () => {
       setIsTyreLoading(true);
       try {
         const sessionId = localStorage.getItem('DAgent_session_id');
+        if (!sessionId || sessionId === "null") return;
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -639,6 +653,8 @@ export const DashboardGraphs = () => {
   const [zoneProductType, setZoneProductType] = useState("All");
   const [zoneConstructionType, setZoneConstructionType] = useState("All");
   const [zoneTyreType, setZoneTyreType] = useState("All");
+  const [zoneYear, setZoneYear] = useState("All");
+  const [zoneMonth, setZoneMonth] = useState("All");
   const [zoneData, setZoneData] = useState<any[]>([]);
   const [isZoneLoading, setIsZoneLoading] = useState(true);
   const [zoneAxisLabels, setZoneAxisLabels] = useState({ x: "Name", y: "Sales Value (₹)" });
@@ -649,6 +665,7 @@ export const DashboardGraphs = () => {
       setIsZoneLoading(true);
       try {
         const sessionId = localStorage.getItem('DAgent_session_id');
+        if (!sessionId || sessionId === "null") return;
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.SALES_BY_ZONE}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -656,7 +673,9 @@ export const DashboardGraphs = () => {
             session_id: sessionId,
             product_type: zoneProductType,
             construction_type: zoneConstructionType,
-            tyre_type: zoneTyreType
+            tyre_type: zoneTyreType,
+            year: zoneYear,
+            month: zoneMonth
           })
         });
         const data = await response.json();
@@ -687,12 +706,16 @@ export const DashboardGraphs = () => {
       }
     };
     fetchZoneData();
-  }, [zoneProductType, zoneConstructionType, zoneTyreType]);
+  }, [zoneProductType, zoneConstructionType, zoneTyreType, zoneYear, zoneMonth]);
 
   const [yearComparisonData, setYearComparisonData] = useState<any[]>([]);
-  const [isYearComparisonLoading, setIsYearComparisonLoading] = useState(false);
+  const [isYearComparisonLoading, setIsYearComparisonLoading] = useState(true);
   const [yearComparisonAxisLabels, setYearComparisonAxisLabels] = useState({ x: "Month", y: "Sales Value (₹)" });
-  const [yearComparisonTitle, setYearComparisonTitle] = useState("Year-wise comparison");
+  const [yearComparisonTitle, setYearComparisonTitle] = useState("");
+  const [yearComparisonZone, setYearComparisonZone] = useState("All");
+  const [yearComparisonRegion, setYearComparisonRegion] = useState("All");
+  const [yearComparisonMonth, setYearComparisonMonth] = useState("All");
+  const [yearComparisonCustomerType, setYearComparisonCustomerType] = useState("All");
 
   useEffect(() => {
     const fetchYearComparisonData = async () => {
@@ -700,6 +723,7 @@ export const DashboardGraphs = () => {
       setIsYearComparisonLoading(true);
       try {
         const sessionId = localStorage.getItem('DAgent_session_id');
+        if (!sessionId || sessionId === "null") return;
         const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.YEAR_WISE_FILTER}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -707,7 +731,11 @@ export const DashboardGraphs = () => {
             session_id: sessionId,
             question: "Year-wise Sales Comparison",
             user_id: 22,
-            selected_years: selectedYears
+            selected_years: selectedYears,
+            zone: yearComparisonZone,
+            region: yearComparisonRegion,
+            month: yearComparisonMonth,
+            customer_type: yearComparisonCustomerType
           })
         });
         const data = await response.json();
@@ -740,13 +768,13 @@ export const DashboardGraphs = () => {
       }
     };
     fetchYearComparisonData();
-  }, [selectedYears]);
+  }, [selectedYears, yearComparisonZone, yearComparisonRegion, yearComparisonMonth, yearComparisonCustomerType]);
 
   const [mapYear, setMapYear] = useState("All");
   const [mapMonth, setMapMonth] = useState("All");
   const [mapRegion, setMapRegion] = useState("All");
 
-  const availableYears = apiAvailableYears.length > 0 ? apiAvailableYears : [2022, 2023, 2024, 2025, 2026];
+  const availableYears = apiAvailableYears;
 
   // Dynamic colors for different years to ensure they are visually distinct
   const yearColors: Record<number, string> = {
@@ -1082,26 +1110,85 @@ export const DashboardGraphs = () => {
             {yearComparisonTitle}
           </h3>
 
-          <div className="flex flex-wrap items-center gap-3 md:gap-4">
+          <div className="flex flex-nowrap items-center gap-3 md:gap-4 overflow-x-auto pb-2 w-full md:w-auto scrollbar-hide">
+            {/*
+            <select
+              value={yearComparisonZone}
+              onChange={(e) => setYearComparisonZone(e.target.value)}
+              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+            >
+              <option value="All">Zone: All</option>
+              <option value="North">North</option>
+              <option value="South">South</option>
+              <option value="East">East</option>
+              <option value="West">West</option>
+              <option value="Central">Central</option>
+            </select>
+            <select
+              value={yearComparisonRegion}
+              onChange={(e) => setYearComparisonRegion(e.target.value)}
+              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+            >
+              <option value="All">Region: All</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Bangalore">Bangalore</option>
+            </select>
+            <select
+              value={yearComparisonMonth}
+              onChange={(e) => setYearComparisonMonth(e.target.value)}
+              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+            >
+              <option value="All">Month: All</option>
+              <option value="Jan">Jan</option>
+              <option value="Feb">Feb</option>
+              <option value="Mar">Mar</option>
+              <option value="Apr">Apr</option>
+              <option value="May">May</option>
+              <option value="Jun">Jun</option>
+              <option value="Jul">Jul</option>
+              <option value="Aug">Aug</option>
+              <option value="Sep">Sep</option>
+              <option value="Oct">Oct</option>
+              <option value="Nov">Nov</option>
+              <option value="Dec">Dec</option>
+            </select>
+            <select
+              value={yearComparisonCustomerType}
+              onChange={(e) => setYearComparisonCustomerType(e.target.value)}
+              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+            >
+              <option value="All">Customer Type: All</option>
+              <option value="Retail">Retail</option>
+              <option value="Wholesale">Wholesale</option>
+            </select>
+            */}
+
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-400">Years</span>
-              <div className="flex items-center gap-1.5">
-                {availableYears.map((year) => {
-                  const isSelected = selectedYears.includes(year);
-                  return (
-                    <button
-                      key={year}
-                      onClick={() => toggleYear(year)}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
-                        isSelected
-                          ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
-                          : "border-transparent text-slate-500 hover:bg-slate-100"
-                      }`}
-                    >
-                      {year}
-                    </button>
-                  );
-                })}
+              <div className="flex items-center gap-1.5 min-h-[32px]">
+                {isAvailableYearsLoading ? (
+                  <Loader2 className="w-4 h-4 text-slate-400 animate-spin mx-2" />
+                ) : availableYears.length === 0 ? (
+                  <span className="text-xs text-slate-400 mx-2">No years available</span>
+                ) : (
+                  availableYears.map((year) => {
+                    const isSelected = selectedYears.includes(year);
+                    return (
+                      <button
+                        key={year}
+                        onClick={() => toggleYear(year)}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
+                          isSelected
+                            ? "border-yellow-200 bg-yellow-50 text-yellow-700 shadow-sm"
+                            : "border-transparent text-slate-500 hover:bg-slate-100"
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
 
@@ -1169,6 +1256,39 @@ export const DashboardGraphs = () => {
               {zoneChartTitle}
             </h3>
             <div className="flex items-center gap-2 flex-wrap xl:justify-end">
+              {/*
+              <select
+                value={zoneYear}
+                onChange={(e) => setZoneYear(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Year: All</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+              </select>
+              <select
+                value={zoneMonth}
+                onChange={(e) => setZoneMonth(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Month: All</option>
+                <option value="Jan">Jan</option>
+                <option value="Feb">Feb</option>
+                <option value="Mar">Mar</option>
+                <option value="Apr">Apr</option>
+                <option value="May">May</option>
+                <option value="Jun">Jun</option>
+                <option value="Jul">Jul</option>
+                <option value="Aug">Aug</option>
+                <option value="Sep">Sep</option>
+                <option value="Oct">Oct</option>
+                <option value="Nov">Nov</option>
+                <option value="Dec">Dec</option>
+              </select>
+              */}
               <select
                 value={zoneProductType}
                 onChange={(e) => setZoneProductType(e.target.value)}
@@ -1252,9 +1372,67 @@ export const DashboardGraphs = () => {
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[400px]">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">
-            {tyreChartTitle}
-          </h3>
+          <div className="flex flex-col xl:flex-row xl:items-start justify-between mb-4 gap-4">
+            <h3 className="text-lg font-bold text-slate-800 whitespace-nowrap">
+              {tyreChartTitle}
+            </h3>
+            <div className="flex items-center gap-2 flex-wrap xl:justify-end">
+              {/*
+              <select
+                value={tyreYear}
+                onChange={(e) => setTyreYear(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Year: All</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+              </select>
+              <select
+                value={tyreCustomerCategory}
+                onChange={(e) => setTyreCustomerCategory(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Customer Category: All</option>
+                <option value="Retail">Retail</option>
+                <option value="Wholesale">Wholesale</option>
+              </select>
+              <select
+                value={tyreZone}
+                onChange={(e) => setTyreZone(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Zone: All</option>
+                <option value="North">North</option>
+                <option value="South">South</option>
+                <option value="East">East</option>
+                <option value="West">West</option>
+                <option value="Central">Central</option>
+              </select>
+              <select
+                value={tyreRegion}
+                onChange={(e) => setTyreRegion(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Region: All</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Bangalore">Bangalore</option>
+              </select>
+              <select
+                value={tyreConstructionType}
+                onChange={(e) => setTyreConstructionType(e.target.value)}
+                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 outline-none cursor-pointer"
+              >
+                <option value="All">Construction Type: All</option>
+                <option value="Bias">Bias</option>
+                <option value="Radial">Radial</option>
+              </select>
+              */}
+            </div>
+          </div>
           <div className="flex-1 min-h-0">
             {isTyreLoading ? (
               <div className="flex items-center justify-center h-full">
