@@ -649,36 +649,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                       );
                                                     }}
                                                     className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer group flex items-center gap-3 ${
-                                                      (session.querySessionId &&
-                                                        localStorage.getItem("current_visit_number") ===
-                                                          String(session.querySessionId).replace("session_visit_", "").trim()) ||
-                                                      (session.querySessionName &&
-                                                        localStorage.getItem("selected_query_session_name") ===
-                                                          session.querySessionName)
+                                                      session.querySessionId &&
+                                                      localStorage.getItem("current_visit_number") ===
+                                                        String(session.querySessionId).replace("session_visit_", "").trim()
                                                         ? "border-[var(--accent)] bg-[var(--accent)]/10 shadow-sm"
                                                         : "border-[var(--border)] bg-[var(--bg)]/50 hover:bg-[var(--surface-hover)]"
                                                     }`}
                                                   >
                                                     <MessageSquare
                                                       className={`w-4 h-4 shrink-0 transition-colors ${
-                                                        (session.querySessionId &&
-                                                          localStorage.getItem("current_visit_number") ===
-                                                            String(session.querySessionId).replace("session_visit_", "").trim()) ||
-                                                        (session.querySessionName &&
-                                                          localStorage.getItem("selected_query_session_name") ===
-                                                            session.querySessionName)
+                                                        session.querySessionId &&
+                                                        localStorage.getItem("current_visit_number") ===
+                                                          String(session.querySessionId).replace("session_visit_", "").trim()
                                                           ? "text-[var(--accent)]"
                                                           : "text-[var(--text-secondary)] group-hover:text-[var(--accent)]"
                                                       }`}
                                                     />
                                                     <div
                                                       className={`text-[11px] font-semibold truncate transition-colors ${
-                                                        (session.querySessionId &&
-                                                          localStorage.getItem("current_visit_number") ===
-                                                            String(session.querySessionId).replace("session_visit_", "").trim()) ||
-                                                        (session.querySessionName &&
-                                                          localStorage.getItem("selected_query_session_name") ===
-                                                            session.querySessionName)
+                                                        session.querySessionId &&
+                                                        localStorage.getItem("current_visit_number") ===
+                                                          String(session.querySessionId).replace("session_visit_", "").trim()
                                                           ? "text-[var(--text-primary)]"
                                                           : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
                                                       }`}
