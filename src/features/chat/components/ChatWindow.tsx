@@ -64,7 +64,7 @@ export const ChatWindow = ({
   const [isLoadingConnectors, setIsLoadingConnectors] = useState(true);
   const [chatInput, setChatInput] = useState("");
   const [chatSessionName, setChatSessionName] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   useEffect(() => {
     setChatSessionName(localStorage.getItem("selected_query_session_name"));
