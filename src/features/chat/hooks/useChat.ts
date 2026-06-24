@@ -89,8 +89,6 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
         localStorage.setItem('current_visit_number', response.visit_number.toString());
       }
 
-      /*   console.log('Session Chat Response:', response); */
-
       const answerText = response?.answer || '';
       const followUps: string[] = response?.follow_up_questions || response?.suggested_questions || [];
 
@@ -110,11 +108,25 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
         detail: { question: content, answer: answerText }
       }));
 
-      if (isDefaultChat && onNewSessionCreated) {
-        // Trigger sidebar refresh so the new chat shows up and gets selected
-        setTimeout(() => {
-          onNewSessionCreated();
-        }, 500); // short delay to ensure DB transaction completes
+      if (isDefaultChat) {
+        // Update localStorage with the new session's data so the UI
+        // (header + sidebar) reflects the newly created query session
+        // instead of staying stuck on the old default.
+        const newSessionHistory = [{
+          question: content,
+          answer: answerText,
+          visualizations: response?.visualizations || [],
+          follow_up_questions: followUps
+        }];
+        localStorage.setItem('selected_query_session', JSON.stringify(newSessionHistory));
+        localStorage.setItem('selected_query_session_name', response?.query_session_name || content);
+
+        if (onNewSessionCreated) {
+          // Trigger sidebar refresh so the new chat shows up and gets selected
+          setTimeout(() => {
+            onNewSessionCreated();
+          }, 500); // short delay to ensure DB transaction completes
+        }
       }
     } catch (error) {
       console.error('Session Chat Error:', error);

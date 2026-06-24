@@ -68,7 +68,7 @@ export const ChatWindow = ({
 
   useEffect(() => {
     setChatSessionName(localStorage.getItem("selected_query_session_name"));
-  }, []);
+  }, [messages]);
 
   useEffect(() => {
     if (mode === "landing") {
