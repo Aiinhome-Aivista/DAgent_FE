@@ -171,6 +171,7 @@ function AppContent() {
   const handleLoginSuccess = () => {
     setViewMode('app');
     setIsWorkspaceOpen(false);
+    setSidebarOpen(false);
     const storedRoleName = localStorage.getItem('DAgent_role_name');
     setActiveTab(storedRoleName === 'Admin' ? 'admin' : 'chat');
   };
