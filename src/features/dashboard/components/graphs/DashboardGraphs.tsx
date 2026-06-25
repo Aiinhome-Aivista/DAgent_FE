@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
+import { chatHistoryService } from "../../../../services/chatHistory.service";
 import {
   Sparkles,
   ChevronDown,
@@ -49,20 +50,14 @@ const cleanParagraphText = (text: string) => {
   return cleaned.trim();
 };
 
-const parseSessionContent = () => {
+const parseSessionData = (session: any) => {
   try {
-    const storedSession = localStorage.getItem("selected_query_session");
-    const sessionName =
-      localStorage.getItem("selected_query_session_name") || "";
-
-    if (!storedSession) {
-      return null;
-    }
-
-    const history = JSON.parse(storedSession);
+    const history = session.querySessionHistory;
     if (!Array.isArray(history) || history.length === 0) {
       return null;
     }
+
+    const sessionName = session.querySessionName || "";
 
     // Find the first turn with an assistant answer
     const firstTurn = history.find((turn: any) => turn.answer);
@@ -72,7 +67,7 @@ const parseSessionContent = () => {
 
     const rawAnswer = firstTurn.answer;
     const lines = rawAnswer.split("\n").map((l: string) => l.trim());
-
+    
     let title = "";
     let titleIndex = -1;
 
@@ -204,7 +199,7 @@ const parseSessionContent = () => {
       timeBadge,
     };
   } catch (e) {
-    console.error("Error parsing query session summary:", e);
+    console.error("Error parsing query session data:", e);
     return null;
   }
 };
@@ -281,8 +276,71 @@ const renderSectionItems = (items: string[]) => {
 
 const SummaryCard = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [parsedData, setParsedData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const parsedData = useMemo(() => parseSessionContent(), []);
+  useEffect(() => {
+    let active = true;
+    const fetchDefaultSession = async () => {
+      setLoading(true);
+      try {
+        const sessionId = localStorage.getItem("DAgent_session_id");
+        const userIdStr = localStorage.getItem("DAgent_user_id");
+        if (!sessionId || !userIdStr) {
+          if (active) {
+            setParsedData(null);
+            setLoading(false);
+          }
+          return;
+        }
+        const userId = parseInt(userIdStr, 10);
+        
+        const response = await chatHistoryService.getSessionChatHistory(sessionId, userId);
+        if (response && response.status === "success" && response.querySessions) {
+          // Find the default session (name starts with "default_")
+          const defaultSession = response.querySessions.find(
+            (s: any) => s.querySessionName && s.querySessionName.toLowerCase().startsWith("default_")
+          );
+          
+          if (defaultSession) {
+            const data = parseSessionData(defaultSession);
+            if (active) {
+              setParsedData(data);
+            }
+          } else {
+            if (active) setParsedData(null);
+          }
+        } else {
+          if (active) setParsedData(null);
+        }
+      } catch (err) {
+        console.error("Failed to load default query session:", err);
+        if (active) setParsedData(null);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    fetchDefaultSession();
+
+    const handleSessionUpdate = () => {
+      fetchDefaultSession();
+    };
+
+    window.addEventListener("session-id-updated", handleSessionUpdate);
+    window.addEventListener("storage", handleSessionUpdate);
+
+    return () => {
+      active = false;
+      window.removeEventListener("session-id-updated", handleSessionUpdate);
+      window.removeEventListener("storage", handleSessionUpdate);
+    };
+  }, []);
+
+  if (loading) {
+    return null;
+  }
+
   if (!parsedData) return null;
 
   const { title, sections, sectionTitles, badge, timeBadge } = parsedData;
