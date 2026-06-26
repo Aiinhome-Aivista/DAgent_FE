@@ -12,7 +12,7 @@ import {
   Cell,
 } from "recharts";
 import { COLORS } from "./mockData";
-import { FilterSelect, useAvailableYears } from "./dashboardHooks";
+import { FilterSelect, useAvailableYears, useSessionId } from "./dashboardHooks";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
 export const TyreSalesChartDynamic = () => {
@@ -23,6 +23,8 @@ export const TyreSalesChartDynamic = () => {
     availableCustomerTypes,
     availableConstructionTypes,
   } = useAvailableYears();
+
+  const sessionId = useSessionId();
 
   const [tyreData, setTyreData] = useState<any[]>([]);
   const [isTyreLoading, setIsTyreLoading] = useState(true);
@@ -44,9 +46,11 @@ export const TyreSalesChartDynamic = () => {
     const fetchTyreData = async () => {
       setIsTyreLoading(true);
       try {
-        const sessionId = localStorage.getItem("DAgent_session_id");
         const userId = localStorage.getItem("DAgent_user_id");
-        if (!sessionId || sessionId === "null") return;
+        if (!sessionId || sessionId === "null") {
+          setIsTyreLoading(false);
+          return;
+        }
         const response = await fetch(
           `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.TYRE_SALES_DATA}`,
           {
@@ -115,6 +119,7 @@ export const TyreSalesChartDynamic = () => {
     tyreZone,
     tyreRegion,
     tyreConstructionType,
+    sessionId,
   ]);
 
   return (
@@ -166,6 +171,10 @@ export const TyreSalesChartDynamic = () => {
         {isTyreLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          </div>
+        ) : tyreData.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-slate-400 font-medium text-sm">
+            No data available.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

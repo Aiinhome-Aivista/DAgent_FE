@@ -8,11 +8,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { COLORS } from "./mockData";
-import { FilterSelect, useDashboardFilters } from "./dashboardHooks";
+import { FilterSelect, useDashboardFilters, useSessionId } from "./dashboardHooks";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
 export const ZonePieChartDynamic = () => {
   const filters = useDashboardFilters();
+  const sessionId = useSessionId();
 
   const [zoneProductType, setZoneProductType] = useState("All");
   const [zoneConstructionType, setZoneConstructionType] = useState("All");
@@ -31,8 +32,10 @@ export const ZonePieChartDynamic = () => {
     const fetchZoneData = async () => {
       setIsZoneLoading(true);
       try {
-        const sessionId = localStorage.getItem("DAgent_session_id");
-        if (!sessionId || sessionId === "null") return;
+        if (!sessionId || sessionId === "null") {
+          setIsZoneLoading(false);
+          return;
+        }
         const response = await fetch(
           `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.SALES_BY_ZONE}`,
           {
@@ -91,6 +94,7 @@ export const ZonePieChartDynamic = () => {
     zoneTyreType,
     zoneYear,
     zoneMonth,
+    sessionId,
   ]);
 
   return (
@@ -141,6 +145,10 @@ export const ZonePieChartDynamic = () => {
       <div className="flex-1 min-h-0 flex items-center justify-center">
         {isZoneLoading ? (
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        ) : zoneData.length === 0 ? (
+          <div className="text-slate-400 font-medium text-sm">
+            No data available.
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

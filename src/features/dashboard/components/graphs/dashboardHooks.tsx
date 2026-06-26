@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
+export const useSessionId = () => {
+  const [sessionId, setSessionId] = useState<string | null>(
+    localStorage.getItem("DAgent_session_id")
+  );
+
+  useEffect(() => {
+    const handleSessionIdUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail?.sessionId) {
+        setSessionId(customEvent.detail.sessionId);
+      }
+    };
+    window.addEventListener("session-id-updated", handleSessionIdUpdated);
+    return () =>
+      window.removeEventListener("session-id-updated", handleSessionIdUpdated);
+  }, []);
+
+  return sessionId;
+};
+
 export const FilterSelect = ({
   label,
   value,
@@ -37,6 +57,7 @@ export const FilterSelect = ({
 );
 
 export const useDashboardFilters = () => {
+  const sessionId = useSessionId();
   const [filters, setFilters] = useState<{
     categories: string[];
     constructions: string[];
@@ -54,7 +75,6 @@ export const useDashboardFilters = () => {
   useEffect(() => {
     const fetchFilters = async () => {
       try {
-        const sessionId = localStorage.getItem("DAgent_session_id");
         if (!sessionId || sessionId === "null") return;
         const response = await fetch(
           `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.FILTERS}?session_id=${sessionId}`,
@@ -74,12 +94,13 @@ export const useDashboardFilters = () => {
       }
     };
     fetchFilters();
-  }, []);
+  }, [sessionId]);
 
   return filters;
 };
 
 export const useAvailableYears = () => {
+  const sessionId = useSessionId();
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [availableZones, setAvailableZones] = useState<string[]>([]);
   const [availableRegions, setAvailableRegions] = useState<string[]>([]);
@@ -96,19 +117,20 @@ export const useAvailableYears = () => {
     const fetchAvaliableYears = async () => {
       setIsAvailableYearsLoading(true);
       try {
-        const sessionId = localStorage.getItem("DAgent_session_id");
-        if (!sessionId || sessionId === "null") return;
-        const response = await fetch(
-          `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.YEAR_FILTER}?session_id=${sessionId}`,
-        );
-        const data = await response.json();
-        if (data.status === "success") {
-          setAvailableYears(data.years || []);
-          setAvailableZones(data.zones || []);
-          setAvailableRegions(data.regions || []);
-          setAvailableMonths(data.months || []);
-          setAvailableCustomerTypes(data.customer_types || []);
-          setAvailableConstructionTypes(data.construction_types || []);
+        if (sessionId && sessionId !== "null") {
+          const response = await fetch(
+            `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.YEAR_FILTER}?session_id=${sessionId}`,
+          );
+          const data = await response.json();
+
+          if (data.status === "success") {
+            setAvailableYears(data.years || []);
+            setAvailableZones(data.zones || []);
+            setAvailableRegions(data.regions || []);
+            setAvailableMonths(data.months || []);
+            setAvailableCustomerTypes(data.customer_types || []);
+            setAvailableConstructionTypes(data.construction_types || []);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch available years and filters:", err);
@@ -117,7 +139,7 @@ export const useAvailableYears = () => {
       }
     };
     fetchAvaliableYears();
-  }, []);
+  }, [sessionId]);
 
   return {
     availableYears,

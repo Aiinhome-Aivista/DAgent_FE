@@ -20,7 +20,7 @@ import {
   Area,
   Label,
 } from "recharts";
-import { FilterSelect, useAvailableYears } from "./dashboardHooks";
+import { FilterSelect, useAvailableYears, useSessionId } from "./dashboardHooks";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
 export const YearComparisonChartDynamic = () => {
@@ -32,6 +32,8 @@ export const YearComparisonChartDynamic = () => {
     availableCustomerTypes,
     isAvailableYearsLoading,
   } = useAvailableYears();
+
+  const sessionId = useSessionId();
 
   const [selectedYears, setSelectedYears] = useState<number[]>([]);
   const [chartType, setChartType] = useState<"column" | "line" | "area">(
@@ -61,12 +63,17 @@ export const YearComparisonChartDynamic = () => {
 
   useEffect(() => {
     const fetchYearComparisonData = async () => {
-      if (selectedYears.length === 0) return;
+      if (selectedYears.length === 0) {
+        setIsYearComparisonLoading(false);
+        return;
+      }
       setIsYearComparisonLoading(true);
       try {
-        const sessionId = localStorage.getItem("DAgent_session_id");
         const userId = localStorage.getItem("DAgent_user_id");
-        if (!sessionId || sessionId === "null") return;
+        if (!sessionId || sessionId === "null") {
+          setIsYearComparisonLoading(false);
+          return;
+        }
         const response = await fetch(
           `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.YEAR_WISE_FILTER}`,
           {
@@ -158,6 +165,7 @@ export const YearComparisonChartDynamic = () => {
     yearComparisonMonth,
     yearComparisonCustomerType,
     yearComparisonConstructionType,
+    sessionId,
   ]);
 
   const yearColors: Record<number, string> = {
@@ -430,6 +438,10 @@ export const YearComparisonChartDynamic = () => {
         ) : selectedYears.length === 0 ? (
           <div className="h-full flex items-center justify-center text-slate-400 font-medium text-sm">
             Please select at least one year to view the comparison.
+          </div>
+        ) : yearComparisonData.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-slate-400 font-medium text-sm">
+            No data available.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
