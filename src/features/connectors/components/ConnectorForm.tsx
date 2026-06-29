@@ -330,18 +330,18 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
   const guide = activeField ? GUIDES[activeField] : null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-2 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start h-full min-h-0 pb-4">
+      <div className="lg:col-span-2 flex flex-col h-full min-h-0">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-4 group"
+          className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-4 group shrink-0"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Connectors
         </button>
 
-        <Card className="border-[var(--border)] shadow-xl">
-          <CardHeader className="border-b border-[var(--border)] p-6">
+        <Card className="border-[var(--border)] shadow-xl flex flex-col min-h-0 flex-1">
+          <CardHeader className="border-b border-[var(--border)] p-6 shrink-0">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
                 {isWebSearch ? (
@@ -375,7 +375,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-8 space-y-6">
+          <CardContent className="p-8 space-y-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {errorMsg && (
               <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium text-center">
                 {errorMsg}

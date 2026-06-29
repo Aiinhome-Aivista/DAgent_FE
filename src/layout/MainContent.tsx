@@ -51,6 +51,7 @@ export const MainContent: React.FC<MainContentProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
+            className="h-[calc(100vh-5.5rem)] flex flex-col"
           >
             <ConnectorForm
               onBack={handleBackToConnectors}
