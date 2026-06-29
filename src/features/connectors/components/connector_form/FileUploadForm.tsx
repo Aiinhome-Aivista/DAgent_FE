@@ -86,7 +86,7 @@ export const FileUploadForm = ({
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar"
+          className="space-y-2"
         >
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest">
