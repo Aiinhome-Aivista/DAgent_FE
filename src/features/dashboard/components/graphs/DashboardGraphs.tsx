@@ -337,7 +337,7 @@ const SummaryCard = () => {
     };
   }, []);
 
-  if (loading) {
+  if (loading && !parsedData) {
     return null;
   }
 

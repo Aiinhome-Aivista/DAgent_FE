@@ -29,7 +29,9 @@ export const IngestDataView = ({
   // Handle potential nested data property and inconsistent keys for DB views
   const data = connectorResults?.data || connectorResults || {};
   const summary = data?.summary;
-  const tables = data?.tables || [];
+  const rawTables = data?.tables || [];
+  // Deduplicate tables by name (keeping the latest occurrence)
+  const tables = Array.from(new Map(rawTables.map((t: any) => [t.table, t])).values()) as any[];
   const dataSize = summary?.data_size_mb || summary?.['data size mb'] || 0;
 
   const databases = sessionSources?.external_databases?.databases ||
