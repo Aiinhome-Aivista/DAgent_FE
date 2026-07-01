@@ -123,11 +123,11 @@ export const ChatWindow = ({
           className={`flex-1 flex min-h-0 ${mode === "chat" ? "flex-row" : "flex-col"}`}
         >
           <div
-            className={`flex flex-col min-w-0 ${mode === "chat" ? "w-2/3 border-r border-[var(--border)]" : "w-full h-full"}`}
+            className={`flex flex-col min-w-0 min-h-0 ${mode === "chat" ? "w-2/3 border-r border-[var(--border)]" : "w-full h-full"}`}
           >
           <CardContent
             ref={scrollRef}
-            className="flex-1 h-full overflow-y-auto px-3 scroll-smooth space-y-1 bg-[var(--bg)]/10 relative"
+            className="flex-1 min-h-0 overflow-y-auto px-3 scroll-smooth space-y-1 bg-[var(--bg)]/10 relative"
           >
             <AnimatePresence mode="wait">
               {mode === "landing" ? (
@@ -262,7 +262,7 @@ export const ChatWindow = ({
             </AnimatePresence>
           </CardContent>
 
-          <CardFooter className="bg-[var(--surface)]/80 backdrop-blur-md border-t border-[var(--border)] relative z-30 w-full min-w-0">
+          <CardFooter className="bg-[var(--surface)]/80 backdrop-blur-md border-t border-[var(--border)] relative z-30 w-full min-w-0 shrink-0">
             <div className="w-full px-3 min-w-0 flex flex-col justify-center py-3">
               <ChatInput
                 value={chatInput}
