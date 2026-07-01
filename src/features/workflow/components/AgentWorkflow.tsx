@@ -928,6 +928,7 @@ interface AgentWorkflowProps {
   initialChatMessage?: string;
   sessionId?: string;
   workspaceName?: string;
+  chatKey?: number;
 }
 
 import { HistoryItemCard } from './HistoryItemCard';
@@ -1011,7 +1012,8 @@ export const AgentWorkflow = ({
   onNewSessionCreated,
   initialChatMessage,
   sessionId,
-  workspaceName
+  workspaceName,
+  chatKey
 }: AgentWorkflowProps) => {
   const {
     selectedConnector: activeConnector,
@@ -1661,6 +1663,7 @@ export const AgentWorkflow = ({
                             sessionId={sessionId}
                             workspaceName={workspaceName}
                             onCollapseChange={setChatCollapsed}
+                            chatKey={chatKey}
                           />
                         </div>
                       </div>

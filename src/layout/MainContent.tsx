@@ -1,9 +1,9 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { AgentWorkflow } from '../features/workflow';
-import { ConnectorForm } from '../features/connectors';
-import { AdminPanel } from '../features/admin';
-import { MainContentProps } from '../types/layout';
+import React from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { AgentWorkflow } from "../features/workflow";
+import { ConnectorForm } from "../features/connectors";
+import { AdminPanel } from "../features/admin";
+import { MainContentProps } from "../types/layout";
 
 export const MainContent: React.FC<MainContentProps> = ({
   activeTab,
@@ -19,12 +19,14 @@ export const MainContent: React.FC<MainContentProps> = ({
   handleCreateWorkspaceFromSummary,
   onNewSessionCreated,
   sessionId,
-  workspaceName
+  workspaceName,
 }) => {
   return (
-    <div className={`p-2 w-full flex-1 min-h-0 overflow-hidden ${activeTab === 'chat' ? 'max-w-none' : 'max-w-6xl mx-auto'}`}>
+    <div
+      className={`p-2 w-full flex-1 min-h-0 overflow-hidden ${activeTab === "chat" ? "max-w-none" : "max-w-6xl mx-auto"}`}
+    >
       <AnimatePresence mode="wait">
-        {activeTab === 'chat' ? (
+        {activeTab === "chat" ? (
           <motion.div
             key="chat"
             initial={{ opacity: 0, x: 20 }}
@@ -34,7 +36,7 @@ export const MainContent: React.FC<MainContentProps> = ({
             className="h-[calc(100vh-5.5rem)]"
           >
             <AgentWorkflow
-              key={`chat-${workflowKey}-${chatKey}`}
+              key={`chat-${workflowKey}`} //Chat key remove to prevent redundent dashboard graph api call
               onComplete={handleWorkflowComplete}
               defaultAgentId="query"
               onChangeTab={changeTab}
@@ -42,9 +44,10 @@ export const MainContent: React.FC<MainContentProps> = ({
               onNewSessionCreated={onNewSessionCreated}
               sessionId={sessionId}
               workspaceName={workspaceName}
+              chatKey={chatKey}
             />
           </motion.div>
-        ) : activeTab === 'new-connector' ? (
+        ) : activeTab === "new-connector" ? (
           <motion.div
             key="new-connector"
             initial={{ opacity: 0, x: 20 }}
@@ -58,7 +61,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               onTestSuccess={handleStartWorkflow}
             />
           </motion.div>
-        ) : activeTab === 'collection' ? (
+        ) : activeTab === "collection" ? (
           <motion.div
             key="collection"
             initial={{ opacity: 0, x: 20 }}
@@ -76,7 +79,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               workspaceName={workspaceName}
             />
           </motion.div>
-        ) : activeTab === 'analysis' ? (
+        ) : activeTab === "analysis" ? (
           <motion.div
             key="analysis"
             initial={{ opacity: 0, x: 20 }}
@@ -96,7 +99,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               workspaceName={workspaceName}
             />
           </motion.div>
-        ) : activeTab === 'connectors' ? (
+        ) : activeTab === "connectors" ? (
           <motion.div
             key="connectors"
             initial={{ opacity: 0, x: 20 }}
@@ -110,12 +113,12 @@ export const MainContent: React.FC<MainContentProps> = ({
               onComplete={handleWorkflowComplete}
               defaultAgentId="connect"
               onChangeTab={changeTab}
-              onNewConnector={() => changeTab('new-connector')}
+              onNewConnector={() => changeTab("new-connector")}
               sessionId={sessionId}
               workspaceName={workspaceName}
             />
           </motion.div>
-        ) : activeTab === 'admin' ? (
+        ) : activeTab === "admin" ? (
           <motion.div
             key="admin"
             initial={{ opacity: 0, x: 20 }}

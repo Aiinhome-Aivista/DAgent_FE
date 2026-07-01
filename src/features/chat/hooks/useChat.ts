@@ -6,7 +6,7 @@ import { useAuthContext } from '@/src/context/AuthContext';
 
 export type ChatMode = 'landing' | 'workflow' | 'chat';
 
-export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: string, sessionId?: string, onNewSessionCreated?: () => void) => {
+export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: string, sessionId?: string, onNewSessionCreated?: () => void, chatKey?: number) => {
   const { userId } = useAuthContext();
   const [mode, setMode] = useState<ChatMode>(initialMode);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -222,7 +222,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
         }
       });
     }
-  }, [mode, fetchChatHistory, fetchSuggestedQuestions]);
+  }, [mode, fetchChatHistory, fetchSuggestedQuestions, chatKey]);
 
   return {
     messages,

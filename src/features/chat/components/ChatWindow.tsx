@@ -35,6 +35,7 @@ interface ChatWindowProps {
   sessionId?: string;
   workspaceName?: string;
   onCollapseChange?: (collapsed: boolean) => void;
+  chatKey?: number;
 }
 
 export const ChatWindow = ({
@@ -47,6 +48,7 @@ export const ChatWindow = ({
   sessionId,
   workspaceName,
   onCollapseChange,
+  chatKey,
 }: ChatWindowProps) => {
   const {
     messages,
@@ -59,7 +61,7 @@ export const ChatWindow = ({
     startChat,
     followUpQuestions,
     isFetchingSuggestions,
-  } = useChat(initialMode, initialMessage, sessionId, onNewSessionCreated);
+  } = useChat(initialMode, initialMessage, sessionId, onNewSessionCreated, chatKey);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [isLoadingConnectors, setIsLoadingConnectors] = useState(true);
   const [chatInput, setChatInput] = useState("");
