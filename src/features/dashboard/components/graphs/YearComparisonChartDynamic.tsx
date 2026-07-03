@@ -20,7 +20,11 @@ import {
   Area,
   Label,
 } from "recharts";
-import { FilterSelect, useAvailableYears, useSessionId } from "./dashboardHooks";
+import {
+  FilterSelect,
+  useAvailableYears,
+  useSessionId,
+} from "./dashboardHooks";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
 export const YearComparisonChartDynamic = () => {
@@ -52,7 +56,9 @@ export const YearComparisonChartDynamic = () => {
     x: "Month",
     y: "Sales Value (₹)",
   });
-  const [yearComparisonTitle, setYearComparisonTitle] = useState("");
+  const [yearComparisonTitle, setYearComparisonTitle] = useState(
+    "Year Wise Comparison",
+  );
   const [yearComparisonZone, setYearComparisonZone] = useState("All");
   const [yearComparisonRegion, setYearComparisonRegion] = useState("All");
   const [yearComparisonMonth, setYearComparisonMonth] = useState("All");
