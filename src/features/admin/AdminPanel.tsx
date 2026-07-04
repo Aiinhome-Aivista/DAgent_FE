@@ -12,6 +12,7 @@ import { AssignWorkspace } from './components/AssignWorkspaces';
 import { WorkspaceUsers } from './components/WorkspaceUsers';
 import { AdminChats } from './components/AdminChats'; // forces TS refresh
 import { AdminPendingKnowledge } from './components/AdminPendingKnowledge';
+import { CustomPrompts } from './components/CustomPrompts';
 
 
 
@@ -157,7 +158,8 @@ export const AdminPanel: React.FC = () => {
         assignUsers: 'Assignments',
         workspaceUsers: 'Workspace Users',
         adminChats: 'Chat Views',
-        pendingKnowledge: 'KG History'
+        pendingKnowledge: 'KG History',
+        customPrompts: 'Custom Prompts'
     };
 
     return (
@@ -177,7 +179,7 @@ export const AdminPanel: React.FC = () => {
 
             {/* Tabs */}
             <div className="flex border-b border-[var(--border)] px-6 shrink-0 bg-[var(--bg)]/30 overflow-x-auto custom-scrollbar">
-                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge'] as AdminTab[]).map((tab) => (
+                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge', 'customPrompts'] as AdminTab[]).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => {
@@ -199,6 +201,7 @@ export const AdminPanel: React.FC = () => {
                         {tab === 'workspaceUsers' && <Layout className="w-4 h-4" />}
                         {tab === 'adminChats' && <Users className="w-4 h-4" />}
                         {tab === 'pendingKnowledge' && <Layout className="w-4 h-4" />}
+                        {tab === 'customPrompts' && <Layout className="w-4 h-4" />}
                         {tabDisplayNames[tab]}
                     </button>
                 ))}
@@ -315,6 +318,10 @@ export const AdminPanel: React.FC = () => {
 
                                 {activeTab === 'pendingKnowledge' && (
                                     <AdminPendingKnowledge />
+                                )}
+
+                                {activeTab === 'customPrompts' && (
+                                    <CustomPrompts />
                                 )}
                             </motion.div>
                         </AnimatePresence>
