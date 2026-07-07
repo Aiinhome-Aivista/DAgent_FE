@@ -7,8 +7,8 @@ export interface ApiConfig {
 }
 
 export const defaultConfig: ApiConfig = {
-  baseUrl: 'http://122.163.121.176:5005',
-  // baseUrl: 'http://localhost:3019/',
+  // baseUrl: 'http://122.163.121.176:5005',
+  baseUrl: 'http://localhost:5005/',
   // baseUrl: 'http://157.173.221.226:3004',
   // baseUrl: 'http://187.127.163.17:3019',
   timeout: 10000,
@@ -84,6 +84,10 @@ export const API_ENDPOINTS = {
     PUSH_TO_KG: '/api/admin/push_to_kg',
     GET_STAGED_KNOWLEDGE: '/api/admin/staged_knowledge',
     TRIGGER_INDEXING: '/api/admin/trigger_indexing'
+  },
+  PROMPTS: {
+    GET_TYPES: '/api/prompt-types',
+    WORKSPACE_PROMPT: '/api/workspace-prompt',
   }
 
 };

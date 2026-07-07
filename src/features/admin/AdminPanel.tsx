@@ -12,7 +12,7 @@ import { AssignWorkspace } from './components/AssignWorkspaces';
 import { WorkspaceUsers } from './components/WorkspaceUsers';
 import { AdminChats } from './components/AdminChats'; // forces TS refresh
 import { AdminPendingKnowledge } from './components/AdminPendingKnowledge';
-import { CustomPrompts } from './components/CustomPrompts';
+import { CustomPrompts } from './components/CustomPrompts'; // forces TS refresh
 
 
 
@@ -59,7 +59,7 @@ export const AdminPanel: React.FC = () => {
                 }
             }
 
-            if (activeTab === 'workspaces' || activeTab === 'assignUsers' || activeTab === 'workspaceUsers') {
+            if (activeTab === 'workspaces' || activeTab === 'assignUsers' || activeTab === 'workspaceUsers' || activeTab === 'customPrompts') {
                 // Try getting all workspaces if admin API exists
                 try {
                     const wsResponse = await adminService.getAllWorkspaces(userId || 6);
@@ -321,7 +321,7 @@ export const AdminPanel: React.FC = () => {
                                 )}
 
                                 {activeTab === 'customPrompts' && (
-                                    <CustomPrompts />
+                                    <CustomPrompts workspaces={workspaces} />
                                 )}
                             </motion.div>
                         </AnimatePresence>
