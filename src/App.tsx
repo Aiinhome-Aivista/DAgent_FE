@@ -266,11 +266,11 @@ function AppContent() {
       let existingSessionHistory: any[] = [];
       let isExisting = false;
 
-      // Try to determine next visit number or find existing session
+      // Try to determine next visit number or find existing session starting with "default_"
       try {
         const queryResponse = await chatHistoryService.getSessionChatHistory(selectedWorkspace.session_id, userId);
         if (queryResponse && queryResponse.querySessions && queryResponse.querySessions.length > 0) {
-          const existingSession = queryResponse.querySessions.find(s => s.querySessionName === defaultName);
+          const existingSession = queryResponse.querySessions.find(s => s.querySessionName.startsWith('default_'));
 
           if (existingSession) {
             isExisting = true;
@@ -289,7 +289,8 @@ function AppContent() {
         console.error('Failed to fetch chat history for visit number calculation', e);
       }
 
-      const questionToUse = isExisting ? "Updated Analysis from newly uploaded files" : defaultName;
+      // Always keep the question as defaultName so its name in the DB remains default_DD_MM_YYYY
+      const questionToUse = defaultName;
 
       const newTurn = {
         question: questionToUse,
@@ -298,12 +299,16 @@ function AppContent() {
         follow_up_questions: ["What are the key takeaways?", "Can we dive deeper into the anomalies?", "What actions should we take next?"]
       };
 
+      // Check if the summary actually changed
+      const isSummaryChanged = existingSessionHistory.length === 0 || existingSessionHistory[0].answer !== summary;
+
       // We maintain the history object for the sidebar and database
       let newSessionHistory = [];
       if (isExisting && existingSessionHistory.length > 0) {
         newSessionHistory = [...existingSessionHistory];
         newSessionHistory[0] = {
           ...newSessionHistory[0],
+          question: questionToUse, // ensure question is default_DD_MM_YYYY
           answer: summary,
           visualizations: [],
           follow_up_questions: newTurn.follow_up_questions
@@ -312,19 +317,21 @@ function AppContent() {
         newSessionHistory = [newTurn];
       }
 
-      // Save it to backend in background/await
-      try {
-        await chatHistoryService.saveSessionChatHistory({
-          session_id: selectedWorkspace.session_id,
-          user_id: userId,
-          question: questionToUse,
-          answer: summary,
-          visit_number: nextVisitNumber,
-          mode: 'answer',
-          is_update: isExisting
-        });
-      } catch (e) {
-        console.error("Failed to save to backend, continuing UI update", e);
+      if (isSummaryChanged) {
+        // Save/update in database only if summary/data has changed
+        try {
+          await chatHistoryService.saveSessionChatHistory({
+            session_id: selectedWorkspace.session_id,
+            user_id: userId,
+            question: questionToUse,
+            answer: summary,
+            visit_number: nextVisitNumber,
+            mode: 'answer',
+            is_update: isExisting
+          });
+        } catch (e) {
+          console.error("Failed to save to backend, continuing UI update", e);
+        }
       }
 
       // Optimistically add or update it in the sidebar
