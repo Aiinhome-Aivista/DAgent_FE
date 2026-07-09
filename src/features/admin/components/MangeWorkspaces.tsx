@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Layout, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Workspace } from "../../../services/workspace.service";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
 
 interface MangeWorkspaceProps {
   workspaces: Workspace[];
@@ -81,53 +83,127 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
         )}
       </AnimatePresence>
 
-      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
-        <div className="grid grid-cols-12 gap-4 p-4 border-b border-[var(--border)] bg-[var(--bg)]/50 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-          <div className="col-span-2">ID</div>
-          <div className="col-span-4">Workspace Name</div>
-          <div className="col-span-5">Session/WorkSpace ID</div>
-          <div className="col-span-1 text-right flex justify-end">Actions</div>
-        </div>
-        <div className="divide-y divide-[var(--border)]">
-          {filteredWorkspaces.length === 0 ? (
-            <div className="p-8 text-center text-[var(--text-secondary)]">
-              No workspaces found.
+      <DataTable
+        value={filteredWorkspaces}
+        paginator
+        rows={5}
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        tableStyle={{ minWidth: "50rem" }}
+        emptyMessage={
+          <div className="p-8 text-center text-[var(--text-secondary)]">
+            No workspaces found.
+          </div>
+        }
+        className="border border-[var(--border)] rounded-2xl overflow-hidden bg-[var(--surface)] shadow-sm"
+        pt={{
+          thead: { className: "bg-[var(--bg)]/50" },
+          tbody: { className: "bg-[var(--surface)]" },
+          bodyRow: {
+            className: "hover:bg-[var(--surface-hover)] transition-colors",
+          },
+          paginator: {
+            root: {
+              className:
+                "!bg-[var(--surface)] !border-t !border-[var(--border)] !py-3 !px-4 !flex !items-center !justify-center !gap-1",
+            },
+            firstPageButton: {
+              className:
+                "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
+            },
+            prevPageButton: {
+              className:
+                "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
+            },
+            nextPageButton: {
+              className:
+                "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
+            },
+            lastPageButton: {
+              className:
+                "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
+            },
+            pageButton: ({ context }: any) => ({
+              className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${
+                context.active
+                  ? "!bg-[var(--accent)] !text-white !font-semibold"
+                  : "hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent"
+              }`,
+            }),
+            RPPDropdown: {
+              root: {
+                className:
+                  "!bg-[var(--surface)] !border !border-[var(--border)] hover:!border-[var(--accent)] !rounded-lg !px-2 !py-1 text-sm !text-[var(--text-primary)] !flex !items-center !gap-1.5 !cursor-pointer !outline-none !transition-colors",
+              },
+              input: { className: "!px-1 !font-medium" },
+              trigger: {
+                className:
+                  "!w-5 !text-[var(--text-secondary)] !flex !items-center !justify-center",
+              },
+              panel: {
+                className:
+                  "!bg-[var(--surface)] !border border-[var(--border)] !rounded-lg !shadow-lg !py-1 !mt-1 !z-50",
+              },
+              item: ({ context }: any) => ({
+                className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${
+                  context.selected
+                    ? "!bg-[var(--accent)] !text-white !font-semibold"
+                    : "hover:!bg-[var(--surface-hover)] !text-[var(--text-primary)]"
+                }`,
+              }),
+            },
+          },
+        }}
+      >
+        <Column
+          field="id"
+          header="ID"
+          headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+          className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+          style={{ width: "15%" }}
+        />
+        <Column
+          field="workspace_name"
+          header="Workspace Name"
+          headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+          className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-primary)] font-medium"
+          style={{ width: "35%" }}
+        />
+        <Column
+          field="session_id"
+          header="Session/WorkSpace ID"
+          headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+          className="!px-6 !py-4 !border-b !border-[var(--border)]"
+          style={{ width: "40%" }}
+          body={(ws: Workspace) => (
+            <div
+              className="font-mono text-[11px] text-[var(--text-secondary)] break-all select-all inline-block"
+              title={ws.session_id}
+            >
+              {ws.session_id}
             </div>
-          ) : (
-            filteredWorkspaces.map((ws) => (
-              <div
-                key={ws.id}
-                className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-[var(--surface-hover)] transition-colors text-sm group"
-              >
-                <div className="col-span-2 text-[var(--text-secondary)] font-medium">
-                  {ws.id}
-                </div>
-                <div className="col-span-4 text-[var(--text-primary)] flex items-center gap-2">
-                  {ws.workspace_name}
-                </div>
-                <div
-                  className="col-span-5 font-mono text-[11px] text-[var(--text-secondary)] bg-[var(--bg)] px-2 py-1 rounded truncate w-max max-w-[200px]"
-                  title={ws.session_id}
-                >
-                  {ws.session_id}
-                </div>
-                <div className="col-span-1 flex justify-end">
-                  <button
-                    onClick={() => {
-                      setWorkspaceToDelete(ws);
-                      setDeleteConfirmationText("");
-                    }}
-                    className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors focus:opacity-100"
-                    title="Delete Workspace"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))
           )}
-        </div>
-      </div>
+        />
+        <Column
+          header="Actions"
+          headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-right"
+          className="!px-6 !py-4 !border-b !border-[var(--border)] text-right"
+          style={{ width: "10%" }}
+          body={(ws: Workspace) => (
+            <div className="flex justify-start">
+              <button
+                onClick={() => {
+                  setWorkspaceToDelete(ws);
+                  setDeleteConfirmationText("");
+                }}
+                className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors focus:opacity-100"
+                title="Delete Workspace"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        />
+      </DataTable>
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
