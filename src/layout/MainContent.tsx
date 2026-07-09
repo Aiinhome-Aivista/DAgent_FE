@@ -7,6 +7,8 @@ import { MainContentProps } from "../types/layout";
 
 export const MainContent: React.FC<MainContentProps> = ({
   activeTab,
+  adminSubTab,
+  setAdminSubTab,
   workflowKey,
   chatKey,
   initialChatMessage,
@@ -23,7 +25,7 @@ export const MainContent: React.FC<MainContentProps> = ({
 }) => {
   return (
     <div
-      className={`p-2 w-full flex-1 min-h-0 overflow-hidden ${activeTab === "chat" ? "max-w-none" : "max-w-6xl mx-auto"}`}
+      className={`py-4 w-full flex-1 min-h-0 overflow-hidden ${(activeTab === "chat" || activeTab === "admin") ? "max-w-none px-6" : "max-w-6xl mx-auto"}`}
     >
       <AnimatePresence mode="wait">
         {activeTab === "chat" ? (
@@ -127,7 +129,7 @@ export const MainContent: React.FC<MainContentProps> = ({
             transition={{ duration: 0.3 }}
             className="h-[calc(100vh-5.5rem)]"
           >
-            <AdminPanel />
+            <AdminPanel adminSubTab={adminSubTab} setAdminSubTab={setAdminSubTab} />
           </motion.div>
         ) : null}
       </AnimatePresence>

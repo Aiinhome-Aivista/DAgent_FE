@@ -88,6 +88,7 @@ export const API_ENDPOINTS = {
   PROMPTS: {
     GET_TYPES: '/api/prompt-types',
     WORKSPACE_PROMPT: '/api/workspace-prompt',
+    GET_ALL_WORKSPACE_PROMPTS: '/api/workspace-prompts-all',
   }
 
 };

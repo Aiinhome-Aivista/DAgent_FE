@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { MessageSquare, Save, Loader2, RefreshCw } from 'lucide-react';
+import { MessageSquare, Save, Loader2, RefreshCw, Plus, Edit2, ArrowLeft } from 'lucide-react';
 import { Workspace } from '../../../services/workspace.service';
 import { promptService } from '../../../services/prompt.service';
 
 interface CustomPromptsProps {
     workspaces: Workspace[];
+    searchQuery: string;
 }
 
-export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces }) => {
+export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces, searchQuery }) => {
+    const [viewMode, setViewMode] = useState<'list' | 'form'>('list');
+
+    const [allPrompts, setAllPrompts] = useState<any[]>([]);
+    const [isLoadingList, setIsLoadingList] = useState(false);
+
     const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<number | ''>('');
     const [selectedPromptType, setSelectedPromptType] = useState<string>('analysis');
     const [promptText, setPromptText] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const [promptTypes, setPromptTypes] = useState<{ value: string; label: string }[]>([]);
 
@@ -23,46 +29,55 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces }) => {
                 const response = await promptService.getPromptTypes();
                 if (response?.success && response?.prompt_types) {
                     setPromptTypes(response.prompt_types);
-                    if (response.prompt_types.length > 0) {
-                        setSelectedPromptType(response.prompt_types[0].value);
-                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch prompt types", error);
-                toast.error("Failed to load prompt types");
             }
         };
         loadPromptTypes();
     }, []);
 
-    useEffect(() => {
-        if (!selectedWorkspaceId || !selectedPromptType) {
-            setPromptText('');
-            return;
-        }
-
-        const fetchPrompt = async () => {
-            setIsLoading(true);
-            try {
-                const response = await promptService.getWorkspacePromptByType(selectedWorkspaceId as number, selectedPromptType);
-                if (response?.success) {
-                    setPromptText(response.custom_prompt || '');
-                } else {
-                    setPromptText('');
-                }
-            } catch (error) {
-                console.error("Failed to fetch custom prompt", error);
-                setPromptText('');
-            } finally {
-                setIsLoading(false);
+    const fetchAllPrompts = async () => {
+        setIsLoadingList(true);
+        try {
+            const response = await promptService.getAllWorkspacePrompts();
+            if (response?.success && response?.prompts) {
+                setAllPrompts(response.prompts);
             }
-        };
+        } catch (error) {
+            console.error("Failed to fetch all prompts", error);
+            toast.error("Failed to load custom prompts");
+        } finally {
+            setIsLoadingList(false);
+        }
+    };
 
-        fetchPrompt();
-    }, [selectedWorkspaceId, selectedPromptType]);
+    useEffect(() => {
+        if (viewMode === 'list') {
+            fetchAllPrompts();
+        }
+    }, [viewMode]);
+
+    const handleAddClick = () => {
+        setIsEditMode(false);
+        setSelectedWorkspaceId('');
+        if (promptTypes.length > 0) {
+            setSelectedPromptType(promptTypes[0].value);
+        }
+        setPromptText('');
+        setViewMode('form');
+    };
+
+    const handleEditClick = (prompt: any) => {
+        setIsEditMode(true);
+        setSelectedWorkspaceId(prompt.workspace_id);
+        setSelectedPromptType(prompt.prompt_type);
+        setPromptText(prompt.custom_prompt);
+        setViewMode('form');
+    };
 
     const handleSave = async () => {
-        if (!selectedWorkspaceId) {
+        if (selectedWorkspaceId === '') {
             toast.error('Please select a workspace');
             return;
         }
@@ -74,7 +89,8 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces }) => {
         try {
             const response = await promptService.setWorkspacePrompt(selectedWorkspaceId as number, selectedPromptType, promptText);
             if (response?.success) {
-                toast.success('Custom prompt saved successfully!');
+                toast.success(isEditMode ? 'Custom prompt updated successfully!' : 'Custom prompt added successfully!');
+                setViewMode('list');
             } else {
                 toast.error(response?.message || 'Failed to save prompt');
             }
@@ -87,57 +103,126 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces }) => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
-                <div className="flex items-start gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
-                        <MessageSquare className="w-6 h-6 text-[var(--accent)]" />
+        <div className="w-full space-y-4">
+            {viewMode === 'list' ? (
+                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
+                    <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-[var(--accent)]">
+                            <MessageSquare className="w-5 h-5" />
+                            <span className="text-sm font-semibold">Custom Prompts</span>
+                        </div>
+                        <button
+                            onClick={handleAddClick}
+                            className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add Prompt
+                        </button>
                     </div>
-                    <div>
-                        <h2 className="text-xl font-semibold text-[var(--text-primary)]">System Context Prompt</h2>
-                        <p className="text-sm text-[var(--text-secondary)] mt-1">
-                            Set the global behavior and knowledge context for the AI agent per workspace. This prompt will replace the default analysis and communication rules, allowing the agent to adapt dynamically to your newly uploaded domain data.
-                        </p>
+
+                    <div className="grid grid-cols-12 gap-4 p-4 border-b border-[var(--border)] bg-[var(--bg)]/10 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-tight">
+                        <div className="col-span-3">Workspace</div>
+                        <div className="col-span-3">Prompt Type</div>
+                        <div className="col-span-5">Prompt</div>
+                        <div className="col-span-1 text-right">Actions</div>
+                    </div>
+
+                    <div className="divide-y divide-[var(--border)] min-h-[100px] bg-[var(--surface)]">
+                        {isLoadingList ? (
+                            <div className="p-12 flex flex-col items-center justify-center gap-3">
+                                <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
+                                <span className="text-sm text-[var(--text-secondary)]">Loading prompts...</span>
+                            </div>
+                        ) : (() => {
+                            const filteredPrompts = allPrompts.filter(p =>
+                                (p.workspace_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                                (p.prompt_type_label?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                                (p.custom_prompt?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+                            );
+
+                            if (filteredPrompts.length === 0) {
+                                return (
+                                    <div className="p-12 text-center text-[var(--text-secondary)]">
+                                        {searchQuery ? 'No prompts match your search.' : 'No custom prompts found.'}
+                                    </div>
+                                );
+                            }
+
+                            return filteredPrompts.map((p, idx) => (
+                                <div key={idx} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-[var(--surface-hover)] transition-colors text-sm">
+                                    <div className="col-span-3 font-medium text-[var(--text-primary)] truncate" title={p.workspace_name}>
+                                        {p.workspace_id === 0 ? '[ GLOBAL FALLBACK ]' : (p.workspace_name || `Workspace #${p.workspace_id}`)}
+                                    </div>
+                                    <div className="col-span-3 text-[var(--text-secondary)] truncate">
+                                        {p.prompt_type_label || p.prompt_type}
+                                    </div>
+                                    <div className="col-span-5 text-[var(--text-secondary)] truncate" title={p.custom_prompt}>
+                                        {p.custom_prompt?.length > 80 ? `${p.custom_prompt.substring(0, 80)}...` : p.custom_prompt}
+                                    </div>
+                                    <div className="col-span-1 flex justify-end">
+                                        <button
+                                            onClick={() => handleEditClick(p)}
+                                            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] transition-all"
+                                            title="View / Edit"
+                                        >
+                                            <Edit2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        })()}
                     </div>
                 </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                    <div className="flex-1">
-                        <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">Select Workspace</label>
-                        <select
-                            value={selectedWorkspaceId}
-                            onChange={(e) => setSelectedWorkspaceId(e.target.value === '' ? '' : Number(e.target.value))}
-                            className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all"
+            ) : (
+                <>
+                    <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[var(--border)]">
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className="p-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-secondary)] hover:bg-[var(--bg)]/80 hover:text-[var(--text-primary)] transition-all"
                         >
-                            <option value="">-- Choose a workspace --</option>
-                            {workspaces.map(ws => (
-                                <option key={ws.id} value={ws.id}>{ws.workspace_name}</option>
-                            ))}
-                        </select>
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+                        <div>
+                            <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+                                {isEditMode ? 'Edit Custom Prompt' : 'Add Custom Prompt'}
+                            </h2>
+                            <p className="text-sm text-[var(--text-secondary)] mt-1">
+                                {isEditMode ? 'Update the existing system instructions.' : 'Set global behavior and context for a workspace.'}
+                            </p>
+                        </div>
                     </div>
-                    <div className="flex-1">
-                        <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">Select Prompt Type</label>
-                        <select
-                            value={selectedPromptType}
-                            onChange={(e) => setSelectedPromptType(e.target.value)}
-                            className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all"
-                        >
-                            {promptTypes.map(pt => (
-                                <option key={pt.value} value={pt.value}>{pt.label}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
 
-                {!selectedWorkspaceId ? (
-                    <div className="flex items-center justify-center h-48 bg-[var(--bg)]/30 rounded-xl border border-[var(--border)] border-dashed">
-                        <p className="text-[var(--text-secondary)]">Please select a workspace to view or edit prompts.</p>
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">Select Workspace</label>
+                            <select
+                                value={selectedWorkspaceId}
+                                onChange={(e) => setSelectedWorkspaceId(e.target.value === '' ? '' : Number(e.target.value))}
+                                disabled={isEditMode}
+                                className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50"
+                            >
+                                <option value="">-- Choose a workspace --</option>
+                                <option value={0}>Global Fallback Prompts</option>
+                                {workspaces.map(ws => (
+                                    <option key={ws.id} value={ws.id}>{ws.workspace_name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">Select Prompt Type</label>
+                            <select
+                                value={selectedPromptType}
+                                onChange={(e) => setSelectedPromptType(e.target.value)}
+                                disabled={isEditMode}
+                                className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50"
+                            >
+                                {promptTypes.map(pt => (
+                                    <option key={pt.value} value={pt.value}>{pt.label}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                ) : isLoading ? (
-                    <div className="flex items-center justify-center h-48 bg-[var(--bg)]/30 rounded-xl border border-[var(--border)] border-dashed">
-                        <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
-                    </div>
-                ) : (
+
                     <div className="space-y-4">
                         <div className="relative">
                             <textarea
@@ -151,7 +236,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces }) => {
                         <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]">
                             <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                                 <RefreshCw className="w-4 h-4" />
-                                <span>Changes apply immediately to new sessions in this workspace.</span>
+                                <span>Changes apply immediately to new sessions.</span>
                             </div>
                             <button
                                 onClick={handleSave}
@@ -163,13 +248,13 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces }) => {
                                 ) : (
                                     <Save className="w-5 h-5" />
                                 )}
-                                Save Prompt
+                                {isEditMode ? 'Update' : 'Add'}
                             </button>
                         </div>
                     </div>
-                )}
-            </div>
-            
+                </>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-[var(--accent)]/5 border border-[var(--accent)]/20 rounded-xl p-5">
                     <h3 className="font-semibold text-[var(--accent)] mb-2">Pro Tips</h3>
@@ -179,7 +264,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces }) => {
                         <li>If your data is healthcare-related, instruct it to act as a medical analyst.</li>
                     </ul>
                 </div>
-                
+
                 <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-5">
                     <h3 className="font-semibold text-amber-500 mb-2">Note on Structured Queries</h3>
                     <p className="text-sm text-[var(--text-secondary)]">

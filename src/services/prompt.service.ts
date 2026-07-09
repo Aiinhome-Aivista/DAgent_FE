@@ -20,5 +20,9 @@ export const promptService = {
             prompt_type: promptType,
             custom_prompt: customPrompt
         });
+    },
+
+    getAllWorkspacePrompts: async (): Promise<any> => {
+        return apiService.get(API_ENDPOINTS.PROMPTS.GET_ALL_WORKSPACE_PROMPTS);
     }
 };

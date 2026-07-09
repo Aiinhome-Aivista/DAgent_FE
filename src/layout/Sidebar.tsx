@@ -13,6 +13,10 @@ import {
   MessageSquare,
   ShieldAlert,
   RotateCcw,
+  Users,
+  Terminal,
+  Database,
+  Lock,
 } from "lucide-react";
 import { Workspace, workspaceService } from "../services/workspace.service";
 import { SidebarProps } from "../types/layout";
@@ -41,6 +45,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setHistorySearch,
   activeTab,
   setActiveTab,
+  adminSubTab,
+  setAdminSubTab,
   workflowKey,
   setWorkflowKey,
   chatKey,
@@ -87,29 +93,42 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Scrollable middle section */}
         <div className="flex-1 overflow-y-auto min-h-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {roleName === "Admin" && (
-            <div className="px-3 mb-2 mt-2">
-              <button
-                onClick={() => {
-                  setInitialChatMessage(undefined);
-                  setActiveTab("admin");
-                }}
-                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-300 border ${
-                  activeTab === "admin"
-                    ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 text-[var(--accent)] shadow-sm"
-                    : "border-[var(--border)]/20 bg-[var(--bg)]/50 hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                }`}
-              >
-                <ShieldAlert className="w-4 h-4 shrink-0" />
-                {isSidebarOpen && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-sm font-medium"
-                  >
-                    Admin Panel
-                  </motion.span>
-                )}
-              </button>
+            <div className="flex flex-col shrink-0 gap-1 px-3 mt-2 mb-2">
+              {[
+                { id: 'users', icon: Users, label: 'Users' },
+                { id: 'workspaces', icon: Layout, label: 'Workspaces' },
+                { id: 'assignUsers', icon: ShieldAlert, label: 'Assignments' },
+                { id: 'workspaceUsers', icon: Users, label: 'Workspace Users' },
+                { id: 'adminChats', icon: MessageSquare, label: 'Chat Views' },
+                { id: 'pendingKnowledge', icon: Database, label: 'KG History' },
+                { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setInitialChatMessage(undefined);
+                    setActiveTab("admin");
+                    setAdminSubTab(tab.id as any);
+                  }}
+                  title={!isSidebarOpen ? tab.label : undefined}
+                  className={`w-full flex items-center p-2.5 rounded-xl transition-all duration-300 border ${
+                    activeTab === "admin" && adminSubTab === tab.id
+                      ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 text-[var(--accent)] shadow-sm"
+                      : "border-transparent bg-transparent hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  } ${!isSidebarOpen ? "justify-center" : "gap-3"}`}
+                >
+                  <tab.icon className="w-5 h-5 shrink-0" />
+                  {isSidebarOpen && (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-sm font-medium"
+                    >
+                      {tab.label}
+                    </motion.span>
+                  )}
+                </button>
+              ))}
             </div>
           )}
           {/* Workspace & Query Section */}

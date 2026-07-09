@@ -14,11 +14,13 @@ import { AdminChats } from './components/AdminChats'; // forces TS refresh
 import { AdminPendingKnowledge } from './components/AdminPendingKnowledge';
 import { CustomPrompts } from './components/CustomPrompts'; // forces TS refresh
 
+interface AdminPanelProps {
+    adminSubTab: AdminTab;
+    setAdminSubTab: (tab: AdminTab) => void;
+}
 
-
-export const AdminPanel: React.FC = () => {
+export const AdminPanel: React.FC<AdminPanelProps> = ({ adminSubTab, setAdminSubTab }) => {
     const { userId } = useAuthContext();
-    const [activeTab, setActiveTab] = useState<AdminTab>('users');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -39,13 +41,13 @@ export const AdminPanel: React.FC = () => {
 
     useEffect(() => {
         fetchData();
-    }, [activeTab]);
+    }, [adminSubTab]);
 
     const fetchData = async () => {
         setIsLoading(true);
         setError(null);
         try {
-            if (activeTab === 'users' || activeTab === 'assignUsers') {
+            if (adminSubTab === 'users' || adminSubTab === 'assignUsers') {
                 const usersResponse = await adminService.getUsers();
                 if (usersResponse?.users) {
                     setUsers(usersResponse.users);
@@ -59,7 +61,7 @@ export const AdminPanel: React.FC = () => {
                 }
             }
 
-            if (activeTab === 'workspaces' || activeTab === 'assignUsers' || activeTab === 'workspaceUsers' || activeTab === 'customPrompts') {
+            if (adminSubTab === 'workspaces' || adminSubTab === 'assignUsers' || adminSubTab === 'workspaceUsers' || adminSubTab === 'customPrompts') {
                 // Try getting all workspaces if admin API exists
                 try {
                     const wsResponse = await adminService.getAllWorkspaces(userId || 6);
@@ -162,67 +164,49 @@ export const AdminPanel: React.FC = () => {
         customPrompts: 'Custom Prompts'
     };
 
+    const tabDetails: Record<AdminTab, { title: string; desc: string }> = {
+        users: { title: 'Manage Users', desc: 'Add, view, and manage system users.' },
+        workspaces: { title: 'Manage Workspaces', desc: 'Create and configure organizational workspaces.' },
+        assignUsers: { title: 'Workspace Assignments', desc: 'Assign users to specific workspaces.' },
+        workspaceUsers: { title: 'Workspace Members', desc: 'View users grouped by their assigned workspaces.' },
+        adminChats: { title: 'Chat Views', desc: 'Monitor and review chat history across sessions.' },
+        pendingKnowledge: { title: 'Knowledge History', desc: 'Review pending and processed knowledge base entries.' },
+        customPrompts: { title: 'Custom Prompts', desc: 'Configure default system prompts for workspaces.' }
+    };
+
     return (
-        <div className="flex flex-col h-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
+        <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="shrink-0 p-6 border-b border-[var(--border)] bg-[var(--bg)]/50">
+            <div className="shrink-0 pb-6 mb-2">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
                         <ShieldAlert className="w-5 h-5" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-[var(--text-primary)]">Admin Panel</h1>
-                        <p className="text-sm text-[var(--text-secondary)]">Manage users, workspaces, and assign workspaces to users.</p>
+                        <h1 className="text-xl font-bold text-[var(--text-primary)]">{tabDetails[adminSubTab].title}</h1>
+                        <p className="text-sm text-[var(--text-secondary)]">{tabDetails[adminSubTab].desc}</p>
                     </div>
                 </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex border-b border-[var(--border)] px-6 shrink-0 bg-[var(--bg)]/30 overflow-x-auto custom-scrollbar">
-                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge', 'customPrompts'] as AdminTab[]).map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => {
-                            setActiveTab(tab);
-                            setSearchQuery('');
-                            setError(null);
-                        }}
-                        className={`
-                            px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize flex items-center gap-2
-                            ${activeTab === tab
-                                ? 'border-[var(--accent)] text-[var(--accent)]'
-                                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'
-                            }
-                        `}
-                    >
-                        {tab === 'users' && <Users className="w-4 h-4" />}
-                        {tab === 'workspaces' && <Layout className="w-4 h-4" />}
-                        {tab === 'assignUsers' && <ShieldAlert className="w-4 h-4" />}
-                        {tab === 'workspaceUsers' && <Layout className="w-4 h-4" />}
-                        {tab === 'adminChats' && <Users className="w-4 h-4" />}
-                        {tab === 'pendingKnowledge' && <Layout className="w-4 h-4" />}
-                        {tab === 'customPrompts' && <Layout className="w-4 h-4" />}
-                        {tabDisplayNames[tab]}
-                    </button>
-                ))}
-            </div>
+
 
             {/* Content Area */}
-            <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-[var(--bg)]">
+            <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                 {/* Search & Actions Bar */}
-                <div className="shrink-0 p-4 border-b border-[var(--border)] flex items-center justify-between gap-4">
+                <div className="shrink-0 py-4 flex items-center justify-between gap-4">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
                         <input
                             type="text"
-                            placeholder={`Search ${tabDisplayNames[activeTab]}...`}
+                            placeholder={`Search ${tabDisplayNames[adminSubTab]}...`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                         />
                     </div>
 
-                    {activeTab === 'users' && (
+                    {adminSubTab === 'users' && (
                         <button
                             onClick={() => setIsCreatingUser(true)}
                             className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
@@ -232,7 +216,7 @@ export const AdminPanel: React.FC = () => {
                         </button>
                     )}
 
-                    {activeTab === 'workspaces' && (
+                    {adminSubTab === 'workspaces' && (
                         <button
                             onClick={() => setIsCreatingWorkspace(true)}
                             className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
@@ -252,7 +236,7 @@ export const AdminPanel: React.FC = () => {
                 )}
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto py-6 custom-scrollbar">
                     {isLoading ? (
                         <div className="h-full flex items-center justify-center">
                             <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
@@ -260,14 +244,14 @@ export const AdminPanel: React.FC = () => {
                     ) : (
                         <AnimatePresence mode="wait">
                             <motion.div
-                                key={activeTab}
+                                key={adminSubTab}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
                                 className="w-full"
                             >
-                                {activeTab === 'users' && (
+                                {adminSubTab === 'users' && (
                                     <MangeUser
                                         users={users}
                                         searchQuery={searchQuery}
@@ -278,7 +262,7 @@ export const AdminPanel: React.FC = () => {
                                     />
                                 )}
 
-                                {activeTab === 'workspaces' && (
+                                {adminSubTab === 'workspaces' && (
                                     <MangeWorkspace
                                         workspaces={workspaces}
                                         searchQuery={searchQuery}
@@ -292,7 +276,7 @@ export const AdminPanel: React.FC = () => {
                                     />
                                 )}
 
-                                {activeTab === 'assignUsers' && (
+                                {adminSubTab === 'assignUsers' && (
                                     <AssignWorkspace
                                         users={users}
                                         workspaces={workspaces}
@@ -305,23 +289,23 @@ export const AdminPanel: React.FC = () => {
                                     />
                                 )}
 
-                                {activeTab === 'workspaceUsers' && (
+                                {adminSubTab === 'workspaceUsers' && (
                                     <WorkspaceUsers
                                         workspaces={filteredWorkspaces}
                                         searchQuery={searchQuery}
                                     />
                                 )}
 
-                                {activeTab === 'adminChats' && (
+                                {adminSubTab === 'adminChats' && (
                                     <AdminChats />
                                 )}
 
-                                {activeTab === 'pendingKnowledge' && (
+                                {adminSubTab === 'pendingKnowledge' && (
                                     <AdminPendingKnowledge />
                                 )}
 
-                                {activeTab === 'customPrompts' && (
-                                    <CustomPrompts workspaces={workspaces} />
+                                {adminSubTab === 'customPrompts' && (
+                                    <CustomPrompts workspaces={workspaces} searchQuery={searchQuery} />
                                 )}
                             </motion.div>
                         </AnimatePresence>

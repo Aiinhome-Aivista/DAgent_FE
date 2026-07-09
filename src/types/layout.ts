@@ -4,6 +4,7 @@ import { QuerySession } from '../services/chatHistory.service';
 
 export type Tab = 'chat' | 'connectors' | 'new-connector' | 'collection' | 'analysis' | 'admin';
 export type ViewMode = 'landing' | 'login' | 'app' | 'dashboard';
+export type AdminTab = 'users' | 'workspaces' | 'assignUsers' | 'workspaceUsers' | 'adminChats' | 'pendingKnowledge' | 'customPrompts';
 
 export interface SidebarProps {
   isSidebarOpen: boolean;
@@ -28,6 +29,8 @@ export interface SidebarProps {
   setHistorySearch: (search: string) => void;
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  adminSubTab: AdminTab;
+  setAdminSubTab: (tab: AdminTab) => void;
   workflowKey: number;
   setWorkflowKey: (key: number | ((prev: number) => number)) => void;
   chatKey: number;
@@ -48,6 +51,8 @@ export interface AppHeaderProps {
 
 export interface MainContentProps {
   activeTab: Tab;
+  adminSubTab: AdminTab;
+  setAdminSubTab: (tab: AdminTab) => void;
   workflowKey: number;
   chatKey: number;
   initialChatMessage: string | undefined;

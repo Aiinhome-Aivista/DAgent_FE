@@ -18,6 +18,7 @@ import { connectorService } from './services/connector.service';
 import { chatHistoryService, QuerySession } from './services/chatHistory.service';
 
 import { Sidebar } from './layout/Sidebar';
+import { AdminTab } from './types/layout';
 import { AppHeader } from './layout/AppHeader';
 import { MainContent } from './layout/MainContent';
 import { Tab, ViewMode } from './types/layout';
@@ -32,6 +33,7 @@ function AppContent() {
   const [justFinishedWorkflow, setJustFinishedWorkflow] = useState(false);
   const [initialChatMessage, setInitialChatMessage] = useState<string | undefined>(undefined);
   const [chatKey, setChatKey] = useState(0);
+  const [adminSubTab, setAdminSubTab] = useState<AdminTab>('users');
   const [historySearch, setHistorySearch] = useState('');
 
   // Workspace state
@@ -421,6 +423,8 @@ function AppContent() {
         setHistorySearch={setHistorySearch}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        adminSubTab={adminSubTab}
+        setAdminSubTab={setAdminSubTab}
         workflowKey={workflowKey}
         setWorkflowKey={setWorkflowKey}
         chatKey={chatKey}
@@ -445,6 +449,8 @@ function AppContent() {
 
         <MainContent
           activeTab={activeTab}
+          adminSubTab={adminSubTab}
+          setAdminSubTab={setAdminSubTab}
           workflowKey={workflowKey}
           chatKey={chatKey}
           initialChatMessage={initialChatMessage}

@@ -15,11 +15,7 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({ workspaces, sear
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        if (selectedWorkspaceId) {
-            fetchWorkspaceUsers(selectedWorkspaceId);
-        } else {
-            setWorkspaceUsers([]);
-        }
+        fetchWorkspaceUsers(selectedWorkspaceId);
     }, [selectedWorkspaceId]);
 
     const fetchWorkspaceUsers = async (workspaceId: number) => {
@@ -51,7 +47,7 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({ workspaces, sear
                         onChange={(e) => setSelectedWorkspaceId(Number(e.target.value) || null)}
                         className="w-full pl-4 pr-10 py-3 appearance-none rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] cursor-pointer"
                     >
-                        <option value="" disabled>-- Select a workspace --</option>
+                        <option value="">-- All Workspaces --</option>
                         {workspaces.map(w => (
                             <option key={w.id} value={w.id}>{w.workspace_name}</option>
                         ))}
@@ -62,12 +58,13 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({ workspaces, sear
                 </div>
             </div>
 
-            {selectedWorkspaceId && (
-                <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
                     <div className="p-4 border-b border-[var(--border)] bg-[var(--bg)]/30 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-[var(--accent)]">
                             <Users className="w-4 h-4" />
-                            <span className="text-sm font-semibold">Workspace Members</span>
+                            <span className="text-sm font-semibold">
+                                {selectedWorkspaceId ? 'Workspace Members' : 'All Workspace Members'}
+                            </span>
                         </div>
                         <div className="text-xs font-medium text-[var(--text-secondary)]">
                             {filteredUsers.length} Users found
@@ -76,9 +73,10 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({ workspaces, sear
 
                     <div className="grid grid-cols-12 gap-4 p-4 border-b border-[var(--border)] bg-[var(--bg)]/10 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-tight">
                         <div className="col-span-1">ID</div>
-                        <div className="col-span-4">Name</div>
-                        <div className="col-span-4">Email</div>
-                        <div className="col-span-3">Assigned At</div>
+                        <div className="col-span-3">Name</div>
+                        <div className="col-span-3">Email</div>
+                        <div className="col-span-3">Workspace</div>
+                        <div className="col-span-2">Assigned At</div>
                     </div>
 
                     <div className="divide-y divide-[var(--border)] min-h-[100px] bg-[var(--surface)]">
@@ -111,9 +109,10 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({ workspaces, sear
                                 return (
                                     <div key={user.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-[var(--surface-hover)] transition-colors text-sm">
                                         <div className="col-span-1 text-[var(--text-secondary)] font-medium">{user.id}</div>
-                                        <div className="col-span-4 font-medium text-[var(--text-primary)]">{user.name || 'N/A'}</div>
-                                        <div className="col-span-4 text-[var(--text-secondary)]">{user.email}</div>
-                                        <div className="col-span-3 text-[var(--text-secondary)] text-xs font-medium">
+                                        <div className="col-span-3 font-medium text-[var(--text-primary)] truncate">{user.name || 'N/A'}</div>
+                                        <div className="col-span-3 text-[var(--text-secondary)] truncate">{user.email}</div>
+                                        <div className="col-span-3 text-[var(--text-secondary)] truncate">{(user as any).workspace_name || 'N/A'}</div>
+                                        <div className="col-span-2 text-[var(--text-secondary)] text-xs font-medium">
                                             {formatDateTime((user as any).assigned_at)}
                                         </div>
                                     </div>
@@ -122,7 +121,6 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({ workspaces, sear
                         )}
                     </div>
                 </div>
-            )}
         </div>
     );
 };
