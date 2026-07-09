@@ -224,7 +224,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
           </div>
         </div>
       ) : (
-        <>
+        <div className="pr-2 sm:pr-4">
           <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[var(--border)]">
             <button
               onClick={() => setViewMode("list")}
@@ -257,7 +257,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                   )
                 }
                 disabled={isEditMode}
-                className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full pl-3 pr-10 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer"
               >
                 <option value="">-- Choose a workspace --</option>
                 <option value={0}>Global Fallback Prompts</option>
@@ -276,7 +276,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                 value={selectedPromptType}
                 onChange={(e) => setSelectedPromptType(e.target.value)}
                 disabled={isEditMode}
-                className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full pl-3 pr-10 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer"
               >
                 {promptTypes.map((pt) => (
                   <option key={pt.value} value={pt.value}>
@@ -316,7 +316,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
               </button>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
