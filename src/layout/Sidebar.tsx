@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     setAdminSubTab(tab.id as any);
                   }}
                   title={!isSidebarOpen ? tab.label : undefined}
-                  className={`w-full flex items-center p-2.5 rounded-xl transition-all duration-300 border ${
+                  className={`w-full flex items-center p-2.5 rounded-xl transition-all duration-300 border cursor-pointer ${
                     activeTab === "admin" && adminSubTab === tab.id
                       ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 text-[var(--accent)] shadow-sm"
                       : "border-transparent bg-transparent hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -723,7 +723,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Settings + Logout — fixed at the bottom */}
         <div className="px-3 pb-3 space-y-1 shrink-0 mt-auto border-t border-[var(--border)] pt-3">
-          <button className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200">
+          <button className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200 cursor-pointer">
             <Settings className="w-4 h-4 shrink-0" />
             {isSidebarOpen && (
               <motion.span
@@ -737,7 +737,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-500 transition-colors duration-200"
+            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-500 transition-colors duration-200 cursor-pointer"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             {isSidebarOpen && (
