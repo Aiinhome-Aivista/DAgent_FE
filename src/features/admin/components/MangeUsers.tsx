@@ -3,6 +3,8 @@ import toast from 'react-hot-toast';
 import { AdminUser } from '../types';
 import { UserPlus, X, Loader2, Mail, Lock, User as UserIcon, Eye, EyeOff } from 'lucide-react';
 import { adminService } from '../../../services/admin.service';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 
 interface MangeUsersProps {
     users: AdminUser[];
@@ -55,38 +57,86 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
 
     return (
         <div className="space-y-4">
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
-                <div className="grid grid-cols-12 gap-4 p-4 border-b border-[var(--border)] bg-[var(--bg)]/50 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    <div className="col-span-1">ID</div>
-                    <div className="col-span-4">Name</div>
-                    <div className="col-span-4">Email</div>
-                    <div className="col-span-3">Created At</div>
-                </div>
-                <div className="divide-y divide-[var(--border)]">
-                    {filteredUsers.length === 0 ? (
-                        <div className="p-8 text-center text-[var(--text-secondary)]">No users found.</div>
-                    ) : (
-                        filteredUsers.map(user => (
-                            <div key={user.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-[var(--surface-hover)] transition-colors text-sm">
-                                <div className="col-span-1 text-[var(--text-secondary)] font-medium">{user.id}</div>
-                                <div className="col-span-4 font-medium text-[var(--text-primary)]">{user.name}</div>
-                                <div className="col-span-4 text-[var(--text-secondary)]">{user.email}</div>
-                                <div className="col-span-3 text-[var(--text-secondary)] text-xs">
-                                    {user.created_at ? (() => {
-                                        const date = new Date(user.created_at);
-                                        const d = String(date.getDate()).padStart(2, '0');
-                                        const m = String(date.getMonth() + 1).padStart(2, '0');
-                                        const y = String(date.getFullYear()).slice(-2);
-                                        const hours = String(date.getHours()).padStart(2, '0');
-                                        const minutes = String(date.getMinutes()).padStart(2, '0');
-                                        return `${d}/${m}/${y} ${hours}:${minutes}`;
-                                    })() : '-'}
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
+            <DataTable
+                value={filteredUsers}
+                paginator
+                rows={5}
+                rowsPerPageOptions={[5, 10, 25, 50]}
+                tableStyle={{ minWidth: '50rem' }}
+                emptyMessage={<div className="p-8 text-center text-[var(--text-secondary)]">No users found.</div>}
+                className="border border-[var(--border)] rounded-2xl overflow-hidden bg-[var(--surface)] shadow-sm"
+                pt={{
+                    thead: { className: 'bg-[var(--bg)]/50' },
+                    tbody: { className: 'bg-[var(--surface)]' },
+                    bodyRow: { className: 'hover:bg-[var(--surface-hover)] transition-colors' },
+                    paginator: {
+                        root: { className: '!bg-[var(--surface)] !border-t !border-[var(--border)] !py-3 !px-4 !flex !items-center !justify-center !gap-1' },
+                        firstPageButton: { className: '!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center' },
+                        prevPageButton: { className: '!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center' },
+                        nextPageButton: { className: '!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center' },
+                        lastPageButton: { className: '!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center' },
+                        pageButton: ({ context }: any) => ({
+                            className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${
+                                context.active 
+                                    ? '!bg-[var(--accent)] !text-white !font-semibold' 
+                                    : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent'
+                            }`
+                        }),
+                        RPPDropdown: {
+                            root: { className: '!bg-[var(--surface)] !border !border-[var(--border)] hover:!border-[var(--accent)] !rounded-lg !px-2 !py-1 text-sm !text-[var(--text-primary)] !flex !items-center !gap-1.5 !cursor-pointer !outline-none !transition-colors' },
+                            input: { className: '!px-1 !font-medium' },
+                            trigger: { className: '!w-5 !text-[var(--text-secondary)] !flex !items-center !justify-center' },
+                            panel: { className: '!bg-[var(--surface)] !border border-[var(--border)] !rounded-lg !shadow-lg !py-1 !mt-1 !z-50' },
+                            item: ({ context }: any) => ({
+                                className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${
+                                    context.selected 
+                                        ? '!bg-[var(--accent)] !text-white !font-semibold' 
+                                        : 'hover:!bg-[var(--surface-hover)] !text-[var(--text-primary)]'
+                                }`
+                            })
+                        }
+                    }
+                }}
+            >
+                <Column 
+                    field="id" 
+                    header="ID" 
+                    headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+                    className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+                    style={{ width: '10%' }}
+                />
+                <Column 
+                    field="name" 
+                    header="Name" 
+                    headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+                    className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-primary)] font-medium"
+                    style={{ width: '30%' }}
+                />
+                <Column 
+                    field="email" 
+                    header="Email" 
+                    headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+                    className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)]"
+                    style={{ width: '35%' }}
+                />
+                <Column
+                    field="created_at"
+                    header="Created At"
+                    headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+                    className="!px-6 !py-4 !border-b !border-[var(--border)] !text-[var(--text-secondary)] text-xs"
+                    style={{ width: '25%' }}
+                    body={(user: AdminUser) => {
+                        if (!user.created_at) return '-';
+                        const date = new Date(user.created_at);
+                        const d = String(date.getDate()).padStart(2, '0');
+                        const m = String(date.getMonth() + 1).padStart(2, '0');
+                        const y = String(date.getFullYear()).slice(-2);
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        return `${d}/${m}/${y} ${hours}:${minutes}`;
+                    }}
+                />
+            </DataTable>
 
             {/* Create User Modal */}
             {isModalOpen && (
