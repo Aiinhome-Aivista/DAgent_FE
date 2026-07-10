@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { MessageSquare, Save, Loader2, RefreshCw, Plus, Edit2, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Save, Loader2, RefreshCw, Plus, Edit2, ArrowLeft, Trash2, AlertTriangle } from 'lucide-react';
 import { Workspace } from '../../../services/workspace.service';
 import { promptService } from '../../../services/prompt.service';
 
 interface CustomPromptsProps {
     workspaces: Workspace[];
     searchQuery: string;
+}
+
+interface DeleteTarget {
+    workspace_id: number;
+    prompt_type: string;
+    workspace_name: string;
+    prompt_type_label: string;
 }
 
 export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces, searchQuery }) => {
@@ -20,6 +27,10 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces, search
     const [promptText, setPromptText] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
+
+    // Delete modal state
+    const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [promptTypes, setPromptTypes] = useState<{ value: string; label: string }[]>([]);
 
@@ -102,8 +113,97 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces, search
         }
     };
 
+    const handleDeleteClick = (p: any) => {
+        setDeleteTarget({
+            workspace_id: p.workspace_id,
+            prompt_type: p.prompt_type,
+            workspace_name: p.workspace_id === 0 ? 'Global Fallback' : (p.workspace_name || `Workspace #${p.workspace_id}`),
+            prompt_type_label: p.prompt_type_label || p.prompt_type,
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+        setIsDeleting(true);
+        try {
+            const response = await promptService.deleteWorkspacePrompt(deleteTarget.workspace_id, deleteTarget.prompt_type);
+            if (response?.success) {
+                toast.success('Custom prompt deleted successfully!');
+                setDeleteTarget(null);
+                await fetchAllPrompts();
+            } else {
+                toast.error(response?.message || 'Failed to delete prompt');
+            }
+        } catch (error) {
+            console.error('Failed to delete prompt', error);
+            toast.error('Failed to delete custom prompt');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <div className="w-full space-y-4">
+
+            {/* ── Delete Confirmation Modal ── */}
+            {deleteTarget && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                    onClick={() => !isDeleting && setDeleteTarget(null)}
+                >
+                    <div
+                        className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Icon + Title */}
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0">
+                                <AlertTriangle className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-semibold text-[var(--text-primary)]">Delete Custom Prompt</h3>
+                                <p className="text-xs text-[var(--text-secondary)] mt-0.5">This action cannot be undone.</p>
+                            </div>
+                        </div>
+
+                        {/* Info */}
+                        <div className="bg-[var(--bg)]/60 border border-[var(--border)] rounded-xl p-4 mb-6 space-y-2 text-sm">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[var(--text-secondary)]">Workspace</span>
+                                <span className="font-medium text-[var(--text-primary)]">{deleteTarget.workspace_name}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[var(--text-secondary)]">Prompt Type</span>
+                                <span className="font-medium text-[var(--text-primary)]">{deleteTarget.prompt_type_label}</span>
+                            </div>
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setDeleteTarget(null)}
+                                disabled={isDeleting}
+                                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg)] transition-all disabled:opacity-50"
+                            >
+                                No, Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmDelete}
+                                disabled={isDeleting}
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-500 text-sm font-medium text-white hover:bg-rose-600 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
+                            >
+                                {isDeleting ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                )}
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {viewMode === 'list' ? (
                 <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
                     <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
@@ -123,8 +223,8 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces, search
                     <div className="grid grid-cols-12 gap-4 p-4 border-b border-[var(--border)] bg-[var(--bg)]/10 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-tight">
                         <div className="col-span-3">Workspace</div>
                         <div className="col-span-3">Prompt Type</div>
-                        <div className="col-span-5">Prompt</div>
-                        <div className="col-span-1 text-right">Actions</div>
+                        <div className="col-span-4">Prompt</div>
+                        <div className="col-span-2 text-right">Actions</div>
                     </div>
 
                     <div className="divide-y divide-[var(--border)] min-h-[100px] bg-[var(--surface)]">
@@ -156,16 +256,23 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({ workspaces, search
                                     <div className="col-span-3 text-[var(--text-secondary)] truncate">
                                         {p.prompt_type_label || p.prompt_type}
                                     </div>
-                                    <div className="col-span-5 text-[var(--text-secondary)] truncate" title={p.custom_prompt}>
+                                    <div className="col-span-4 text-[var(--text-secondary)] truncate" title={p.custom_prompt}>
                                         {p.custom_prompt?.length > 80 ? `${p.custom_prompt.substring(0, 80)}...` : p.custom_prompt}
                                     </div>
-                                    <div className="col-span-1 flex justify-end">
+                                    <div className="col-span-2 flex justify-end items-center gap-1">
                                         <button
                                             onClick={() => handleEditClick(p)}
                                             className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] transition-all"
                                             title="View / Edit"
                                         >
                                             <Edit2 className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteClick(p)}
+                                            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-rose-500/10 hover:text-rose-500 transition-all"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>

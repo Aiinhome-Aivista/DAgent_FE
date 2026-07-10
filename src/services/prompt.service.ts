@@ -24,5 +24,12 @@ export const promptService = {
 
     getAllWorkspacePrompts: async (): Promise<any> => {
         return apiService.get(API_ENDPOINTS.PROMPTS.GET_ALL_WORKSPACE_PROMPTS);
+    },
+
+    deleteWorkspacePrompt: async (workspaceId: number, promptType: string): Promise<any> => {
+        return apiService.delete(API_ENDPOINTS.PROMPTS.DELETE_WORKSPACE_PROMPT, {
+            workspace_id: workspaceId,
+            prompt_type: promptType
+        });
     }
 };
