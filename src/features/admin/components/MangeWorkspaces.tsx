@@ -106,6 +106,9 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
               className:
                 "!bg-[var(--surface)] !border-t !border-[var(--border)] !py-3 !px-4 !flex !items-center !justify-center !gap-1",
             },
+            pages: {
+              className: "!flex !items-center !gap-1",
+            },
             firstPageButton: {
               className:
                 "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
@@ -195,7 +198,7 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                   setWorkspaceToDelete(ws);
                   setDeleteConfirmationText("");
                 }}
-                className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors focus:opacity-100"
+                className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors focus:opacity-100 cursor-pointer"
                 title="Delete Workspace"
               >
                 <Trash2 className="w-4 h-4" />

@@ -302,7 +302,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         )}
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto py-3 custom-scrollbar">
+        <div className={`flex-1 py-3 pr-3 flex flex-col min-h-0 ${adminSubTab === 'customPrompts' ? '' : 'overflow-y-auto custom-scrollbar'}`}>
           {isLoading ? (
             <div className="h-full flex items-center justify-center">
               <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
@@ -315,7 +315,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="w-full"
+                className={`w-full ${adminSubTab === 'customPrompts' ? 'h-full flex flex-col min-h-0' : ''}`}
               >
                 {adminSubTab === "users" && (
                   <MangeUser
