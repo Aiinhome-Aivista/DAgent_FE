@@ -13,6 +13,8 @@ import { ZonePieChartDynamic } from "./ZonePieChartDynamic";
 import { TyreSalesChartDynamic } from "./TyreSalesChartDynamic";
 import { YoYGrowthGraph } from "./YoYGrowthGraph";
 import { IndiaMapGraph } from "./IndiaCoverageMap";
+import { PlanVsSaleChartDynamic } from "./PlanVsSaleChartDynamic";
+import { CategorySalesCardDynamic } from "./CategorySalesCardDynamic";
 
 const formatInlineMarkdown = (text: string) => {
   if (!text) return "";
@@ -475,6 +477,12 @@ export const DashboardGraphs = () => {
 
         {/* Top 10 Tyre Types by Sales */}
         <TyreSalesChartDynamic />
+        
+        {/* Plan vs Sale & Achievement */}
+        <PlanVsSaleChartDynamic />
+
+        {/* Category Sales */}
+        <CategorySalesCardDynamic />
       </div>
     </div>
   );
