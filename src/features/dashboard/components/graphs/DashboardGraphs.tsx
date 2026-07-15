@@ -15,6 +15,10 @@ import { YoYGrowthGraph } from "./YoYGrowthGraph";
 import { IndiaMapGraph } from "./IndiaCoverageMap";
 import { PlanVsSaleChartDynamic } from "./PlanVsSaleChartDynamic";
 import { CategorySalesCardDynamic } from "./CategorySalesCardDynamic";
+import { AccountCategorySalesCardDynamic } from "./AccountCategorySalesCardDynamic";
+import { NonBilledAccountsCardDynamic } from "./NonBilledAccountsCardDynamic";
+import { OverduePieChartDynamic } from "./OverduePieChartDynamic";
+import { ExposureCardDynamic } from "./ExposureCardDynamic";
 
 const formatInlineMarkdown = (text: string) => {
   if (!text) return "";
@@ -483,6 +487,18 @@ export const DashboardGraphs = () => {
 
         {/* Category Sales */}
         <CategorySalesCardDynamic />
+
+        {/* Actual Sales by Account Category */}
+        <AccountCategorySalesCardDynamic />
+
+        {/* Non Billed Accounts % */}
+        <NonBilledAccountsCardDynamic />
+
+        {/* Overdue% (as on Date) */}
+        <OverduePieChartDynamic />
+
+        {/* Exposure % */}
+        <ExposureCardDynamic />
       </div>
     </div>
   );
