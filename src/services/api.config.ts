@@ -44,8 +44,13 @@ export const API_ENDPOINTS = {
     SALES_BY_ZONE: '/sales-by-zone',
     FILTERS: '/dashboard-filters/',
     YEAR_FILTER: '/available-years',
-    YEAR_WISE_FILTER: '/year-wise-sales-comparison'
-
+    YEAR_WISE_FILTER: '/year-wise-sales-comparison',
+    SALES_REVENUE: '/sales-revenue',
+    SALES_BY_ACCOUNT_CATEGORY: '/sales-by-account-category',
+    NON_BILLED_ACCOUNTS: '/non-billed-accounts-pct',
+    OVERDUE_PCT: '/overdue-pct',
+    EXPOSURE_PCT: '/exposure-pct',
+    CATEGORY_SALES: '/category-sales'
 
   },
 
@@ -84,8 +89,11 @@ export const API_ENDPOINTS = {
     PUSH_TO_KG: '/api/admin/push_to_kg',
     GET_STAGED_KNOWLEDGE: '/api/admin/staged_knowledge',
     TRIGGER_INDEXING: '/api/admin/trigger_indexing'
+  },
+  REPORTS: {
+    RECIPIENTS: '/api/report-recipients',
+    SCHEDULES: '/api/scheduled-reports',
   }
-
 };
 
 // top 2 customers

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, Layout, ShieldAlert, Check, X, Search, Loader2 } from 'lucide-react';
+import { Users, Layout, ShieldAlert, Check, X, Search, Loader2, FileText } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
 import { AdminUser, AdminTab } from './types';
 import { workspaceService, Workspace } from '../../services/workspace.service';
@@ -10,8 +10,11 @@ import { MangeUser } from './components/MangeUsers';
 import { MangeWorkspace } from './components/MangeWorkspaces';
 import { AssignWorkspace } from './components/AssignWorkspaces';
 import { WorkspaceUsers } from './components/WorkspaceUsers';
+import { ReportRecipients } from './components/ReportRecipients';
 import { AdminChats } from './components/AdminChats'; // forces TS refresh
 import { AdminPendingKnowledge } from './components/AdminPendingKnowledge';
+import { ScheduledReports } from './components/ScheduledReports';
+import { Calendar, UserPlus, Plus } from 'lucide-react';
 
 
 
@@ -29,6 +32,8 @@ export const AdminPanel: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
     const [isCreatingUser, setIsCreatingUser] = useState(false);
+    const [isCreatingRecipient, setIsCreatingRecipient] = useState(false);
+    const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
     const [newWorkspaceName, setNewWorkspaceName] = useState('');
 
     // Assignment State
@@ -148,7 +153,8 @@ export const AdminPanel: React.FC = () => {
     );
 
     const filteredWorkspaces = workspaces.filter(w =>
-        w.workspace_name.toLowerCase().includes(searchQuery.toLowerCase())
+        w?.workspace_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        w?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const tabDisplayNames: Record<AdminTab, string> = {
@@ -157,7 +163,9 @@ export const AdminPanel: React.FC = () => {
         assignUsers: 'Assignments',
         workspaceUsers: 'Workspace Users',
         adminChats: 'Chat Views',
-        pendingKnowledge: 'KG History'
+        pendingKnowledge: 'KG History',
+        reportRecipients: 'Report Recipients',
+        scheduledReports: 'Scheduled Reports'
     };
 
     return (
@@ -177,7 +185,7 @@ export const AdminPanel: React.FC = () => {
 
             {/* Tabs */}
             <div className="flex border-b border-[var(--border)] px-6 shrink-0 bg-[var(--bg)]/30 overflow-x-auto custom-scrollbar">
-                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge'] as AdminTab[]).map((tab) => (
+                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge', 'reportRecipients', 'scheduledReports'] as AdminTab[]).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => {
@@ -199,6 +207,8 @@ export const AdminPanel: React.FC = () => {
                         {tab === 'workspaceUsers' && <Layout className="w-4 h-4" />}
                         {tab === 'adminChats' && <Users className="w-4 h-4" />}
                         {tab === 'pendingKnowledge' && <Layout className="w-4 h-4" />}
+                        {tab === 'reportRecipients' && <Users className="w-4 h-4" />}
+                        {tab === 'scheduledReports' && <FileText className="w-4 h-4" />}
                         {tabDisplayNames[tab]}
                     </button>
                 ))}
@@ -236,6 +246,26 @@ export const AdminPanel: React.FC = () => {
                         >
                             <Layout className="w-4 h-4" />
                             Create Workspace
+                        </button>
+                    )}
+
+                    {activeTab === 'reportRecipients' && (
+                        <button
+                            onClick={() => setIsCreatingRecipient(true)}
+                            className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
+                        >
+                            <UserPlus className="w-4 h-4" />
+                            Add Recipient
+                        </button>
+                    )}
+
+                    {activeTab === 'scheduledReports' && (
+                        <button
+                            onClick={() => setIsCreatingSchedule(true)}
+                            className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
+                        >
+                            <Calendar className="w-4 h-4" />
+                            Create Schedule
                         </button>
                     )}
                 </div>
@@ -315,6 +345,22 @@ export const AdminPanel: React.FC = () => {
 
                                 {activeTab === 'pendingKnowledge' && (
                                     <AdminPendingKnowledge />
+                                )}
+
+                                {activeTab === 'reportRecipients' && (
+                                    <ReportRecipients 
+                                        searchQuery={searchQuery}
+                                        isModalOpen={isCreatingRecipient}
+                                        setIsModalOpen={setIsCreatingRecipient}
+                                    />
+                                )}
+
+                                {activeTab === 'scheduledReports' && (
+                                    <ScheduledReports 
+                                        searchQuery={searchQuery}
+                                        isModalOpen={isCreatingSchedule}
+                                        setIsModalOpen={setIsCreatingSchedule}
+                                    />
                                 )}
                             </motion.div>
                         </AnimatePresence>

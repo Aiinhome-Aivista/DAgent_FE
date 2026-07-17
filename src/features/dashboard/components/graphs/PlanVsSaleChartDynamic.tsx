@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
+import { useSessionId } from "./dashboardHooks";
 import {
   ComposedChart,
   Line,
@@ -13,7 +15,7 @@ import {
   LabelList,
 } from "recharts";
 
-const regionData = [
+const fallbackRegionData = [
   { city: "West", planValue: 214.4, saleValue: 101, achevValue: 47.1 },
   { city: "South - I", planValue: 95.1, saleValue: 31, achevValue: 32.6 },
   { city: "North", planValue: 225.2, saleValue: 91, achevValue: 40.4 },
@@ -33,6 +35,30 @@ const cityData = [
 
 export const PlanVsSaleChartDynamic = () => {
   const [view, setView] = useState<"region" | "city">("region");
+  const [dynamicRegionData, setDynamicRegionData] = useState<any[]>(fallbackRegionData);
+  const sessionId = useSessionId();
+
+  useEffect(() => {
+    const fetchSalesRevenue = async () => {
+      try {
+        if (!sessionId || sessionId === "null") return;
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.SALES_REVENUE}?session_id=${sessionId}`);
+        const json = await response.json();
+        if (json.status === "success" && json.data) {
+          const mappedData = json.data.map((item: any) => ({
+            city: item.zone || item.Region || "Unknown",
+            planValue: item.planValueCr || 0,
+            saleValue: item.saleValueCr || 0,
+            achevValue: item.achievValuePct || 0
+          }));
+          setDynamicRegionData(mappedData);
+        }
+      } catch (error) {
+        console.error("Error fetching dynamic sales revenue data:", error);
+      }
+    };
+    fetchSalesRevenue();
+  }, []);
 
   const handleDrilldown = (data: any) => {
     // Extract city name whether it's from a Bar click or an XAxis tick click
@@ -42,9 +68,9 @@ export const PlanVsSaleChartDynamic = () => {
     }
   };
 
-  const activeData = view === "region" ? regionData : cityData;
-  const leftDomain = view === "region" ? [0, 300] : [0, 80];
-  const rightDomain = view === "region" ? [0, 60] : [0, 80];
+  const activeData = view === "region" ? dynamicRegionData : cityData;
+  const leftDomain: any = view === "region" ? [0, 'auto'] : [0, 80];
+  const rightDomain: any = view === "region" ? [0, 100] : [0, 80];
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-100 p-6 flex flex-col min-h-[400px]">

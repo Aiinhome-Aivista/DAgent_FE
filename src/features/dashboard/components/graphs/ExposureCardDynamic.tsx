@@ -1,14 +1,36 @@
-import React from "react";
-
-const mockData = [
-  { name: "DL", value: 23 },
-  { name: "FL", value: 116 },
-  { name: "DB", value: 23 },
-  { name: "BS", value: 45 },
-];
+import React, { useState, useEffect } from "react";
+import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
+import { useSessionId } from "./dashboardHooks";
 
 export const ExposureCardDynamic = () => {
+  const [data, setData] = useState<any[]>([]);
+  const sessionId = useSessionId();
   const maxScale = 120; // Allow values up to 120%
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!sessionId || sessionId === "null") return;
+        const response = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.EXPOSURE_PCT}?session_id=${sessionId}`);
+        const json = await response.json();
+        
+        if (json.status === "success" && json.data) {
+          const mappedData = json.data.map((item: any) => ({
+            name: item.name,
+            value: parseFloat(item.value) || 0
+          }));
+          
+          if (mappedData.length > 0) {
+            setData(mappedData);
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching exposure pct", e);
+      }
+    };
+    fetchData();
+  }, [sessionId]);
+
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-100 p-6 flex flex-col min-h-[400px]">
@@ -19,7 +41,7 @@ export const ExposureCardDynamic = () => {
       </div>
 
       <div className="flex-1 flex flex-col justify-center gap-8 py-4">
-        {mockData.map((item, index) => {
+        {data.map((item, index) => {
           // Calculate widths as percentages of the maxScale
           const barWidth = (item.value / maxScale) * 100;
           const hundredPercentWidth = (100 / maxScale) * 100;
