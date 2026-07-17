@@ -74,11 +74,14 @@ export const DashboardKPIs = () => {
     }
   };
 
-  const fetchDefaultMetrics = async (sessionId: string) => {
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+
+  const fetchDefaultMetrics = async (sessionId: string, zone?: string | null) => {
     setIsLoading(true);
     try {
+      const url = `${defaultConfig.baseUrl}/default-dashboard-metrics${zone ? `?zone=${encodeURIComponent(zone)}` : ''}`;
       const response = await fetch(
-        `${defaultConfig.baseUrl}/default-dashboard-metrics`,
+        url,
         {
           method: "POST",
           headers: {
@@ -127,20 +130,30 @@ export const DashboardKPIs = () => {
   useEffect(() => {
     const sessionId = localStorage.getItem("DAgent_session_id");
     if (sessionId) {
-      fetchDefaultMetrics(sessionId);
+      fetchDefaultMetrics(sessionId, selectedZone);
     }
 
     const handleSessionIdUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.sessionId) {
-        fetchDefaultMetrics(customEvent.detail.sessionId);
+        fetchDefaultMetrics(customEvent.detail.sessionId, selectedZone);
       }
+    };
+    
+    const handleZoneChange = (e: any) => {
+      setSelectedZone(e.detail);
+      const sid = localStorage.getItem("DAgent_session_id");
+      if (sid) fetchDefaultMetrics(sid, e.detail);
     };
 
     window.addEventListener("session-id-updated", handleSessionIdUpdated);
-    return () =>
+    window.addEventListener("zone-changed", handleZoneChange);
+    
+    return () => {
       window.removeEventListener("session-id-updated", handleSessionIdUpdated);
-  }, []);
+      window.removeEventListener("zone-changed", handleZoneChange);
+    };
+  }, [selectedZone]);
 
   useEffect(() => {
     const handleChatMetricsUpdate = (event: CustomEvent) => {

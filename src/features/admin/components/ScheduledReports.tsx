@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Mail, Trash2, Send, FileText, X, Plus, Edit2 } from 'lucide-react';
+import { Calendar, Clock, Mail, Trash2, Send, FileText, X, Plus, Edit2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { scheduleService, ScheduledReport, Recipient, Workspace } from '../../../services/schedule.service';
 
@@ -17,6 +17,7 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
     const [recipients, setRecipients] = useState<Recipient[]>([]);
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const mockReports = scheduleService.getReportOptions();
 
     // Form State
@@ -70,6 +71,7 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
             return;
         }
 
+        setIsSubmitting(true);
         try {
             if (editId) {
                 const res = await scheduleService.updateSchedule(editId, {
@@ -106,6 +108,8 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || `Failed to ${editId ? 'update' : 'create'} schedule`);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -359,9 +363,10 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-[2] py-2.5 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center justify-center gap-2"
+                                    disabled={isSubmitting}
+                                    className="flex-[2] py-2.5 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
-                                    {editId ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (editId ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />)}
                                     {editId ? 'Update Schedule' : 'Create Schedule'}
                                 </button>
                             </div>

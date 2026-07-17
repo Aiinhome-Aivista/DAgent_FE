@@ -457,8 +457,28 @@ const SummaryCard = () => {
 };
 
 export const DashboardGraphs = () => {
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("zone-changed", { detail: selectedZone }));
+  }, [selectedZone]);
+
   return (
     <div className="flex flex-col gap-6 overflow-x-hidden">
+      {selectedZone && (
+        <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-lg">
+          <span className="text-sm font-semibold text-indigo-700">
+            Filtered by Zone: {selectedZone}
+          </span>
+          <button 
+            onClick={() => setSelectedZone(null)}
+            className="text-xs font-bold text-indigo-500 hover:text-indigo-700 underline cursor-pointer"
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3">
         {/* Executive Summary Card */}
         <SummaryCard />
@@ -466,14 +486,6 @@ export const DashboardGraphs = () => {
         {/* Year-wise Comparison Filterable Chart */}
         <YearComparisonChartDynamic />
       </div>
-
-      {/* Future use: YoY Growth & India Coverage Map (currently commented out) */}
-      {/* 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <YoYGrowthGraph />
-        <IndiaMapGraph />
-      </div>
-      */}
 
       <div className="grid grid-cols-1 gap-6">
         {/* Sales by Zone */}
@@ -483,22 +495,22 @@ export const DashboardGraphs = () => {
         <TyreSalesChartDynamic />
         
         {/* Plan vs Sale & Achievement */}
-        <PlanVsSaleChartDynamic />
+        <PlanVsSaleChartDynamic onZoneClick={(zone) => setSelectedZone(zone)} />
 
         {/* Category Sales */}
-        <CategorySalesCardDynamic />
+        <CategorySalesCardDynamic zone={selectedZone} />
 
         {/* Actual Sales by Account Category */}
-        <AccountCategorySalesCardDynamic />
+        <AccountCategorySalesCardDynamic zone={selectedZone} />
 
         {/* Non Billed Accounts % */}
-        <NonBilledAccountsCardDynamic />
+        <NonBilledAccountsCardDynamic zone={selectedZone} />
 
         {/* Overdue% (as on Date) */}
-        <OverduePieChartDynamic />
+        <OverduePieChartDynamic zone={selectedZone} />
 
         {/* Exposure % */}
-        <ExposureCardDynamic />
+        <ExposureCardDynamic zone={selectedZone} />
       </div>
     </div>
   );

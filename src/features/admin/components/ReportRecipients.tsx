@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Trash2, X, Plus, User, Edit2 } from 'lucide-react';
+import { Mail, Trash2, X, Plus, User, Edit2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { scheduleService, Recipient } from '../../../services/schedule.service';
 
@@ -11,9 +11,12 @@ interface ReportRecipientsProps {
 
 export const ReportRecipients: React.FC<ReportRecipientsProps> = ({ searchQuery, isModalOpen, setIsModalOpen }) => {
     const [recipients, setRecipients] = useState<Recipient[]>([]);
-    const [newEmail, setNewEmail] = useState('');
-    const [newName, setNewName] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // Form State
+    const [newName, setNewName] = useState('');
+    const [newEmail, setNewEmail] = useState('');
     const [editId, setEditId] = useState<number | null>(null);
 
     useEffect(() => {
@@ -55,6 +58,7 @@ export const ReportRecipients: React.FC<ReportRecipientsProps> = ({ searchQuery,
             toast.error('This email is already in the list');
             return;
         }
+        setIsSubmitting(true);
         try {
             if (editId) {
                 const res = await scheduleService.updateRecipient(editId, newName.trim(), newEmail.trim());
@@ -77,6 +81,8 @@ export const ReportRecipients: React.FC<ReportRecipientsProps> = ({ searchQuery,
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || `Failed to ${editId ? 'update' : 'add'} recipient`);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -212,9 +218,10 @@ export const ReportRecipients: React.FC<ReportRecipientsProps> = ({ searchQuery,
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-[2] py-2.5 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center justify-center gap-2"
+                                    disabled={isSubmitting}
+                                    className="flex-[2] py-2.5 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
-                                    {editId ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (editId ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />)}
                                     {editId ? 'Update Recipient' : 'Add Recipient'}
                                 </button>
                             </div>

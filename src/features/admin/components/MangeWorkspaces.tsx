@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Trash2 } from 'lucide-react';
+import { Layout, Trash2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Workspace } from '../../../services/workspace.service';
 
@@ -11,7 +11,7 @@ interface MangeWorkspaceProps {
     newWorkspaceName: string;
     setNewWorkspaceName: (val: string) => void;
     handleCreateWorkspace: () => void;
-    handleDeleteWorkspace: (id: number) => void;
+    handleDeleteWorkspace: (id: number) => Promise<void>;
     isLoading: boolean;
 }
 
@@ -59,8 +59,9 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                             <button 
                                 onClick={handleCreateWorkspace}
                                 disabled={!newWorkspaceName.trim() || isLoading}
-                                className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 font-medium h-[46px]"
+                                className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 font-medium h-[46px] flex items-center justify-center gap-2"
                             >
+                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                 Create
                             </button>
                             <button 
@@ -68,7 +69,8 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                                     setIsCreatingWorkspace(false);
                                     setNewWorkspaceName('');
                                 }}
-                                className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors h-[46px]"
+                                disabled={isLoading}
+                                className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors h-[46px] disabled:opacity-50"
                             >
                                 Cancel
                             </button>
@@ -151,14 +153,15 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        handleDeleteWorkspace(workspaceToDelete.id);
+                                    onClick={async () => {
+                                        await handleDeleteWorkspace(workspaceToDelete.id);
                                         setWorkspaceToDelete(null);
                                         setDeleteConfirmationText('');
                                     }}
-                                    disabled={deleteConfirmationText !== workspaceToDelete.workspace_name}
-                                    className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={deleteConfirmationText !== workspaceToDelete.workspace_name || isLoading}
+                                    className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
+                                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                     Confirm
                                 </button>
                             </div>
