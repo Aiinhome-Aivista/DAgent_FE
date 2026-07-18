@@ -6,4 +6,4 @@ export interface AdminUser {
     created_at?: string;
 }
 
-export type AdminTab = 'users' | 'workspaces' | 'assignUsers' | 'workspaceUsers' | 'adminChats' | 'pendingKnowledge' | 'reportRecipients' | 'scheduledReports';
+export type AdminTab = 'users' | 'workspaces' | 'assignUsers' | 'workspaceUsers' | 'adminChats' | 'pendingKnowledge' | 'scheduledReports';

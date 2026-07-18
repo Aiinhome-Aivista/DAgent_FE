@@ -14,20 +14,28 @@ interface ScheduledReportsProps {
 export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery, isModalOpen, setIsModalOpen }) => {
     // State
     const [scheduledReports, setScheduledReports] = useState<ScheduledReport[]>([]);
-    const [recipients, setRecipients] = useState<Recipient[]>([]);
+    const [allUsers, setAllUsers] = useState<any[]>([]); // Store all users
+    const [recipients, setRecipients] = useState<any[]>([]); // This will now hold either all users or filtered users
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const mockReports = scheduleService.getReportOptions();
 
     // Form State
+    const getCurrentTime = () => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 5);
+        return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    };
+
     const [selectedRecipientId, setSelectedRecipientId] = useState('');
     const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
     const [selectedReportIds, setSelectedReportIds] = useState<string[]>([]);
     const [selectedDays, setSelectedDays] = useState<string[]>([]);
-    const [time, setTime] = useState('09:00');
+    const [time, setTime] = useState(getCurrentTime());
     const [editId, setEditId] = useState<number | null>(null);
     const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false);
+    const [submitAttempted, setSubmitAttempted] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -36,13 +44,19 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [schedulesRes, recipientsRes, workspacesRes] = await Promise.all([
+            const [schedulesRes, workspacesRes, usersRes] = await Promise.all([
                 scheduleService.getSchedules(),
-                scheduleService.getRecipients(),
-                scheduleService.getWorkspaces()
+                scheduleService.getWorkspaces(),
+                scheduleService.getAllUsers()
             ]);
             if (schedulesRes.status === 'success') setScheduledReports(schedulesRes.data || []);
-            if (recipientsRes.status === 'success') setRecipients(recipientsRes.data || []);
+            
+            if (usersRes.status === 'success' && usersRes.users) {
+                const filteredUsers = usersRes.users.filter((u: any) => u.id !== 1);
+                setAllUsers(filteredUsers);
+                if (!selectedWorkspaceId) setRecipients(filteredUsers);
+            }
+
             if (workspacesRes.status === 'success') setWorkspaces(workspacesRes.workspaces || workspacesRes.data || []);
         } catch (error) {
             toast.error('Failed to load data');
@@ -52,11 +66,29 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
     };
 
     const filteredSchedules = scheduledReports.filter(s => {
-        const email = s.recipient_email || recipients?.find(r => r.id === s.recipient_id)?.email || '';
+        if (s.recipient_id === 1) return false; // Hide schedules assigned to admin
+        
+        const email = s.recipient_email || '';
         const workspaceName = s.workspace_name || workspaces?.find(w => w.id === s.workspace_id)?.name || '';
         return email?.toLowerCase().includes(searchQuery?.toLowerCase() || '') ||
             workspaceName?.toLowerCase().includes(searchQuery?.toLowerCase() || '');
     });
+
+    // Fetch users when a workspace is selected
+    useEffect(() => {
+        if (selectedWorkspaceId) {
+            scheduleService.getWorkspaceUsers(parseInt(selectedWorkspaceId)).then(res => {
+                const usersList = res.users || res.assigned_users;
+                if (res.status === 'success' && usersList) {
+                    setRecipients(usersList.filter((u: any) => u.id !== 1));
+                } else {
+                    setRecipients([]);
+                }
+            }).catch(() => setRecipients([]));
+        } else {
+            setRecipients(allUsers);
+        }
+    }, [selectedWorkspaceId, allUsers]);
 
     const handleToggleDay = (day: string) => {
         setSelectedDays(prev =>
@@ -66,8 +98,8 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
 
     const handleAddSchedule = async (e: React.FormEvent) => {
         e.preventDefault();
+        setSubmitAttempted(true);
         if (!selectedRecipientId || !selectedWorkspaceId || selectedDays.length === 0 || !time) {
-            toast.error('Please fill in recipient, workspace, time, and days');
             return;
         }
 
@@ -128,10 +160,11 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
         setSelectedWorkspaceId('');
         setSelectedReportIds([]);
         setSelectedDays([]);
-        setTime('09:00');
+        setTime(getCurrentTime());
         setEditId(null);
         setIsModalOpen(false);
         setIsReportsDropdownOpen(false);
+        setSubmitAttempted(false);
     };
 
     const handleDeleteSchedule = async (id: number) => {
@@ -149,14 +182,24 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
     };
 
     const getReportName = (id: string, name?: string) => name || mockReports.find(r => r.id === id)?.name || 'Unknown Report';
-    const getRecipientEmail = (id: number, email?: string) => email || recipients.find(r => r.id === id)?.email || 'Unknown Email';
-    const getRecipientName = (id: number, name?: string) => name || recipients.find(r => r.id === id)?.name || 'Unknown Name';
+    const getRecipientEmail = (id: number, email?: string) => email || 'Unknown Email';
+    const getRecipientName = (id: number, name?: string) => name || 'Unknown Name';
+
+    const formatTimeToAMPM = (timeStr?: string) => {
+        if (!timeStr) return '';
+        const [hours, minutes] = timeStr.split(':');
+        let h = parseInt(hours, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12; // '0' becomes '12'
+        return `${h.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+    };
 
     return (
         <div className="space-y-4">
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
                 <div className="grid grid-cols-12 gap-4 p-4 border-b border-[var(--border)] bg-[var(--bg)]/50 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    <div className="col-span-2">ID</div>
+                    <div className="col-span-2">SL No</div>
                     <div className="col-span-3">Report</div>
                     <div className="col-span-3">Recipient</div>
                     <div className="col-span-2">Schedule</div>
@@ -168,9 +211,9 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
                     ) : filteredSchedules.length === 0 ? (
                         <div className="p-8 text-center text-[var(--text-secondary)]">No data found.</div>
                     ) : (
-                        filteredSchedules.map(schedule => (
+                        filteredSchedules.map((schedule, index) => (
                             <div key={schedule.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-[var(--surface-hover)] transition-colors text-sm">
-                                <div className="col-span-2 text-[var(--text-secondary)] font-medium">{schedule.id}</div>
+                                <div className="col-span-2 text-[var(--text-secondary)] font-medium">{index + 1}</div>
                                 <div className="col-span-3 font-medium text-[var(--text-primary)]">
                                     {(schedule.report_ids || []).length > 0
                                         ? schedule.report_ids.map(id => mockReports.find(r => r.id === id)?.name || id).join(', ')
@@ -184,7 +227,7 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
                                 </div>
                                 <div className="col-span-2 text-[var(--text-secondary)] text-xs space-y-1">
                                     <div className="font-medium text-[var(--text-primary)]">
-                                        {schedule.time}
+                                        {formatTimeToAMPM(schedule.time)}
                                     </div>
                                     <div className="flex flex-wrap gap-1">
                                         {schedule.days.map(day => (
@@ -194,7 +237,7 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
                                         ))}
                                     </div>
                                 </div>
-                                <div className="flex gap-1 justify-end">
+                                <div className="col-span-2 flex gap-1 justify-end">
                                     <button
                                         onClick={() => handleEditClick(schedule)}
                                         className="p-1.5 text-[var(--text-secondary)] hover:text-blue-500 rounded-lg hover:bg-blue-500/10 transition-colors"
@@ -235,32 +278,15 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
 
                         <form onSubmit={handleAddSchedule} className="p-6 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {/* Select Recipient */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Select Recipient</label>
-                                    <select
-                                        value={selectedRecipientId}
-                                        required
-                                        onChange={(e) => setSelectedRecipientId(e.target.value)}
-                                        className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                                    >
-                                        <option value="" disabled>Choose a recipient...</option>
-                                        {recipients.map(r => (
-                                            <option key={r.id} value={r.id}>{r.name} ({r.email})</option>
-                                        ))}
-                                    </select>
-                                    {recipients.length === 0 && (
-                                        <p className="text-xs text-amber-500 mt-1">Please add recipients in the Report Recipients tab first.</p>
-                                    )}
-                                </div>
-
                                 {/* Select Workspace */}
                                 <div className="space-y-1.5">
-                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Select Target Workspace</label>
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Select Target Workspace <span className="text-rose-500">*</span></label>
                                     <select
                                         value={selectedWorkspaceId}
-                                        required
-                                        onChange={(e) => setSelectedWorkspaceId(e.target.value)}
+                                        onChange={(e) => {
+                                            setSelectedWorkspaceId(e.target.value);
+                                            setSelectedRecipientId(''); // Reset user when workspace changes
+                                        }}
                                         className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                                     >
                                         <option value="" disabled>Choose a workspace...</option>
@@ -271,11 +297,44 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
                                     {workspaces.length === 0 && (
                                         <p className="text-xs text-amber-500 mt-1">No workspaces found.</p>
                                     )}
+                                    {submitAttempted && !selectedWorkspaceId && (
+                                        <p className="text-xs text-rose-500 mt-1">Please select a workspace.</p>
+                                    )}
+                                </div>
+
+                                {/* Select Recipient */}
+                                <div className="space-y-1.5">
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Select User (Recipient) <span className="text-rose-500">*</span></label>
+                                    <select
+                                        value={selectedRecipientId}
+                                        onChange={(e) => setSelectedRecipientId(e.target.value)}
+                                        className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                                    >
+                                        <option value="" disabled>Choose a user...</option>
+                                        {recipients.map((r: any) => (
+                                            <option key={r.id} value={r.id}>{r.username || r.name} ({r.email})</option>
+                                        ))}
+                                        {/* Fallback option if the selected user is not in the workspace users list but exists in allUsers */}
+                                        {selectedRecipientId && !recipients.some((r: any) => r.id.toString() === selectedRecipientId.toString()) && (
+                                            (() => {
+                                                const u = allUsers.find((u: any) => u.id.toString() === selectedRecipientId.toString());
+                                                return u ? <option key={u.id} value={u.id}>{u.username || u.name} ({u.email})</option> : null;
+                                            })()
+                                        )}
+                                    </select>
+                                    {recipients.length === 0 && (
+                                        <p className="text-xs text-amber-500 mt-1">
+                                            {selectedWorkspaceId ? "No users found for this workspace." : "No users found."}
+                                        </p>
+                                    )}
+                                    {submitAttempted && !selectedRecipientId && (
+                                        <p className="text-xs text-rose-500 mt-1">Please select a user.</p>
+                                    )}
                                 </div>
 
                                 {/* Select Reports */}
                                 <div className="space-y-1.5 relative">
-                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Select Reports (Optional)</label>
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Select Reports</label>
 
                                     <div
                                         className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] cursor-pointer flex justify-between items-center"
@@ -316,19 +375,21 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
 
                                 {/* Select Time */}
                                 <div className="space-y-1.5">
-                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Delivery Time</label>
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Delivery Time (IST) <span className="text-rose-500">*</span></label>
                                     <input
                                         type="time"
                                         value={time}
-                                        required
                                         onChange={(e) => setTime(e.target.value)}
                                         className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                                     />
+                                    {submitAttempted && !time && (
+                                        <p className="text-xs text-rose-500 mt-1">Please select a delivery time.</p>
+                                    )}
                                 </div>
 
                                 {/* Select Days */}
                                 <div className="space-y-2 md:col-span-2">
-                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Select Days</label>
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)]">Select Days <span className="text-rose-500">*</span></label>
                                     <div className="flex flex-wrap gap-2">
                                         {DAYS_OF_WEEK.map(day => {
                                             const isSelected = selectedDays.includes(day);
@@ -347,7 +408,7 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
                                             );
                                         })}
                                     </div>
-                                    {selectedDays.length === 0 && (
+                                    {submitAttempted && selectedDays.length === 0 && (
                                         <p className="text-xs text-rose-500 mt-1">Please select at least one day.</p>
                                     )}
                                 </div>

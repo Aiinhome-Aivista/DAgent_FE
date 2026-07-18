@@ -27,21 +27,31 @@ export interface ScheduledReport {
 }
 
 export const scheduleService = {
-    // Recipients
-    getRecipients: async () => {
-        const response = await axios.get(getUrl(API_ENDPOINTS.REPORTS.RECIPIENTS));
+    // Recipients (Commented out as we are using users table now)
+    // getRecipients: async () => {
+    //     const response = await axios.get(getUrl(API_ENDPOINTS.REPORTS.RECIPIENTS));
+    //     return response.data;
+    // },
+    // addRecipient: async (name: string, email: string) => {
+    //     const response = await axios.post(getUrl(API_ENDPOINTS.REPORTS.RECIPIENTS), { name, email });
+    //     return response.data;
+    // },
+    // updateRecipient: async (id: number, name: string, email: string) => {
+    //     const response = await axios.put(`${getUrl(API_ENDPOINTS.REPORTS.RECIPIENTS)}/${id}`, { name, email });
+    //     return response.data;
+    // },
+    // deleteRecipient: async (id: number) => {
+    //     const response = await axios.delete(`${getUrl(API_ENDPOINTS.REPORTS.RECIPIENTS)}/${id}`);
+    //     return response.data;
+    // },
+    
+    // Workspace Users
+    getAllUsers: async () => {
+        const response = await axios.get(getUrl('/users'));
         return response.data;
     },
-    addRecipient: async (name: string, email: string) => {
-        const response = await axios.post(getUrl(API_ENDPOINTS.REPORTS.RECIPIENTS), { name, email });
-        return response.data;
-    },
-    updateRecipient: async (id: number, name: string, email: string) => {
-        const response = await axios.put(`${getUrl(API_ENDPOINTS.REPORTS.RECIPIENTS)}/${id}`, { name, email });
-        return response.data;
-    },
-    deleteRecipient: async (id: number) => {
-        const response = await axios.delete(`${getUrl(API_ENDPOINTS.REPORTS.RECIPIENTS)}/${id}`);
+    getWorkspaceUsers: async (workspaceId: number) => {
+        const response = await axios.post(getUrl('/workspace_users'), { workspace_id: workspaceId });
         return response.data;
     },
 
