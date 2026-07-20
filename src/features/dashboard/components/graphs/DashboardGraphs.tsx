@@ -6,6 +6,7 @@ import {
   ChevronUp,
   TrendingUp,
   Zap,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { YearComparisonChartDynamic } from "./YearComparisonChartDynamic";
@@ -459,6 +460,17 @@ const SummaryCard = () => {
 export const DashboardGraphs = () => {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
 
+  const getZoneFullName = (zone: string) => {
+    const map: Record<string, string> = {
+      'WZ': 'West Zone',
+      'EZ': 'East Zone',
+      'NZ': 'North Zone',
+      'SZ': 'South Zone',
+      'CZ': 'Central Zone'
+    };
+    return map[zone.toUpperCase()] || zone;
+  };
+
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("zone-changed", { detail: selectedZone }));
   }, [selectedZone]);
@@ -466,15 +478,16 @@ export const DashboardGraphs = () => {
   return (
     <div className="flex flex-col gap-6 overflow-x-hidden">
       {selectedZone && (
-        <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-lg">
-          <span className="text-sm font-semibold text-indigo-700">
-            Filtered by Zone: {selectedZone}
-          </span>
+        <div className="flex items-center justify-center relative py-2">
+          <h2 className="text-2xl font-bold text-slate-700 font-serif">
+            Sales Dashboard - {getZoneFullName(selectedZone)}
+          </h2>
           <button 
             onClick={() => setSelectedZone(null)}
-            className="text-xs font-bold text-indigo-500 hover:text-indigo-700 underline cursor-pointer"
+            className="absolute right-4 p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Clear Filter"
           >
-            Clear Filter
+            <X className="w-5 h-5 text-slate-400 hover:text-red-500 transition-colors" />
           </button>
         </div>
       )}
@@ -484,15 +497,15 @@ export const DashboardGraphs = () => {
         <SummaryCard />
 
         {/* Year-wise Comparison Filterable Chart */}
-        <YearComparisonChartDynamic />
+        <YearComparisonChartDynamic zone={selectedZone} />
       </div>
 
       <div className="grid grid-cols-1 gap-6">
         {/* Sales by Zone */}
-        <ZonePieChartDynamic />
+        <ZonePieChartDynamic zone={selectedZone} />
 
         {/* Top 10 Tyre Types by Sales */}
-        <TyreSalesChartDynamic />
+        <TyreSalesChartDynamic zone={selectedZone} />
         
         {/* Plan vs Sale & Achievement */}
         <PlanVsSaleChartDynamic onZoneClick={(zone) => setSelectedZone(zone)} />

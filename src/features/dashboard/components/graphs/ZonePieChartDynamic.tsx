@@ -11,7 +11,7 @@ import { COLORS } from "./mockData";
 import { FilterSelect, useDashboardFilters, useSessionId } from "./dashboardHooks";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
-export const ZonePieChartDynamic = () => {
+export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
   const filters = useDashboardFilters();
   const sessionId = useSessionId();
 
@@ -48,6 +48,7 @@ export const ZonePieChartDynamic = () => {
               tyre_type: zoneTyreType,
               years: zoneYear === "All" ? "All" : [Number(zoneYear)],
               months: zoneMonth,
+              selected_zones: zone && zone.toLowerCase() !== "all" ? [zone] : []
             }),
           },
         );
@@ -89,12 +90,13 @@ export const ZonePieChartDynamic = () => {
     };
     fetchZoneData();
   }, [
+    sessionId,
     zoneProductType,
     zoneConstructionType,
     zoneTyreType,
     zoneYear,
     zoneMonth,
-    sessionId,
+    zone,
   ]);
 
   return (

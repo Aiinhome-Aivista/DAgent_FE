@@ -43,7 +43,7 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
             planValue: item.planValueCr || 0,
             saleValue: item.saleValueCr || item.saleV || 0,
             achevValue: item.achievValuePct || 0
-          }));
+          })).sort((a: any, b: any) => String(a.city).localeCompare(String(b.city)));
           setDynamicRegionData(mappedData);
         } else {
           setDynamicRegionData([]);

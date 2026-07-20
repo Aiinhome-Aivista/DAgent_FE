@@ -233,17 +233,22 @@ export const DashboardKPIs = () => {
                 <h3 className="text-[1.1rem] font-black text-slate-700 leading-tight my-0.5 uppercase truncate">
                   {(() => {
                     let formattedVal: React.ReactNode = "";
+                    const nonCurrencyMetrics = ["Billing Scope", "Dealer Spread", "Attrition", "New Dealer", "Rotation"];
+                    
                     if (
                       typeof metric.value === "string" &&
                       /^\s*[\d,.]+/.test(metric.value) &&
                       !metric.value.includes("₹") &&
-                      !metric.value.includes("%")
+                      !metric.value.includes("%") &&
+                      !nonCurrencyMetrics.includes(metric.label)
                     ) {
                       formattedVal = `₹${metric.value.replace(/\$/g, "").trim()}`;
                     } else if (typeof metric.value === "string") {
                       formattedVal = metric.value.replace(/\$/g, "₹");
                     } else if (typeof metric.value === "number") {
-                      formattedVal = `₹${metric.value}`;
+                      formattedVal = nonCurrencyMetrics.includes(metric.label) 
+                        ? String(metric.value) 
+                        : `₹${metric.value}`;
                     } else {
                       return metric.value as React.ReactNode;
                     }
