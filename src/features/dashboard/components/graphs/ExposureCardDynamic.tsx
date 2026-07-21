@@ -21,13 +21,13 @@ export const ExposureCardDynamic = ({ zone }: { zone?: string | null }) => {
         const url = `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.EXPOSURE_PCT}?session_id=${sessionId}${zone ? `&zone=${encodeURIComponent(zone)}` : ''}`;
         const response = await fetch(url);
         const json = await response.json();
-        
+
         if (json.status === "success" && json.data) {
           const mappedData = json.data.map((item: any) => ({
             name: item.name,
             value: parseFloat(item.value) || 0
           }));
-          
+
           if (mappedData.length > 0) {
             setData(mappedData);
           } else {
@@ -66,27 +66,27 @@ export const ExposureCardDynamic = ({ zone }: { zone?: string | null }) => {
             const hundredPercentWidth = (100 / maxScale) * 100;
 
             return (
-              <div key={index} className="flex items-center gap-4">
+              <div key={index} className="flex items-center gap-10">
                 <span className="w-8 text-slate-600 font-semibold">{item.name}</span>
-                
+
                 <div className="flex-1 relative h-6">
                   {/* 100% Marker Line */}
-                  <div 
+                  <div
                     className="absolute top-[-4px] bottom-[-4px] w-[2px] bg-slate-800 z-20"
                     style={{ left: `${hundredPercentWidth}%` }}
                   />
 
                   {/* Striped Background for 100% */}
-                  <div 
+                  <div
                     className="absolute top-0 bottom-0 left-0 z-0"
-                    style={{ 
+                    style={{
                       width: `${hundredPercentWidth}%`,
                       background: 'repeating-linear-gradient(45deg, transparent, transparent 2px, #fca5a5 2px, #fca5a5 4px)'
                     }}
                   />
 
                   {/* Actual Value Bar */}
-                  <div 
+                  <div
                     className="absolute top-0 bottom-0 left-0 bg-red-600 z-10"
                     style={{ width: `${barWidth}%` }}
                   />

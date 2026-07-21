@@ -20,7 +20,7 @@ export const CategorySalesCardDynamic = ({ zone }: { zone?: string | null }) => 
         const url = `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.CATEGORY_SALES}?session_id=${sessionId}${zone ? `&zone=${encodeURIComponent(zone)}` : ''}`;
         const response = await fetch(url);
         const json = await response.json();
-        
+
         if (json.status === "success" && json.data) {
           const formattedData = json.data.map((item: any) => ({
             title: item.category,
@@ -41,28 +41,28 @@ export const CategorySalesCardDynamic = ({ zone }: { zone?: string | null }) => 
   }, [sessionId, zone]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-100 p-6 flex flex-col min-h-[300px]">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-start gap-4 mb-6">
-        <h3 className="text-slate-800 font-bold text-lg text-left">
+    <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 p-6 flex flex-col h-full min-h-[280px] justify-between">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-slate-900 font-extrabold text-base tracking-tight">
           Category Sales
         </h3>
       </div>
-      
-      <div className="flex-1 min-h-[200px] flex items-center justify-center">
+
+      <div className="flex-1 flex items-center justify-center">
         {isLoading ? (
-          <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+          <Loader2 className="w-7 h-7 text-indigo-500 animate-spin" />
         ) : data.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
+          <div className="grid grid-cols-2 gap-3 w-full">
             {data.map((item, index) => (
               <div
                 key={index}
-                className="bg-indigo-50 rounded-xl p-4 flex flex-col items-center justify-center gap-2"
+                className="bg-indigo-50/70 border border-indigo-100/60 rounded-xl p-3.5 flex flex-col items-center justify-center gap-1 transition-all hover:bg-indigo-50"
               >
-                <span className="text-slate-800 font-bold text-lg">
-                  {item.value}
-                </span>
-                <span className="text-slate-800 text-sm font-semibold text-center">
+                <span className="text-slate-500 text-xs font-bold text-center">
                   {item.title}
+                </span>
+                <span className="text-slate-900 font-black text-base tracking-tight">
+                  {item.value}
                 </span>
               </div>
             ))}

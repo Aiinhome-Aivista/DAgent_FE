@@ -146,3 +146,52 @@ export const formatChatMessage = (text: string, isAssistant: boolean): string =>
     }
   }).join('');
 };
+
+/**
+ * Converts Markdown tables (| col1 | col2 |) into responsive HTML <table> markup
+ * before passing through to formatChatMessage.
+ */
+export const formatMarkdownWithTables = (text: string, isAssistant: boolean = true): string => {
+  if (typeof text !== 'string') return '';
+
+  let processed = text.replace(/\$/g, '₹');
+
+  // Regex to match markdown tables
+  const tableRegex = /((?:\|[^\n]+\|\n?)+)/g;
+
+  processed = processed.replace(tableRegex, (match) => {
+    const lines = match.trim().split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return match;
+
+    const headerLine = lines[0];
+    const dataLines = lines.slice(1).filter(l => !/^[|\s:-]+$/.test(l));
+
+    const parseRow = (rowStr: string) => {
+      return rowStr.split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+    };
+
+    const headers = parseRow(headerLine);
+    const rows = dataLines.map(parseRow);
+
+    if (headers.length === 0) return match;
+
+    const tableHtml = `<div class="overflow-x-auto my-3 border border-amber-200/80 rounded-xl bg-white shadow-xs">
+      <table class="w-full text-left text-xs border-collapse">
+        <thead class="bg-amber-100/70 font-bold text-slate-800 border-b border-amber-200">
+          <tr>${headers.map(h => `<th class="px-4 py-2.5 uppercase tracking-wider font-extrabold">${h}</th>`).join('')}</tr>
+        </thead>
+        <tbody class="divide-y divide-amber-100">
+          ${rows.map(r => `
+            <tr class="hover:bg-amber-50/50 transition-colors">
+              ${r.map(cell => `<td class="px-4 py-2.5 font-mono text-slate-800">${cell}</td>`).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+    return tableHtml;
+  });
+
+  return formatChatMessage(processed, isAssistant);
+};

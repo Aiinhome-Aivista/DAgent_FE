@@ -1653,8 +1653,8 @@ export const AgentWorkflow = ({
                         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
                           <DashboardGraphs />
                         </div>
-                        {/* Lower portion: Chat */}
-                        <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
+                        {/* Lower portion: Chat (Commented out as per user request) */}
+                        {/* <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
                           <ChatWindow
                             initialMode="chat"
                             initialMessage={initialChatMessage}
@@ -1665,7 +1665,7 @@ export const AgentWorkflow = ({
                             onCollapseChange={setChatCollapsed}
                             chatKey={chatKey}
                           />
-                        </div>
+                        </div> */}
                       </div>
 
                       {/* Right side strip - scrollable KPIs + Graph buttons */}
