@@ -429,7 +429,7 @@ function AppContent() {
 
       <main
         className={`flex-1 flex flex-col overflow-hidden h-screen transition-all ${
-          isSidebarOpen ? "ml-0 md:ml-[280px]" : "ml-0 md:ml-[80px]"
+          isSidebarOpen ? "md:pl-[280px]" : "md:pl-[80px]"
         }`}
       >
         <AppHeader

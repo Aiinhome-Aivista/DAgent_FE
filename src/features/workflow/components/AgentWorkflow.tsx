@@ -1646,7 +1646,7 @@ export const AgentWorkflow = ({
                   )}
 
                   {selectedAgent.id === 'query' ? (
-                    <div className="flex-1 flex overflow-hidden">
+                    <div className="relative flex-1 flex overflow-hidden w-full h-full">
                       <motion.div
                         key="main-dash"
                         initial={{ opacity: 0, x: -20 }}
