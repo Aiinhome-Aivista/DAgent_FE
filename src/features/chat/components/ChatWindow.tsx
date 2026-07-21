@@ -120,10 +120,10 @@ export const ChatWindow = ({
 
       {!isCollapsed && (
         <div
-          className={`flex-1 flex min-h-0 ${mode === "chat" ? "flex-row" : "flex-col"}`}
+          className={`flex-1 flex min-h-0 ${mode === "chat" ? "flex-col md:flex-row" : "flex-col"}`}
         >
           <div
-            className={`flex flex-col min-w-0 min-h-0 ${mode === "chat" ? "w-2/3 border-r border-[var(--border)]" : "w-full h-full"}`}
+            className={`flex flex-col min-w-0 min-h-0 ${mode === "chat" ? "w-full md:w-2/3 border-b md:border-b-0 md:border-r border-[var(--border)] flex-1 md:flex-none" : "w-full h-full"}`}
           >
           <CardContent
             ref={scrollRef}
@@ -280,8 +280,8 @@ export const ChatWindow = ({
 
         {/* Right Column: Critical Insights (1/3 width, only in chat mode) */}
         {mode === "chat" && (
-          <div className="w-1/3 bg-[var(--surface)]/50 p-4 flex flex-col relative z-30 min-h-0">
-            <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] mb-3 flex items-center gap-2 flex-shrink-0">
+          <div className="w-full md:w-1/3 bg-[var(--surface)]/50 p-3 md:p-4 flex flex-col relative z-30 min-h-0 shrink-0 md:flex-none max-h-[150px] md:max-h-none overflow-y-auto border-t md:border-t-0 border-[var(--border)]">
+            <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] mb-2 md:mb-3 flex items-center gap-2 flex-shrink-0">
               <Sparkles className="w-3 h-3 text-[var(--accent)]" /> Critical
               Insights
             </h4>

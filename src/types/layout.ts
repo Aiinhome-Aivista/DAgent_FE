@@ -44,6 +44,8 @@ export interface SidebarProps {
 export interface AppHeaderProps {
   activeTab: Tab;
   selectedConnector: Connector | null;
+  isSidebarOpen?: boolean;
+  setSidebarOpen?: (open: boolean) => void;
 }
 
 export interface MainContentProps {

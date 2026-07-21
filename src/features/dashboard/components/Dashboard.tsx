@@ -32,7 +32,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onBack }) => {
       </header>
 
       {/* Main content body */}
-      <main className="flex-1 p-6 overflow-hidden max-w-[1600px] mx-auto w-full flex gap-6">
+      <main className="flex-1 p-6 overflow-hidden max-w-[1600px] mx-auto w-full flex flex-col md:flex-row gap-6">
         {/* Left Side: Premium Overview (No scroll) */}
         <div className="flex-1 min-w-0 flex flex-col gap-6 overflow-y-auto pr-2 [scrollbar-width:thin]">
           {/* Welcome Banner */}
@@ -104,7 +104,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onBack }) => {
         </div>
 
         {/* Right Side: KPIs and Chart Selection (Scrollable) */}
-        <div className="w-56 shrink-0 flex flex-col gap-4 border-l border-slate-200 pl-4 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-slate-50">
+        <div className="w-full md:w-56 shrink-0 flex flex-col gap-4 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-4 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-slate-50">
           {/* KPIs */}
           <DashboardKPIs />
 

@@ -428,12 +428,15 @@ function AppContent() {
       />
 
       <main
-        className="flex-1 flex flex-col overflow-hidden h-screen"
-        style={{ marginLeft: isSidebarOpen ? 280 : 80 }}
+        className={`flex-1 flex flex-col overflow-hidden h-screen transition-all ${
+          isSidebarOpen ? "ml-0 md:ml-[280px]" : "ml-0 md:ml-[80px]"
+        }`}
       >
         <AppHeader
           activeTab={activeTab}
           selectedConnector={selectedConnector}
+          isSidebarOpen={isSidebarOpen}
+          setSidebarOpen={setSidebarOpen}
         />
 
         <MainContent

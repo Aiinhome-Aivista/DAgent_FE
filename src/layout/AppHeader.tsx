@@ -1,5 +1,5 @@
 import React from "react";
-import { User } from "lucide-react";
+import { User, Menu } from "lucide-react";
 import { Button } from "../ui-kit";
 import { AppHeaderProps } from "../types/layout";
 import { useAuthContext } from "../context/AuthContext";
@@ -7,6 +7,8 @@ import { useAuthContext } from "../context/AuthContext";
 export const AppHeader: React.FC<AppHeaderProps> = ({
   activeTab,
   selectedConnector,
+  isSidebarOpen,
+  setSidebarOpen,
 }) => {
   const { userName } = useAuthContext();
   const getTabTitle = () => {
@@ -50,12 +52,22 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       : displayUserName;
 
   return (
-    <header className="h-14 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-40 px-6 flex items-center justify-between">
-      <div>
-        <h1 className="text-lg font-bold tracking-tight">{getTabTitle()}</h1>
-        <p className="text-sm text-[var(--text-secondary)]">
-          {getTabSubtitle()}
-        </p>
+    <header className="h-14 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-40 px-3 md:px-6 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        {setSidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(!isSidebarOpen)}
+            className="md:hidden p-2 -ml-1 rounded-lg hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-secondary)]"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">{getTabTitle()}</h1>
+          <p className="text-xs md:text-sm text-[var(--text-secondary)]">
+            {getTabSubtitle()}
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <Button

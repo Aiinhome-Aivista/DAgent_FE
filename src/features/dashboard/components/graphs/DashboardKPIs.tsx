@@ -180,11 +180,11 @@ export const DashboardKPIs = () => {
   };
 
   const renderSkeleton = () => (
-    <div className="flex flex-col gap-2 w-full flex-1 min-h-0 overflow-y-auto pr-1">
+    <div className="flex flex-row md:flex-col gap-2 w-full flex-1 min-h-0 overflow-x-auto md:overflow-x-hidden overflow-y-hidden md:overflow-y-auto pr-1 pb-2 md:pb-0">
       {[...Array(6)].map((_, i) => (
         <div
           key={i}
-          className="bg-white p-[14px] rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2 shrink-0"
+          className="w-[140px] md:w-auto bg-white p-[14px] rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2 shrink-0"
         >
           <div className="h-2.5 bg-slate-200 rounded w-24 mt-1 animate-pulse"></div>
           <div className="min-w-0">
@@ -217,11 +217,11 @@ export const DashboardKPIs = () => {
       {isLoading ? (
         renderSkeleton()
       ) : (
-        <div className="flex flex-col gap-2 w-full flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        <div className="flex flex-row md:flex-col gap-2 w-full flex-1 min-h-0 overflow-x-auto md:overflow-x-hidden overflow-y-hidden md:overflow-y-auto pr-1 pb-2 md:pb-0 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           {metrics.map((metric, index) => (
             <div
               key={index}
-              className="bg-white p-[14px] rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center gap-1.5 shrink-0"
+              className="w-[140px] md:w-auto bg-white p-[14px] rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center gap-1.5 shrink-0"
             >
               <p
                 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 truncate"

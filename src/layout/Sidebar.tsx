@@ -59,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <motion.aside
       initial={false}
       animate={{ width: isSidebarOpen ? 280 : 80 }}
-      className="fixed left-0 top-0 h-full bg-[var(--surface)] border-r border-[var(--border)] z-50 flex flex-col"
+      className={`fixed left-0 top-0 h-full bg-[var(--surface)] border-r border-[var(--border)] z-50 flex flex-col transition-transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
     >
       <div className="p-4 flex items-center justify-between">
         {isSidebarOpen && (

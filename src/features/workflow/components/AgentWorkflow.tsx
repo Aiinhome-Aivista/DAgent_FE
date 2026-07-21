@@ -1647,14 +1647,21 @@ export const AgentWorkflow = ({
 
                   {selectedAgent.id === 'query' ? (
                     <div className="flex-1 flex overflow-hidden">
-                      {/* Left Side: Split into Charts (upper) and Chat (lower) */}
-                      <div className="flex-1 min-w-0 flex flex-col min-h-0">
+                      <motion.div
+                        key="main-dash"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="absolute inset-0 w-full flex flex-col md:flex-row"
+                      >
+                        {/* Left Side: Split into Charts (upper) and Chat (lower) */}
+                        <div className="flex-1 min-w-0 flex flex-col min-h-0">
                         {/* Upper portion: Charts */}
-                        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
+                        <div className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)] ${!chatCollapsed ? 'hidden md:block' : ''}`}>
                           <DashboardGraphs />
                         </div>
                         {/* Lower portion: Chat */}
-                        <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
+                        <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'flex-1 md:flex-none md:h-[45%] md:min-h-[350px]'}`}>
                           <ChatWindow
                             initialMode="chat"
                             initialMessage={initialChatMessage}
@@ -1670,7 +1677,7 @@ export const AgentWorkflow = ({
 
                       {/* Right side strip - scrollable KPIs + Graph buttons */}
                       {!activeGraphId && (
-                        <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                        <div className="w-full md:w-52 max-h-[40vh] md:max-h-none shrink-0 border-t md:border-t-0 md:border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                           <div className="p-3 flex flex-col h-full">
                             {/* KPIs */}
                             <DashboardKPIs />
@@ -1708,6 +1715,7 @@ export const AgentWorkflow = ({
                       )}
                       {/* Graph Side Panel overlay */}
                       <GraphSidePanel activeGraphId={activeGraphId} onClose={() => setActiveGraphId(null)} inline={true} />
+                      </motion.div>
                     </div>
                   ) : (
                     (() => {
