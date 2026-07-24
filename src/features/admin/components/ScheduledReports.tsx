@@ -28,10 +28,16 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
         return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     };
 
+    const getCurrentDay = () => {
+        const today = new Date();
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return days[today.getDay()];
+    };
+
     const [selectedRecipientId, setSelectedRecipientId] = useState('');
     const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
     const [selectedReportIds, setSelectedReportIds] = useState<string[]>([]);
-    const [selectedDays, setSelectedDays] = useState<string[]>([]);
+    const [selectedDays, setSelectedDays] = useState<string[]>([getCurrentDay()]);
     const [time, setTime] = useState(getCurrentTime());
     const [editId, setEditId] = useState<number | null>(null);
     const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false);
@@ -159,7 +165,7 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
         setSelectedRecipientId('');
         setSelectedWorkspaceId('');
         setSelectedReportIds([]);
-        setSelectedDays([]);
+        setSelectedDays([getCurrentDay()]);
         setTime(getCurrentTime());
         setEditId(null);
         setIsModalOpen(false);
@@ -262,7 +268,7 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
             {/* Create Schedule Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
-                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden my-8">
+                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-3xl my-8">
                         <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
                             <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                                 <Plus className="w-5 h-5 text-[var(--accent)]" />

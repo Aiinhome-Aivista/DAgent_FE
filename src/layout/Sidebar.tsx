@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Menu,
@@ -17,6 +17,7 @@ import {
 import { Workspace, workspaceService } from "../services/workspace.service";
 import { SidebarProps } from "../types/layout";
 import { useAuthContext } from "../context/AuthContext";
+import { SettingsModal } from "../features/settings/SettingsModal";
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isSidebarOpen,
@@ -54,6 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isWorkspacesLoading,
 }) => {
   const { userId, roleId, roleName } = useAuthContext();
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   return (
     <motion.aside
@@ -701,10 +703,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
         </div>
+      </div>
 
         {/* Settings + Logout — fixed at the bottom */}
         <div className="px-3 pb-3 space-y-1 shrink-0 mt-auto border-t border-[var(--border)] pt-3">
-          <button className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200">
+          <button 
+            onClick={() => setIsSettingsOpen(true)}
+            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200"
+          >
             <Settings className="w-4 h-4 shrink-0" />
             {isSidebarOpen && (
               <motion.span
@@ -731,8 +737,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </motion.span>
             )}
           </button>
-        </div>
       </div>
+      
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </motion.aside>
   );
 };
+
+export default Sidebar;
