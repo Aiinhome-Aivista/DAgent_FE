@@ -89,20 +89,30 @@ function AppContent() {
                   } 
                   // Fresh auto-select for initial load
                   else if (!hasSelectedSession && !currentVisit) {
-                    const firstSession = sessions[0];
-                    if (firstSession.querySessionHistory) {
-                      localStorage.setItem('selected_query_session', JSON.stringify(firstSession.querySessionHistory));
+                    let sessionToSelect = sessions[sessions.length - 1]; // fallback to latest
+                    // Try to find the latest default session
+                    for (let i = sessions.length - 1; i >= 0; i--) {
+                      if (sessions[i].querySessionName?.trim().toLowerCase().startsWith('default')) {
+                        sessionToSelect = sessions[i];
+                        break;
+                      }
                     }
-                    if (firstSession.querySessionId) {
-                      localStorage.setItem('current_visit_number', firstSession.querySessionId.replace('session_visit_', ''));
-                    }
-                    if (firstSession.querySessionName) {
-                      localStorage.setItem('selected_query_session_name', firstSession.querySessionName);
-                    }
-                    if (firstSession.querySessionName && firstSession.querySessionName.startsWith('default_')) {
-                      localStorage.setItem('is_default_chat', 'true');
-                    } else {
-                      localStorage.removeItem('is_default_chat');
+
+                    if (sessionToSelect) {
+                      if (sessionToSelect.querySessionHistory) {
+                        localStorage.setItem('selected_query_session', JSON.stringify(sessionToSelect.querySessionHistory));
+                      }
+                      if (sessionToSelect.querySessionId) {
+                        localStorage.setItem('current_visit_number', sessionToSelect.querySessionId.replace('session_visit_', ''));
+                      }
+                      if (sessionToSelect.querySessionName) {
+                        localStorage.setItem('selected_query_session_name', sessionToSelect.querySessionName);
+                      }
+                      if (sessionToSelect.querySessionName && sessionToSelect.querySessionName.trim().toLowerCase().startsWith('default')) {
+                        localStorage.setItem('is_default_chat', 'true');
+                      } else {
+                        localStorage.removeItem('is_default_chat');
+                      }
                     }
                     setExpandedWorkspaceId(activeWS.id);
                     setChatKey(prev => prev + 1);

@@ -409,20 +409,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                           // Fetch and expand the workspace history
                                           const sessions = await fetchWorkspaceHistory(workspace.id, workspace.session_id, true);
                                           
-                                          // Auto-select the first session if available
+                                          // Auto-select the latest default session if available
                                           if (sessions && sessions.length > 0) {
-                                            const firstSession = sessions[0];
-                                            if (firstSession.querySessionHistory) {
-                                              localStorage.setItem("selected_query_session", JSON.stringify(firstSession.querySessionHistory));
+                                            let sessionToSelect = sessions[sessions.length - 1]; // fallback to latest
+                                            // Try to find the latest default session
+                                            for (let i = sessions.length - 1; i >= 0; i--) {
+                                              if (sessions[i].querySessionName?.trim().toLowerCase().startsWith('default')) {
+                                                sessionToSelect = sessions[i];
+                                                break;
+                                              }
                                             }
-                                            if (firstSession.querySessionId) {
-                                              localStorage.setItem("current_visit_number", firstSession.querySessionId.replace("session_visit_", ""));
-                                            }
-                                            if (firstSession.querySessionName) {
-                                              localStorage.setItem("selected_query_session_name", firstSession.querySessionName);
-                                            }
-                                            if (firstSession.querySessionName && firstSession.querySessionName.startsWith("default_")) {
-                                              localStorage.setItem("is_default_chat", "true");
+
+                                            if (sessionToSelect) {
+                                              if (sessionToSelect.querySessionHistory) {
+                                                localStorage.setItem("selected_query_session", JSON.stringify(sessionToSelect.querySessionHistory));
+                                              }
+                                              if (sessionToSelect.querySessionId) {
+                                                localStorage.setItem("current_visit_number", sessionToSelect.querySessionId.replace("session_visit_", ""));
+                                              }
+                                              if (sessionToSelect.querySessionName) {
+                                                localStorage.setItem("selected_query_session_name", sessionToSelect.querySessionName);
+                                              }
+                                              if (sessionToSelect.querySessionName && sessionToSelect.querySessionName.trim().toLowerCase().startsWith("default")) {
+                                                localStorage.setItem("is_default_chat", "true");
+                                              } else {
+                                                localStorage.removeItem("is_default_chat");
+                                              }
                                             }
                                           }
                                           
@@ -572,17 +584,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                           </div>
                                         ) : (
                                           (() => {
-                                            const filteredSessions = (
-                                              queryHistories[workspace.id] || []
-                                            ).filter(
-                                              (s) =>
-                                                !historySearch ||
-                                                s.querySessionName
-                                                  .toLowerCase()
-                                                  .includes(
-                                                    historySearch.toLowerCase(),
-                                                  ),
-                                            );
+                                            const rawSessions = [...(queryHistories[workspace.id] || [])].reverse();
+                                            const activeVisitNumber = localStorage.getItem("current_visit_number");
+                                            
+                                            let defaultToKeep: any = null;
+                                            for (const s of rawSessions) {
+                                              const name = s.querySessionName?.trim().toLowerCase() || "";
+                                              if (name.startsWith("default")) {
+                                                const isThisActive = s.querySessionId && activeVisitNumber === String(s.querySessionId).replace("session_visit_", "").trim();
+                                                if (isThisActive) {
+                                                  defaultToKeep = s;
+                                                  break;
+                                                }
+                                                if (!defaultToKeep) {
+                                                  defaultToKeep = s;
+                                                }
+                                              }
+                                            }
+
+                                            const filteredSessions = rawSessions
+                                              .filter((s) => {
+                                                const name = s.querySessionName?.trim().toLowerCase() || "";
+                                                if (name.startsWith("default")) {
+                                                  return s === defaultToKeep;
+                                                }
+                                                return true;
+                                              })
+                                              .filter(
+                                                (s) =>
+                                                  !historySearch ||
+                                                  s.querySessionName
+                                                    .toLowerCase()
+                                                    .includes(
+                                                      historySearch.toLowerCase(),
+                                                    ),
+                                              )
+                                              .sort((a, b) => {
+                                                if (a === defaultToKeep) return -1;
+                                                if (b === defaultToKeep) return 1;
+                                                return 0;
+                                              });
 
                                             return filteredSessions.length ===
                                               0 ? (
