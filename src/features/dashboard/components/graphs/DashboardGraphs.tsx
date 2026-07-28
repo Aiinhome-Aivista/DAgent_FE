@@ -79,7 +79,7 @@ const parseSessionData = (session: any) => {
 
     const rawAnswer = firstTurn.answer;
     const lines = rawAnswer.split("\n").map((l: string) => l.trim());
-    
+
     let title = "";
     let titleIndex = -1;
 
@@ -306,14 +306,14 @@ const SummaryCard = () => {
           return;
         }
         const userId = parseInt(userIdStr, 10);
-        
+
         const response = await chatHistoryService.getSessionChatHistory(sessionId, userId);
         if (response && response.status === "success" && response.querySessions) {
           // Find the default session (name starts with "default_")
           const defaultSession = response.querySessions.find(
             (s: any) => s.querySessionName && s.querySessionName.toLowerCase().startsWith("default_")
           );
-          
+
           if (defaultSession) {
             const data = parseSessionData(defaultSession);
             if (active) {
@@ -530,7 +530,7 @@ const SummaryRevisedDownloadCard = () => {
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-        <h3 className="font-bold text-slate-800 text-base">Summary Revised</h3>
+        <h3 className="font-bold text-slate-800 text-base">Sales Summary</h3>
         <button
           onClick={handleDownload}
           disabled={isDownloading}
@@ -547,11 +547,10 @@ const SummaryRevisedDownloadCard = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap transition-colors ${
-              activeTab === tab.id
+            className={`px-3 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap transition-colors ${activeTab === tab.id
                 ? 'bg-indigo-600 text-white'
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -580,18 +579,18 @@ const SummaryRevisedDownloadCard = () => {
                       const val = String(cell.value);
                       const isNum = !isNaN(Number(val.replace(/,/g, ''))) && val !== '';
                       const isPct = val.includes('%');
-                      
+
                       // Base classes
                       let tdClass = "border border-slate-300 px-2 py-1.5 whitespace-nowrap text-slate-700 ";
-                      
+
                       // Font weight
                       if (cell.bold) tdClass += "font-bold ";
-                      
+
                       // Text alignment
                       if (cell.align === "center" || cell.align === "justify") tdClass += "text-center ";
                       else if (cell.align === "right" || isNum) tdClass += "text-right font-mono ";
                       else tdClass += "text-left ";
-                      
+
                       // Highlight % values slightly if not already styled
                       if (isPct && !cell.bold) tdClass += "text-indigo-700 font-semibold ";
 
@@ -648,7 +647,7 @@ export const DashboardGraphs = () => {
           <h2 className="text-2xl font-bold text-slate-700 font-serif">
             Sales Dashboard - {getZoneFullName(selectedZone)}
           </h2>
-          <button 
+          <button
             onClick={() => setSelectedZone(null)}
             className="absolute right-4 p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
             title="Clear Filter"
@@ -678,7 +677,7 @@ export const DashboardGraphs = () => {
 
         {/* Top 10 Tyre Types by Sales */}
         <TyreSalesChartDynamic zone={selectedZone} />
-        
+
         {/* Category Sales */}
         <CategorySalesCardDynamic zone={selectedZone} />
 
