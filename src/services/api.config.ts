@@ -94,6 +94,7 @@ export const API_ENDPOINTS = {
     RECIPIENTS: '/api/report-recipients',
     SCHEDULES: '/api/scheduled-reports',
     EXPORT_DOMESTIC_SALES: '/export-domestic-sales-report',
+    EXPORT_DOMESTIC_SALES_PREVIEW: '/export-domestic-sales-preview',
   }
 };
 

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { chatHistoryService } from "../../../../services/chatHistory.service";
+import toast from "react-hot-toast";
+import { apiService } from "../../../../services/api.service";
+import { API_ENDPOINTS, defaultConfig } from "../../../../services/api.config";
 import {
   Sparkles,
   ChevronDown,
@@ -7,8 +10,10 @@ import {
   TrendingUp,
   Zap,
   X,
+  Download,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+
 import { YearComparisonChartDynamic } from "./YearComparisonChartDynamic";
 import { ZonePieChartDynamic } from "./ZonePieChartDynamic";
 import { TyreSalesChartDynamic } from "./TyreSalesChartDynamic";
@@ -457,6 +462,167 @@ const SummaryCard = () => {
   );
 };
 
+const TABS = [
+  { id: "s1", label: "Sheet 1", title: "Domestic Sales Value Achievement" },
+  { id: "s2", label: "Sheet 2", title: "Sales Number's" },
+  { id: "s3", label: "Sheet 3", title: "Sales Report by Values" },
+  { id: "s4", label: "Sheet 4", title: "Sales Summary in No's & Values" },
+];
+
+const fmt = (v: any) => {
+  if (v === null || v === undefined || v === '') return '–';
+  if (typeof v === 'number') {
+    if (Number.isInteger(v)) return v.toLocaleString('en-IN');
+    return parseFloat(v.toFixed(2)).toLocaleString('en-IN');
+  }
+  return String(v);
+};
+
+const SummaryRevisedDownloadCard = () => {
+  const [activeTab, setActiveTab] = useState("s1");
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [previewData, setPreviewData] = useState<Record<string, any> | null>(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getSessionId = () =>
+    localStorage.getItem('chatSessionId') || localStorage.getItem('DAgent_session_id') || '7b4c93ae-3d87-4696-92c2-f8119c0c923a';
+
+  useEffect(() => {
+    setIsFetching(true);
+    setError(null);
+    fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.REPORTS.EXPORT_DOMESTIC_SALES_PREVIEW}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: getSessionId() }),
+    })
+      .then(r => r.json())
+      .then(json => {
+        if (json.status === 'success') setPreviewData(json.sections);
+        else setError('Failed to load data');
+      })
+      .catch(() => setError('Failed to load data'))
+      .finally(() => setIsFetching(false));
+  }, []);
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDownloading(true);
+    const toastId = toast.loading("Generating report...");
+    try {
+      const now = new Date();
+      await apiService.download(
+        API_ENDPOINTS.REPORTS.EXPORT_DOMESTIC_SALES,
+        { session_id: getSessionId() },
+        `Summary_Revised_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}.xlsx`
+      );
+      toast.success("Downloaded!", { id: toastId });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed', { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const currentSection = previewData?.[activeTab];
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+        <h3 className="font-bold text-slate-800 text-base">Summary Revised</h3>
+        <button
+          onClick={handleDownload}
+          disabled={isDownloading}
+          title="Download Full Report as Excel"
+          className="flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 text-indigo-600 transition-colors"
+        >
+          <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-slate-100 px-4 pt-2 gap-1 overflow-x-auto">
+        {TABS.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-3 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap transition-colors ${
+              activeTab === tab.id
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+
+
+      {/* Table Content */}
+      <div className="overflow-auto" style={{ height: '350px' }}>
+        {isFetching ? (
+          <div className="flex items-center justify-center h-full gap-3">
+            <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <span className="text-slate-500 text-sm">Loading data...</span>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full text-red-400 text-sm">{error}</div>
+        ) : currentSection && currentSection.matrix ? (
+          <table className="w-full text-[10px] border-collapse min-w-max bg-white">
+            <tbody>
+              {currentSection.matrix.map((row: any[], ri: number) => {
+                const isHeader = ri < 4;
+                return (
+                  <tr key={ri} className={`${isHeader ? 'sticky top-' + (ri * 24) + ' z-10' : ''} hover:bg-slate-50 transition-colors`}>
+                    {row.map((cell: any, ci: number) => {
+                      const val = String(cell.value);
+                      const isNum = !isNaN(Number(val.replace(/,/g, ''))) && val !== '';
+                      const isPct = val.includes('%');
+                      
+                      // Base classes
+                      let tdClass = "border border-slate-300 px-2 py-1.5 whitespace-nowrap text-slate-700 ";
+                      
+                      // Font weight
+                      if (cell.bold) tdClass += "font-bold ";
+                      
+                      // Text alignment
+                      if (cell.align === "center" || cell.align === "justify") tdClass += "text-center ";
+                      else if (cell.align === "right" || isNum) tdClass += "text-right font-mono ";
+                      else tdClass += "text-left ";
+                      
+                      // Highlight % values slightly if not already styled
+                      if (isPct && !cell.bold) tdClass += "text-indigo-700 font-semibold ";
+
+                      return (
+                        <td
+                          key={ci}
+                          colSpan={cell.colSpan || 1}
+                          rowSpan={cell.rowSpan || 1}
+                          className={tdClass.trim()}
+                          style={{
+                            backgroundColor: cell.bgColor || (ri % 2 === 0 ? '#ffffff' : '#f8fafc')
+                          }}
+                        >
+                          {val}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
+
+
+
 export const DashboardGraphs = () => {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
 
@@ -495,6 +661,9 @@ export const DashboardGraphs = () => {
       <div className="flex flex-col gap-3">
         {/* Executive Summary Card */}
         <SummaryCard />
+
+        {/* Summary Revised Download Card */}
+        <SummaryRevisedDownloadCard />
 
         {/* Plan vs Sale & Achievement */}
         <PlanVsSaleChartDynamic onZoneClick={(zone) => setSelectedZone(zone)} />
