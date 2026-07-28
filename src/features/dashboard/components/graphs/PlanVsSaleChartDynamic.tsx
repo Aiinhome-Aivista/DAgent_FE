@@ -38,12 +38,30 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
         const response = await fetch(url);
         const json = await response.json();
         if (json.status === "success" && json.data) {
-          const mappedData = json.data.map((item: any) => ({
-            city: item.zone || item.Region || item.region || item.territory || "Unknown",
-            planValue: item.planValueCr || 0,
-            saleValue: item.saleValueCr || item.saleV || 0,
-            achevValue: item.achievValuePct || 0
-          })).sort((a: any, b: any) => String(a.city).localeCompare(String(b.city)));
+          const getFullName = (shortName: string) => {
+            if (!shortName) return "Unknown";
+            const map: Record<string, string> = {
+              "CZ": "Central Zone",
+              "WZ": "West Zone",
+              "NP": "Nepal Zone",
+              "NZ": "North Zone",
+              "TZ": "South Zone 2",
+              "SZ": "South Zone 1",
+              "EZ": "East Zone"
+            };
+            return map[shortName.toUpperCase()] || shortName;
+          };
+
+          const mappedData = json.data.map((item: any) => {
+            const rawZone = item.zone || item.Region || item.region || item.territory || "Unknown";
+            return {
+              city: item.zone ? getFullName(item.zone) : rawZone,
+              originalZone: rawZone,
+              planValue: item.planValueCr || 0,
+              saleValue: item.saleValueCr || item.saleV || 0,
+              achevValue: item.achievValuePct || 0
+            };
+          }).sort((a: any, b: any) => String(a.city).localeCompare(String(b.city)));
           setDynamicRegionData(mappedData);
         } else {
           setDynamicRegionData([]);
@@ -58,9 +76,23 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
     fetchSalesRevenue();
   }, [sessionId, currentZone]);
 
+  const getShortCode = (fullName: string) => {
+    const map: Record<string, string> = {
+      "Central Zone": "CZ",
+      "West Zone": "WZ",
+      "Nepal Zone": "NP",
+      "North Zone": "NZ",
+      "South Zone 2": "TZ",
+      "South Zone 1": "SZ",
+      "East Zone": "EZ"
+    };
+    return map[fullName] || fullName;
+  };
+
   const handleDrilldown = (data: any) => {
-    const city = data?.value || data?.city || data?.payload?.city;
+    let city = data?.payload?.originalZone || data?.originalZone || data?.value || data?.city || data?.payload?.city;
     if (city) {
+      city = getShortCode(city);
       if (onZoneClick) {
         onZoneClick(city);
       }
@@ -108,7 +140,7 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
         </div>
       </div>
 
-      <div className="flex-1 w-full relative min-h-[350px] flex items-center justify-center">
+      <div className="w-full relative" style={{ height: '350px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isLoading ? (
           <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
         ) : dynamicRegionData.length > 0 ? (
@@ -172,7 +204,15 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
               fill="#FCD34D"
               stroke="none"
               activeDot={false}
-            />
+            >
+              <LabelList
+                dataKey="planValue"
+                position="top"
+                fill="#EAB308"
+                fontSize={12}
+                fontWeight="bold"
+              />
+            </Area>
             <Bar
               yAxisId="left"
               dataKey="saleValue"
@@ -186,9 +226,10 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
               <LabelList
                 dataKey="saleValue"
                 position="top"
-                fill="#64748B"
+                fill="#0EA5E9"
                 fontSize={12}
                 fontWeight="bold"
+                dy={-15}
               />
             </Bar>
             <Line
@@ -205,9 +246,10 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
               <LabelList
                 dataKey="achevValue"
                 position="top"
-                fill="#64748B"
+                fill="#84CC16"
                 fontSize={12}
                 fontWeight="bold"
+                dy={-35}
               />
             </Line>
           </ComposedChart>

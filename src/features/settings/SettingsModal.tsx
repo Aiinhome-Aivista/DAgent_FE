@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, FileSpreadsheet } from 'lucide-react';
 import { apiService } from '../../services/api.service';
+import { API_ENDPOINTS } from '../../services/api.config';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -26,7 +27,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       const now = new Date();
       const filename = `Summary_Revised_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}.xlsx`;
 
-      await apiService.download('/export-domestic-sales-report', payload, filename);
+      await apiService.download(API_ENDPOINTS.REPORTS.EXPORT_DOMESTIC_SALES, payload, filename);
+
 
       onClose();
     } catch (err: any) {

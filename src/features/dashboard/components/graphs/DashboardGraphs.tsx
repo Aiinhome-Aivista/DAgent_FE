@@ -496,6 +496,9 @@ export const DashboardGraphs = () => {
         {/* Executive Summary Card */}
         <SummaryCard />
 
+        {/* Plan vs Sale & Achievement */}
+        <PlanVsSaleChartDynamic onZoneClick={(zone) => setSelectedZone(zone)} />
+
         {/* Year-wise Comparison Filterable Chart */}
         <YearComparisonChartDynamic zone={selectedZone} />
       </div>
@@ -507,9 +510,6 @@ export const DashboardGraphs = () => {
         {/* Top 10 Tyre Types by Sales */}
         <TyreSalesChartDynamic zone={selectedZone} />
         
-        {/* Plan vs Sale & Achievement */}
-        <PlanVsSaleChartDynamic onZoneClick={(zone) => setSelectedZone(zone)} />
-
         {/* Category Sales */}
         <CategorySalesCardDynamic zone={selectedZone} />
 
