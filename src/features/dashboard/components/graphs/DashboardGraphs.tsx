@@ -11,6 +11,8 @@ import {
   Zap,
   X,
   Download,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -479,7 +481,8 @@ const fmt = (v: any) => {
 };
 
 const SummaryRevisedDownloadCard = () => {
-  const [activeTab, setActiveTab] = useState("s1");
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const activeTab = TABS[activeTabIndex].id;
   const [isDownloading, setIsDownloading] = useState(false);
   const [previewData, setPreviewData] = useState<Record<string, any> | null>(null);
   const [isFetching, setIsFetching] = useState(false);
@@ -529,32 +532,49 @@ const SummaryRevisedDownloadCard = () => {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-        <h3 className="font-bold text-slate-800 text-base">Sales Summary</h3>
-        <button
-          onClick={handleDownload}
-          disabled={isDownloading}
-          title="Download Full Report as Excel"
-          className="flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 text-indigo-600 transition-colors"
-        >
-          <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex border-b border-slate-100 px-4 pt-2 gap-1 overflow-x-auto">
-        {TABS.map(tab => (
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
+        <h3 className="font-bold text-slate-800 text-base w-40 shrink-0">Sales Summary</h3>
+        
+        {/* Carousel Controls Inline */}
+        <div className="flex items-center gap-4 flex-1 justify-center">
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap transition-colors ${activeTab === tab.id
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
+            onClick={() => setActiveTabIndex((prev) => (prev > 0 ? prev - 1 : TABS.length - 1))}
+            className="p-1.5 rounded-full hover:bg-slate-200 text-slate-600 transition-colors focus:outline-none"
           >
-            {tab.label}
+            <ChevronLeft className="w-5 h-5" />
           </button>
-        ))}
+          
+          <div className="flex flex-col items-center">
+            <span className="text-sm font-bold text-slate-800 text-center">{TABS[activeTabIndex].title}</span>
+            <div className="flex gap-1.5 mt-1.5">
+              {TABS.map((_, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setActiveTabIndex(idx)}
+                  className={`h-1.5 rounded-full transition-all duration-300 focus:outline-none ${activeTabIndex === idx ? 'w-4 bg-indigo-600' : 'w-1.5 bg-slate-300'}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => setActiveTabIndex((prev) => (prev < TABS.length - 1 ? prev + 1 : 0))}
+            className="p-1.5 rounded-full hover:bg-slate-200 text-slate-600 transition-colors focus:outline-none"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="w-40 flex justify-end shrink-0">
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            title="Download Full Report as Excel"
+            className="flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 text-indigo-600 transition-colors focus:outline-none"
+          >
+            <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
+          </button>
+        </div>
       </div>
 
 
