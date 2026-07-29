@@ -580,7 +580,7 @@ const SummaryRevisedDownloadCard = () => {
 
 
       {/* Table Content */}
-      <div className="overflow-auto" style={{ height: '350px' }}>
+      <div className="overflow-auto" style={{ maxHeight: '350px' }}>
         {isFetching ? (
           <div className="flex items-center justify-center h-full gap-3">
             <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
@@ -588,7 +588,7 @@ const SummaryRevisedDownloadCard = () => {
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-full text-red-400 text-sm">{error}</div>
-        ) : currentSection && currentSection.matrix ? (
+        ) : currentSection && currentSection.matrix && currentSection.matrix.length > 0 ? (
           <table className="w-full text-[10px] border-collapse min-w-max bg-white">
             <tbody>
               {currentSection.matrix.map((row: any[], ri: number) => {
@@ -633,7 +633,11 @@ const SummaryRevisedDownloadCard = () => {
               })}
             </tbody>
           </table>
-        ) : null}
+        ) : (
+          <div className="flex items-center justify-center h-full text-slate-400 font-medium text-sm">
+            No sales data available.
+          </div>
+        )}
       </div>
     </div>
   );

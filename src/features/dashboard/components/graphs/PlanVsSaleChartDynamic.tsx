@@ -45,8 +45,8 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
               "WZ": "West Zone",
               "NP": "Nepal Zone",
               "NZ": "North Zone",
-              "TZ": "South Zone 2",
-              "SZ": "South Zone 1",
+              "TZ": "South Zone II",
+              "SZ": "South Zone I",
               "EZ": "East Zone"
             };
             return map[shortName.toUpperCase()] || shortName;
@@ -82,8 +82,8 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
       "West Zone": "WZ",
       "Nepal Zone": "NP",
       "North Zone": "NZ",
-      "South Zone 2": "TZ",
-      "South Zone 1": "SZ",
+      "South Zone II": "TZ",
+      "South Zone I": "SZ",
       "East Zone": "EZ"
     };
     return map[fullName] || fullName;
@@ -169,91 +169,91 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
                 onClick={handleDrilldown}
               />
               <YAxis
-              yAxisId="left"
-              axisLine={{ stroke: "#0EA5E9" }}
-              tickLine={{ stroke: "#0EA5E9" }}
-              tick={{ fill: "#64748B", fontSize: 12 }}
-              domain={leftDomain}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              axisLine={{ stroke: "#84CC16" }}
-              tickLine={{ stroke: "#84CC16" }}
-              tick={{ fill: "#64748B", fontSize: 12 }}
-              domain={rightDomain}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-              }}
-              cursor={{ fill: "transparent" }}
-            />
-            <Legend
-              verticalAlign="top"
-              wrapperStyle={{ paddingBottom: "20px" }}
-            />
-            <Area
-              yAxisId="left"
-              type="linear"
-              dataKey="planValue"
-              name="Plan Value"
-              fill="#FCD34D"
-              stroke="none"
-              activeDot={false}
-            >
-              <LabelList
+                yAxisId="left"
+                axisLine={{ stroke: "#0EA5E9" }}
+                tickLine={{ stroke: "#0EA5E9" }}
+                tick={{ fill: "#64748B", fontSize: 12 }}
+                domain={leftDomain}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                axisLine={{ stroke: "#84CC16" }}
+                tickLine={{ stroke: "#84CC16" }}
+                tick={{ fill: "#64748B", fontSize: 12 }}
+                domain={rightDomain}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#fff",
+                  borderRadius: "8px",
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                }}
+                cursor={{ fill: "transparent" }}
+              />
+              <Legend
+                verticalAlign="top"
+                wrapperStyle={{ paddingBottom: "20px" }}
+              />
+              <Area
+                yAxisId="left"
+                type="linear"
                 dataKey="planValue"
-                position="top"
-                fill="#EAB308"
-                fontSize={12}
-                fontWeight="bold"
-              />
-            </Area>
-            <Bar
-              yAxisId="left"
-              dataKey="saleValue"
-              name="Sale Value"
-              fill="#0EA5E9"
-              barSize={40}
-              radius={[4, 4, 0, 0]}
-              onClick={handleDrilldown}
-              cursor="pointer"
-            >
-              <LabelList
+                name="Plan Value"
+                fill="#FCD34D"
+                stroke="none"
+                activeDot={false}
+              >
+                <LabelList
+                  dataKey="planValue"
+                  position="top"
+                  fill="#EAB308"
+                  fontSize={12}
+                  fontWeight="bold"
+                />
+              </Area>
+              <Bar
+                yAxisId="left"
                 dataKey="saleValue"
-                position="top"
+                name="Sale Value"
                 fill="#0EA5E9"
-                fontSize={12}
-                fontWeight="bold"
-                dy={-15}
-              />
-            </Bar>
-            <Line
-              yAxisId="right"
-              type="linear"
-              dataKey="achevValue"
-              name="Achev Value %"
-              stroke="#84CC16"
-              strokeWidth={2}
-              dot={{ fill: "#84CC16", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6 }}
-              connectNulls={false}
-            >
-              <LabelList
+                barSize={40}
+                radius={[4, 4, 0, 0]}
+                onClick={handleDrilldown}
+                cursor="pointer"
+              >
+                <LabelList
+                  dataKey="saleValue"
+                  position="top"
+                  fill="#0EA5E9"
+                  fontSize={12}
+                  fontWeight="bold"
+                  dy={-15}
+                />
+              </Bar>
+              <Line
+                yAxisId="right"
+                type="linear"
                 dataKey="achevValue"
-                position="top"
-                fill="#84CC16"
-                fontSize={12}
-                fontWeight="bold"
-                dy={-35}
-              />
-            </Line>
-          </ComposedChart>
-        </ResponsiveContainer>
+                name="Achev Value %"
+                stroke="#84CC16"
+                strokeWidth={2}
+                dot={{ fill: "#84CC16", strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6 }}
+                connectNulls={false}
+              >
+                <LabelList
+                  dataKey="achevValue"
+                  position="top"
+                  fill="#84CC16"
+                  fontSize={12}
+                  fontWeight="bold"
+                  dy={-35}
+                />
+              </Line>
+            </ComposedChart>
+          </ResponsiveContainer>
         ) : (
           <span className="text-slate-400 font-medium text-sm">No sales revenue data available.</span>
         )}
