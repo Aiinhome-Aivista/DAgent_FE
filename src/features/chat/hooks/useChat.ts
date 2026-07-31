@@ -108,10 +108,10 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
         detail: { question: content, answer: answerText }
       }));
 
-      if (isDefaultChat) {
+      if (isDefaultChat || !currentVisitNumber) {
         // Update localStorage with the new session's data so the UI
         // (header + sidebar) reflects the newly created query session
-        // instead of staying stuck on the old default.
+        // instead of staying stuck on the old default or a blank unselected state.
         const newSessionHistory = [{
           question: content,
           answer: answerText,
