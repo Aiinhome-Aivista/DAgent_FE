@@ -32,14 +32,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
 
   const startChat = useCallback(() => {
     setMode('chat');
-    setMessages([
-      {
-        id: 'init-1',
-        role: 'assistant',
-        content: `Great! I've successfully connected to your data and synchronized the environment. How can I help you analyze this information today?`,
-        timestamp: new Date(),
-      },
-    ]);
+    setMessages([]);
   }, []);
 
   const completeWorkflow = useCallback(() => {
@@ -184,9 +177,13 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
           return { hasHistory: true, hasFollowUps };
         }
       }
+      setMessages([]);
+      setFollowUpQuestions([]);
       return { hasHistory: false, hasFollowUps: false };
     } catch (error) {
       console.error('Failed to parse selected chat history:', error);
+      setMessages([]);
+      setFollowUpQuestions([]);
       return { hasHistory: false, hasFollowUps: false };
     }
   }, []);
