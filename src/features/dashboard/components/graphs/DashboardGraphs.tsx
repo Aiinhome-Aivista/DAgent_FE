@@ -492,20 +492,44 @@ const SummaryRevisedDownloadCard = () => {
     localStorage.getItem('chatSessionId') || localStorage.getItem('DAgent_session_id') || '7b4c93ae-3d87-4696-92c2-f8119c0c923a';
 
   useEffect(() => {
-    setIsFetching(true);
-    setError(null);
-    fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.REPORTS.EXPORT_DOMESTIC_SALES_PREVIEW}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: getSessionId() }),
-    })
-      .then(r => r.json())
-      .then(json => {
-        if (json.status === 'success') setPreviewData(json.sections);
-        else setError('Failed to load data');
-      })
-      .catch(() => setError('Failed to load data'))
-      .finally(() => setIsFetching(false));
+    let isMounted = true;
+    const fetchPreview = async (retryCount = 0) => {
+      if (retryCount === 0) setIsFetching(true);
+      setError(null);
+      try {
+        const res = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.REPORTS.EXPORT_DOMESTIC_SALES_PREVIEW}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: getSessionId() }),
+        });
+        const json = await res.json();
+        
+        if (!isMounted) return;
+        
+        if (json.status === 'success') {
+          setPreviewData(json.sections);
+          setIsFetching(false);
+        } else {
+          if (retryCount < 5) {
+            setTimeout(() => fetchPreview(retryCount + 1), 2000);
+          } else {
+            setError('Failed to load data');
+            setIsFetching(false);
+          }
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        if (retryCount < 5) {
+          setTimeout(() => fetchPreview(retryCount + 1), 2000);
+        } else {
+          setError('Failed to load data');
+          setIsFetching(false);
+        }
+      }
+    };
+
+    fetchPreview();
+    return () => { isMounted = false; };
   }, []);
 
   const handleDownload = async (e: React.MouseEvent) => {
