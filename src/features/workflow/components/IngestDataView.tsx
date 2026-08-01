@@ -56,7 +56,7 @@ export const IngestDataView = ({
           )}
         </div>
 
-        {!activeConnector ? (
+        {(!activeConnector && databases.length === 0 && topics.length === 0) ? (
           <div className="text-center py-6">
             <p className="text-sm text-[var(--text-secondary)]">No active data source. Please connect a data source first.</p>
             <Button variant="outline" size="sm" className="mt-4" onClick={onGoToDataSource}>
@@ -64,12 +64,12 @@ export const IngestDataView = ({
             </Button>
           </div>
         ) : (() => {
-          const isWebSource = activeConnector.type === 'Integration' ||
-            activeConnector.name.toLowerCase().includes('web') ||
-            activeConnector.name.toLowerCase().includes('search');
+          const isWebSource = activeConnector?.type === 'Integration' ||
+            activeConnector?.name?.toLowerCase().includes('web') ||
+            activeConnector?.name?.toLowerCase().includes('search');
           const isWebSearch = isWebSource;
-          const isCsvSource = activeConnector.name.toLowerCase().includes('csv');
-          const isSqlSource = activeConnector.name.toLowerCase().includes('sql') && !activeConnector.name.toLowerCase().includes('postgre');
+          const isCsvSource = activeConnector?.name?.toLowerCase().includes('csv');
+          const isSqlSource = activeConnector?.name?.toLowerCase().includes('sql') && !activeConnector?.name?.toLowerCase().includes('postgre');
 
           if (isImporting) {
             return (
@@ -262,7 +262,7 @@ export const IngestDataView = ({
       )}
 
       {/* Continue to Process button at the exact bottom */}
-      {!isImporting && activeConnector && (results.length > 0 || summary || tables.length > 0 || (connectorResults?.imported_files?.length > 0) || (topics.length > 0 || databases.length > 0)) && onContinue && (
+      {!isImporting && (activeConnector || databases.length > 0 || topics.length > 0) && (results.length > 0 || summary || tables.length > 0 || (connectorResults?.imported_files?.length > 0) || (topics.length > 0 || databases.length > 0)) && onContinue && (
         <div className="mt-12 pt-8 border-t border-[var(--border)] flex justify-end">
           <Button
             onClick={onContinue}
