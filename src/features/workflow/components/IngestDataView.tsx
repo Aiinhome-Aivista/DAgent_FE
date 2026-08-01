@@ -28,8 +28,8 @@ export const IngestDataView = ({
 
   // Handle potential nested data property and inconsistent keys for DB views
   const data = connectorResults?.data || connectorResults || {};
-  const summary = data?.summary;
-  const rawTables = data?.tables || [];
+  let summary = data?.summary;
+  let rawTables = data?.tables || [];
   // Deduplicate tables by name (keeping the latest occurrence)
   const tables = Array.from(new Map(rawTables.map((t: any) => [t.table, t])).values()) as any[];
   const dataSize = summary?.data_size_mb || summary?.['data size mb'] || 0;
@@ -40,6 +40,33 @@ export const IngestDataView = ({
   const topics = sessionSources?.web_topics?.topics ||
     sessionSources?.topics ||
     (Array.isArray(sessionSources?.web_topics) ? sessionSources?.web_topics : []);
+
+  // Fallback to history summary if live summary is missing
+  if (!summary && databases.length > 0) {
+    let t_rows = 0;
+    let t_cols = 0;
+    let t_size = 0;
+    let allTables: string[] = [];
+    databases.forEach((db: any) => {
+       if (db.summary) {
+          t_rows += db.summary.total_rows || 0;
+          t_cols += db.summary.total_columns || 0;
+          t_size += db.summary.data_size_mb || 0;
+       }
+       if (db.tables) {
+          allTables = [...allTables, ...db.tables];
+       }
+    });
+    
+    if (t_rows > 0 || t_cols > 0) {
+       summary = {
+          total_rows: t_rows,
+          total_columns: t_cols,
+          data_size_mb: Number(t_size.toFixed(2))
+       };
+       rawTables = Array.from(new Set(allTables)).map(t => ({ table: t, rows: 'N/A', columns: 'N/A' }));
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -197,7 +224,7 @@ export const IngestDataView = ({
                     tables.map((t: any, idx: number) => (
                       <div key={idx} className="flex justify-between items-center p-3 rounded-lg bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors">
                         <span className="font-mono text-sm">{t.table}</span>
-                        <span className="text-xs text-[var(--text-secondary)]">{t.rows.toLocaleString()} rows • {t.columns} cols</span>
+                        <span className="text-xs text-[var(--text-secondary)]">{typeof t.rows === 'number' ? t.rows.toLocaleString() : t.rows} rows • {t.columns} cols</span>
                       </div>
                     ))
                   ) : (
