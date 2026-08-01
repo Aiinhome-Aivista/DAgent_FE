@@ -513,16 +513,20 @@ const SummaryRevisedDownloadCard = () => {
           if (retryCount < 5) {
             setTimeout(() => fetchPreview(retryCount + 1), 2000);
           } else {
-            setError('Failed to load data');
+            let customError = json.message;
+            if (json.message === 'Failed to generate Excel worksheets for preview.') {
+              customError = 'No data available. Please process your files first.';
+            }
+            setError(customError || 'No data available. Please process your files first.');
             setIsFetching(false);
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         if (!isMounted) return;
         if (retryCount < 5) {
           setTimeout(() => fetchPreview(retryCount + 1), 2000);
         } else {
-          setError('Failed to load data');
+          setError(err.message || 'No data available. Please process your files first.');
           setIsFetching(false);
         }
       }
@@ -592,9 +596,9 @@ const SummaryRevisedDownloadCard = () => {
         <div className="w-40 flex justify-end shrink-0">
           <button
             onClick={handleDownload}
-            disabled={isDownloading}
+            disabled={isDownloading || isFetching || !!error || !previewData}
             title="Download Full Report as Excel"
-            className="flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 text-indigo-600 transition-colors focus:outline-none"
+            className={`flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed text-indigo-600 transition-colors focus:outline-none`}
           >
             <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
           </button>
@@ -611,7 +615,9 @@ const SummaryRevisedDownloadCard = () => {
             <span className="text-slate-500 text-sm">Loading data...</span>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center h-full text-red-400 text-sm">{error}</div>
+          <div className="flex items-center justify-center h-full min-h-[200px] text-slate-400 font-medium text-sm px-10 text-center">
+            {error}
+          </div>
         ) : currentSection && currentSection.matrix && currentSection.matrix.length > 0 ? (
           <table className="w-full text-[10px] border-collapse min-w-max bg-white">
             <tbody>
@@ -658,7 +664,7 @@ const SummaryRevisedDownloadCard = () => {
             </tbody>
           </table>
         ) : (
-          <div className="flex items-center justify-center h-full text-slate-400 font-medium text-sm">
+          <div className="flex items-center justify-center h-full min-h-[200px] text-slate-400 font-medium text-sm">
             No sales data available.
           </div>
         )}
