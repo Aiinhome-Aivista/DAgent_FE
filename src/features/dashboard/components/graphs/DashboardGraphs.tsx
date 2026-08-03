@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { formatChatMessage } from "../../../../utils/format";
 
 import { YearComparisonChartDynamic } from "./YearComparisonChartDynamic";
 import { ZonePieChartDynamic } from "./ZonePieChartDynamic";
@@ -379,13 +380,14 @@ const SummaryCard = () => {
         <div className="flex flex-col gap-1.5">
           {!isExpanded ? (
             <div className="flex items-end justify-between gap-4">
-              <p
+              <div
                 className="text-slate-600 text-sm leading-relaxed font-normal line-clamp-2 flex-1"
                 dangerouslySetInnerHTML={{
-                  __html: formatInlineMarkdown(
+                  __html: formatChatMessage(
                     execSummary
                       .map((para) => cleanParagraphText(para))
-                      .join(" "),
+                      .join("\n\n"),
+                    true
                   ),
                 }}
               />
@@ -404,17 +406,17 @@ const SummaryCard = () => {
               className="flex flex-col gap-4"
             >
               {/* Executive Summary Paragraphs */}
-              <div className="flex flex-col gap-2">
-                {execSummary.map((para, idx) => (
-                  <p
-                    key={idx}
-                    className="text-slate-600 text-sm leading-relaxed font-normal"
-                    dangerouslySetInnerHTML={{
-                      __html: formatInlineMarkdown(cleanParagraphText(para)),
-                    }}
-                  />
-                ))}
-              </div>
+              <div 
+                className="flex flex-col gap-2 text-slate-600 text-sm leading-relaxed font-normal"
+                dangerouslySetInnerHTML={{
+                  __html: formatChatMessage(
+                    execSummary
+                      .map((para) => cleanParagraphText(para))
+                      .join("\n\n"),
+                    true
+                  )
+                }}
+              />
 
               {/* Key Insights Section */}
               {keyInsights.length > 0 && (
@@ -427,7 +429,12 @@ const SummaryCard = () => {
                       {sectionTitles["Key Insights"] || "Key Insights"}
                     </span>
                   </div>
-                  {renderSectionItems(keyInsights)}
+                  <div 
+                    className="flex flex-col gap-2 mt-1.5 pl-1 text-slate-600 text-sm leading-relaxed font-normal"
+                    dangerouslySetInnerHTML={{
+                      __html: formatChatMessage(keyInsights.join("\n"), true)
+                    }}
+                  />
                 </div>
               )}
 
@@ -443,7 +450,12 @@ const SummaryCard = () => {
                         "Actionable Recommendations"}
                     </span>
                   </div>
-                  {renderSectionItems(recommendations)}
+                  <div 
+                    className="flex flex-col gap-2 mt-1.5 pl-1 text-slate-600 text-sm leading-relaxed font-normal"
+                    dangerouslySetInnerHTML={{
+                      __html: formatChatMessage(recommendations.join("\n"), true)
+                    }}
+                  />
                 </div>
               )}
 
