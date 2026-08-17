@@ -7,7 +7,7 @@ import { ChatWindow } from './features/chat';
 import { AgentWorkflow } from './features/workflow';
 import { LandingPage } from './features/marketing/components/LandingPage';
 import { LoginPage } from './features/auth/components/LoginPage';
-import { Dashboard } from './features/dashboard/components/Dashboard';
+
 import { Moon, Sun, Layout, Settings, LogOut, Menu, MessageSquare, Database, Plus, Sparkles, BarChart3, Clock, Search, ChevronDown, User, Check, X, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useMemo } from 'react';
@@ -388,16 +388,14 @@ function AppContent() {
   };
 
   if (viewMode === 'landing') {
-    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')} />;
+    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} />;
   }
 
   if (viewMode === 'login') {
     return <LoginPage onBack={handleBackToLanding} onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (viewMode === 'dashboard') {
-    return <Dashboard onBack={() => setViewMode('landing')} />;
-  }
+
 
   return (
     <div className="h-screen flex overflow-hidden text-[var(--text-primary)]">

@@ -25,10 +25,9 @@ import image2 from '@/src/assets/images/landing2.jpg';
 interface LandingPageProps {
   onGetStarted: () => void;
   onLogin: () => void;
-  onDashboardClick?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin, onDashboardClick }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   return (

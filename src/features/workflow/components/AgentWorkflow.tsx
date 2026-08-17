@@ -29,7 +29,7 @@
 // import { HistoryItemCard } from './HistoryItemCard';
 // import { AgentStepper, getAgentIcon } from './AgentStepper';
 // import { IngestDataView } from './IngestDataView';
-// import { DashboardKPIs, graphPanelItems, GraphSidePanel, DashboardGraphs } from '../../dashboard/components/DashboardCharts';
+
 
 // const formatInsightsText = (text: string) => {
 //   if (typeof text !== 'string') return JSON.stringify(text, null, 2);
@@ -740,7 +740,7 @@
 //                       <div className="flex-1 min-w-0 flex flex-col min-h-0">
 //                         {/* Upper portion: Charts */}
 //                         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
-//                           <DashboardGraphs />
+
 //                         </div>
 //                         {/* Lower portion: Chat */}
 //                         <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
@@ -761,7 +761,7 @@
 //                         <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
 //                           <div className="p-3 flex flex-col h-full">
 //                           {/* KPIs */}
-//                           <DashboardKPIs />
+
 
 //                           {/* Divider */}
 //                           {/* <div className="flex items-center gap-2 pt-1">
@@ -934,7 +934,7 @@ interface AgentWorkflowProps {
 import { HistoryItemCard } from './HistoryItemCard';
 import { AgentStepper, getAgentIcon } from './AgentStepper';
 import { IngestDataView } from './IngestDataView';
-import { DashboardKPIs, graphPanelItems, GraphSidePanel, DashboardGraphs } from '../../dashboard/components/DashboardCharts';
+
 
 const formatInsightsText = (text: string) => {
   if (typeof text !== 'string') return JSON.stringify(text, null, 2);
@@ -1647,14 +1647,8 @@ export const AgentWorkflow = ({
 
                   {selectedAgent.id === 'query' ? (
                     <div className="flex-1 flex overflow-hidden">
-                      {/* Left Side: Split into Charts (upper) and Chat (lower) */}
                       <div className="flex-1 min-w-0 flex flex-col min-h-0">
-                        {/* Upper portion: Charts */}
-                        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
-                          <DashboardGraphs />
-                        </div>
-                        {/* Lower portion: Chat */}
-                        <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
+                        <div className="flex-1 flex flex-col h-full">
                           <ChatWindow
                             initialMode="chat"
                             initialMessage={initialChatMessage}
@@ -1667,47 +1661,6 @@ export const AgentWorkflow = ({
                           />
                         </div>
                       </div>
-
-                      {/* Right side strip - scrollable KPIs + Graph buttons */}
-                      {!activeGraphId && (
-                        <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                          <div className="p-3 flex flex-col h-full">
-                            {/* KPIs */}
-                            <DashboardKPIs />
-
-                            {/* Divider */}
-                            {/* <div className="flex items-center gap-2 pt-1">
-                            <div className="flex-1 h-px bg-slate-200" />
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Charts</span>
-                            <div className="flex-1 h-px bg-slate-200" />
-                          </div> */}
-
-                            {/* Graph icon buttons */}
-                            {/* <div className="space-y-1.5">
-                            {graphPanelItems.map(item => (
-                              <button
-                                key={item.id}
-                                onClick={() => setActiveGraphId(item.id)}
-                                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border transition-all duration-200 cursor-pointer group ${
-                                  activeGraphId === item.id
-                                    ? 'border-[var(--accent)]/30 bg-[var(--accent)]/5 shadow-sm'
-                                    : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm'
-                                }`}
-                              >
-                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${item.color}`}>
-                                  <item.icon className="w-3.5 h-3.5" />
-                                </div>
-                                <span className="text-[11px] font-semibold text-slate-700 group-hover:text-slate-900 truncate">
-                                  {item.name}
-                                </span>
-                              </button>
-                            ))}
-                          </div> */}
-                          </div>
-                        </div>
-                      )}
-                      {/* Graph Side Panel overlay */}
-                      <GraphSidePanel activeGraphId={activeGraphId} onClose={() => setActiveGraphId(null)} inline={true} />
                     </div>
                   ) : (
                     (() => {
