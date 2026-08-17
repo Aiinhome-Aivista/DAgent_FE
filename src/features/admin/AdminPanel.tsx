@@ -12,7 +12,6 @@ import { AssignWorkspace } from './components/AssignWorkspaces';
 import { WorkspaceUsers } from './components/WorkspaceUsers';
 import { AdminChats } from './components/AdminChats'; // forces TS refresh
 import { AdminPendingKnowledge } from './components/AdminPendingKnowledge';
-import { ScheduledReports } from './components/ScheduledReports';
 import { Calendar, UserPlus, Plus } from 'lucide-react';
 
 
@@ -31,7 +30,6 @@ export const AdminPanel: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
     const [isCreatingUser, setIsCreatingUser] = useState(false);
-    const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
     const [newWorkspaceName, setNewWorkspaceName] = useState('');
 
     // Assignment State
@@ -161,8 +159,7 @@ export const AdminPanel: React.FC = () => {
         assignUsers: 'Assignments',
         workspaceUsers: 'Workspace Users',
         adminChats: 'Chat Views',
-        pendingKnowledge: 'KG History',
-        scheduledReports: 'Scheduled Reports'
+        pendingKnowledge: 'KG History'
     };
 
     return (
@@ -182,7 +179,7 @@ export const AdminPanel: React.FC = () => {
 
             {/* Tabs */}
             <div className="flex border-b border-[var(--border)] px-6 shrink-0 bg-[var(--bg)]/30 overflow-x-auto custom-scrollbar">
-                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge', 'scheduledReports'] as AdminTab[]).map((tab) => (
+                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge'] as AdminTab[]).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => {
@@ -204,7 +201,6 @@ export const AdminPanel: React.FC = () => {
                         {tab === 'workspaceUsers' && <Layout className="w-4 h-4" />}
                         {tab === 'adminChats' && <Users className="w-4 h-4" />}
                         {tab === 'pendingKnowledge' && <Layout className="w-4 h-4" />}
-                        {tab === 'scheduledReports' && <FileText className="w-4 h-4" />}
                         {tabDisplayNames[tab]}
                     </button>
                 ))}
@@ -242,16 +238,6 @@ export const AdminPanel: React.FC = () => {
                         >
                             <Layout className="w-4 h-4" />
                             Create Workspace
-                        </button>
-                    )}
-
-                    {activeTab === 'scheduledReports' && (
-                        <button
-                            onClick={() => setIsCreatingSchedule(true)}
-                            className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
-                        >
-                            <Calendar className="w-4 h-4" />
-                            Create Schedule
                         </button>
                     )}
                 </div>
@@ -331,14 +317,6 @@ export const AdminPanel: React.FC = () => {
 
                                 {activeTab === 'pendingKnowledge' && (
                                     <AdminPendingKnowledge />
-                                )}
-
-                                {activeTab === 'scheduledReports' && (
-                                    <ScheduledReports 
-                                        searchQuery={searchQuery}
-                                        isModalOpen={isCreatingSchedule}
-                                        setIsModalOpen={setIsCreatingSchedule}
-                                    />
                                 )}
                             </motion.div>
                         </AnimatePresence>
