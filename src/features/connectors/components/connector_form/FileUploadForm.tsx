@@ -5,6 +5,8 @@ import { Button } from '@/src/ui-kit';
 
 interface FileUploadFormProps {
   isCsvUpload: boolean;
+  isSqlUpload: boolean;
+  isDocUpload: boolean;
   isDragging: boolean;
   setIsDragging: (dragging: boolean) => void;
   handleFileDrop: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -22,6 +24,8 @@ interface FileUploadFormProps {
 
 export const FileUploadForm = ({
   isCsvUpload,
+  isSqlUpload,
+  isDocUpload,
   isDragging,
   setIsDragging,
   handleFileDrop,
@@ -65,7 +69,7 @@ export const FileUploadForm = ({
           onChange={handleFileInput}
         />
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-colors bg-[var(--accent)]/20 text-[var(--accent)]">
-          {isCsvUpload ? <FileSpreadsheet className="w-7 h-7" /> : <FileCode2 className="w-7 h-7" />}
+          {isCsvUpload ? <FileSpreadsheet className="w-7 h-7" /> : isDocUpload ? <FileCode2 className="w-7 h-7" /> : <FileCode2 className="w-7 h-7" />}
         </div>
         <div className="text-center">
           <p className="text-sm font-semibold text-[var(--text-primary)]">
@@ -112,7 +116,7 @@ export const FileUploadForm = ({
               >
                 <div className="flex items-center gap-3">
                   <div className="p-1.5 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)]">
-                    {isCsvUpload ? <FileSpreadsheet className="w-4 h-4" /> : <FileCode2 className="w-4 h-4" />}
+                    {isCsvUpload ? <FileSpreadsheet className="w-4 h-4" /> : isDocUpload ? <FileCode2 className="w-4 h-4" /> : <FileCode2 className="w-4 h-4" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{file.name}</p>

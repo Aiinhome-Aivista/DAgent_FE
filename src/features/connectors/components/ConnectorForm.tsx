@@ -241,19 +241,23 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
   const isWebSearch  = connector?.name === 'Web Search using LLM';
   const isCsvUpload  = connector?.name === 'Upload CSV File';
   const isSqlUpload  = connector?.name === 'Upload SQL File';
-  const isFileUpload = isCsvUpload || isSqlUpload;
+  const isDocUpload  = connector?.name === 'Upload Document';
+  const isFileUpload = isCsvUpload || isSqlUpload || isDocUpload;
   const isFtp        = connector?.name === 'FTP Connector';   // ← NEW
 
-  const acceptedFileTypes = isCsvUpload ? '.csv' : isSqlUpload ? '.sql' : '';
+  const acceptedFileTypes = isCsvUpload ? '.csv' : isSqlUpload ? '.sql' : isDocUpload ? '.pdf,.doc,.docx' : '';
 
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files).filter(f =>
-      isCsvUpload ? f.name.endsWith('.csv') : f.name.endsWith('.sql')
-    );
+    const files = Array.from(e.dataTransfer.files).filter(f => {
+      if (isCsvUpload) return f.name.endsWith('.csv');
+      if (isSqlUpload) return f.name.endsWith('.sql');
+      if (isDocUpload) return f.name.endsWith('.pdf') || f.name.endsWith('.doc') || f.name.endsWith('.docx');
+      return false;
+    });
     if (files.length === 0) {
-      setErrorMsg(`Only ${isCsvUpload ? 'CSV' : 'SQL'} files are allowed.`);
+      setErrorMsg(`Only ${isCsvUpload ? 'CSV' : isSqlUpload ? 'SQL' : 'Document (PDF/DOC/DOCX)'} files are allowed.`);
       return;
     }
     const existingNames = new Set(uploadedFiles.map(f => `${f.name}-${f.size}`));
@@ -367,7 +371,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                   {isWebSearch
                     ? 'Identify live data for AI analysis'
                     : isFileUpload
-                    ? `Upload ${isCsvUpload ? 'CSV' : 'SQL'} files for AI analysis`
+                    ? `Upload ${isCsvUpload ? 'CSV' : isSqlUpload ? 'SQL' : 'Document'} files for AI analysis`
                     : isFtp
                     ? 'Fetch files from an FTP server with scheduled sync'
                     : 'Configure your data source settings'}
@@ -417,6 +421,8 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
             ) : isFileUpload ? (
               <FileUploadForm
                 isCsvUpload={isCsvUpload}
+                isSqlUpload={isSqlUpload}
+                isDocUpload={isDocUpload}
                 isDragging={isDragging}
                 setIsDragging={setIsDragging}
                 handleFileDrop={handleFileDrop}

@@ -72,4 +72,12 @@ export const SUPPORTED_CONNECTORS = [
     icon: 'ftp',
     status: 'disconnected',
   },
+  {
+    id: '10',
+    name: 'Upload Document',
+    description: 'Upload PDF, DOC, or DOCX files for AI analysis',
+    type: 'File Upload',
+    icon: 'file-text',
+    status: 'disconnected',
+  },
 ];
