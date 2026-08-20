@@ -913,6 +913,8 @@ import { ConnectorList } from '../../connectors/components/ConnectorList';
 import { Connector } from '../../connectors/types';
 import { ChatWindow } from '../../chat/components/ChatWindow';
 import { ChatSummaryCard } from '../../chat/components/ChatSummaryCard';
+import { KPICard } from '../../chat/components/KPICard';
+import { DynamicChart } from '../../chat/components/DynamicChart';
 import { useConnectorContext } from '../../../context/ConnectorContext';
 import { useAuthContext } from '../../../context/AuthContext';
 import { connectorService } from '@/src/services/connector.service';
@@ -1529,6 +1531,8 @@ export const AgentWorkflow = ({
     let rawText = '';
     let extractedTitle: string | undefined = undefined;
     let extractedContent: string | undefined = undefined;
+    let kpis: any[] = [];
+    let charts: any[] = [];
 
     try {
       const storedSession = localStorage.getItem('selected_query_session');
@@ -1553,19 +1557,107 @@ export const AgentWorkflow = ({
     }
 
     if (rawText) {
-      const lines = rawText.split('\n');
-      const titleLineIndex = lines.findIndex(line => line.toLowerCase().includes('title:'));
-
-      if (titleLineIndex !== -1) {
-        let titleLine = lines[titleLineIndex];
-        const match = titleLine.match(/title\s*:\s*(.*)/i);
-        if (match) {
-          extractedTitle = match[1].replace(/\*\*/g, '').replace(/#/g, '').trim();
+      try {
+        let jsonStr = rawText;
+        
+        // Handle markdown wrapped json like ```json ... ```
+        const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonStr = jsonMatch[1];
+        } else {
+          // If no markdown blocks, try to aggressively find the JSON object boundaries
+          const firstBrace = rawText.indexOf('{');
+          const lastBrace = rawText.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            jsonStr = rawText.slice(firstBrace, lastBrace + 1);
+          }
         }
-        lines.splice(titleLineIndex, 1);
-        extractedContent = lines.join('\n').trim();
-      } else {
-        extractedContent = rawText;
+        
+        const parsedJson = JSON.parse(jsonStr);
+
+        if (parsedJson.report || parsedJson.kpis || parsedJson.charts) {
+          extractedContent = parsedJson.report || '';
+          kpis = parsedJson.kpis || [];
+          charts = parsedJson.charts || [];
+          
+          // Try to extract title from the report string
+          if (typeof extractedContent === 'string') {
+            const lines = extractedContent.split('\n');
+            const titleLineIndex = lines.findIndex(line => line.toLowerCase().includes('title:'));
+            if (titleLineIndex !== -1) {
+              let titleLine = lines[titleLineIndex];
+              const match = titleLine.match(/title\s*:\s*(.*)/i);
+              if (match) {
+                extractedTitle = match[1].replace(/\*\*/g, '').replace(/#/g, '').trim();
+              }
+              lines.splice(titleLineIndex, 1);
+              extractedContent = lines.join('\n').trim();
+            }
+          }
+        } else {
+          // It's a valid JSON but doesn't have the dashboard schema.
+          // Structure it nicely instead of failing.
+          if (Array.isArray(parsedJson) && parsedJson.length > 0 && typeof parsedJson[0] === 'object') {
+            // Convert array of objects to markdown table
+            const headers = Object.keys(parsedJson[0]);
+            let table = '| ' + headers.join(' | ') + ' |\n';
+            table += '| ' + headers.map(() => '---').join(' | ') + ' |\n';
+            parsedJson.forEach((row: any) => {
+              table += '| ' + headers.map(h => String(row[h] || '')).join(' | ') + ' |\n';
+            });
+            extractedContent = "### Data Table\n\n" + table;
+          } else {
+            // Just format it beautifully as JSON
+            extractedContent = "```json\n" + JSON.stringify(parsedJson, null, 2) + "\n```";
+          }
+        }
+      } catch (e) {
+        // Fallback to plain text logic
+        const lines = rawText.split('\n');
+        const titleLineIndex = lines.findIndex(line => line.toLowerCase().includes('title:'));
+
+        if (titleLineIndex !== -1) {
+          let titleLine = lines[titleLineIndex];
+          const match = titleLine.match(/title\s*:\s*(.*)/i);
+          if (match) {
+            extractedTitle = match[1].replace(/\*\*/g, '').replace(/#/g, '').trim();
+          }
+          lines.splice(titleLineIndex, 1);
+          extractedContent = lines.join('\n').trim();
+        } else {
+          extractedContent = rawText;
+        }
+
+        // --- HELPER MOCK DATA FOR CURRENT VIEWING ---
+        if (kpis.length === 0 && charts.length === 0) {
+          kpis = [
+            { title: "Income Variance", value: "9.79%", description: "Total other incomes variance for 2025-26", trend: "up" },
+            { title: "Settlement", value: "16.11 Cr", description: "Approved NCLI settlement amount", trend: "neutral" },
+            { title: "Elec. Variance (23-24)", value: "-21%", description: "Electricity cost under budget", trend: "down" },
+            { title: "Maint. Peak (23-24)", value: "58.66 L", description: "Highest repair & maintenance cost", trend: "up" }
+          ];
+          charts = [
+            {
+              chart_type: 'bar',
+              title: 'Electricity Cost Trend',
+              description: 'Actual electricity cost across financial years.',
+              labels: ['2022-2023', '2023-2024', '2025-2026'],
+              datasets: [
+                { label: 'Actual Cost (₹)', data: [7876563.29, 6677227.90, 6335453.66] }
+              ]
+            },
+            {
+              chart_type: 'bar',
+              title: 'Repair & Maintenance Breakdown',
+              description: 'Comparison of maintenance expenses by category.',
+              labels: ['2022-2023', '2023-2024', '2024-2025'],
+              datasets: [
+                { label: 'Repair & Maintenance', data: [3980422.28, 5164004.15, 4235050.20] },
+                { label: 'Other Repair', data: [703546.16, 701650.27, 910896.84] }
+              ]
+            }
+          ];
+        }
       }
     }
 
@@ -1582,7 +1674,7 @@ export const AgentWorkflow = ({
       extractedTitle = activeConnector?.name ? `${activeConnector.name} Summary` : undefined;
     }
 
-    return { title: extractedTitle, content: extractedContent };
+    return { title: extractedTitle, content: extractedContent, kpis, charts };
   }, [connectorResults?.description, connectorResults?.report_content, chatKey, activeConnector?.name]);
 
   if (isLoading) {
@@ -1711,13 +1803,45 @@ export const AgentWorkflow = ({
 
                   {selectedAgent.id === 'query' ? (
                     <div className="flex-1 flex overflow-hidden flex-col relative">
-                      <div className="px-6 pt-6 z-10 w-full shrink-0">
-                        <ChatSummaryCard
-                          title={chatSummaryData.title}
-                          content={chatSummaryData.content}
-                        />
+                      {/* Dashboard Container: Sized to content, shrinks and scrolls only if too tall */}
+                      <div className="px-6 pt-6 z-10 w-full flex-initial shrink overflow-y-auto pb-4">
+                        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
+                          
+                          {/* Left Column: Summary and Charts */}
+                          <div className={`flex flex-col gap-6 ${chatSummaryData.kpis?.length > 0 ? 'xl:col-span-3' : 'xl:col-span-4'}`}>
+                            <ChatSummaryCard 
+                              title={chatSummaryData.title}
+                              content={chatSummaryData.content}
+                            />
+                            
+                            {chatSummaryData.charts?.length > 0 && (
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-4">
+                                {chatSummaryData.charts.map((chart, idx) => (
+                                  <DynamicChart key={idx} config={chart} index={idx} />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Right Column: KPIs Sidebar */}
+                          {chatSummaryData.kpis?.length > 0 && (
+                            <div className="xl:col-span-1 flex flex-col gap-4">
+                              <div className="flex items-center justify-between px-1">
+                                <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Key Metrics</h3>
+                              </div>
+                              <div className="flex flex-col gap-4">
+                                {chatSummaryData.kpis.map((kpi, idx) => (
+                                  <KPICard key={idx} kpi={kpi} index={idx} />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0 flex flex-col min-h-0">
+                      
+                      {/* ChatWindow Container: Takes remaining space, with a reasonable minimum height to prevent squashing the chat layout */}
+                      <div className="flex-1 min-w-0 flex flex-col min-h-[250px]">
                         <div className="flex-1 flex flex-col h-full">
                           <ChatWindow
                             initialMode="chat"

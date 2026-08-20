@@ -256,11 +256,10 @@ export const IngestDataView = ({
                 {databases.map((db: any, idx: number) => (
                   <div key={idx} className="p-4 rounded-xl bg-[var(--surface)]/30 border border-[var(--border)] space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-bold truncate">{db.external_database}</span>
+                      <span className="text-sm font-bold truncate">{db.new_user_db || db.external_database}</span>
                       <Badge variant="outline" className="text-[9px]">{db.table_count} tables</Badge>
                     </div>
-                    <div className="flex justify-between text-[10px] text-[var(--text-secondary)]">
-                      <span>{db.new_user_db}</span>
+                    <div className="flex justify-end text-[10px] text-[var(--text-secondary)]">
                       <span>{db.last_sync}</span>
                     </div>
                   </div>

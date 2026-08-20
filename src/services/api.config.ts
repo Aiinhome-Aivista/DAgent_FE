@@ -7,8 +7,8 @@ export interface ApiConfig {
 }
 
 export const defaultConfig: ApiConfig = {
-  // baseUrl: 'http://122.163.121.176:5005',
-  baseUrl: 'http://localhost:3019/',
+  baseUrl: 'http://122.163.121.176:3019',
+  // baseUrl: 'http://localhost:3019/',
   // baseUrl: 'http://157.173.221.226:3004',
   // baseUrl: 'http://187.127.163.17:3019',
   // baseUrl: 'http://72.61.226.68:3019/',
