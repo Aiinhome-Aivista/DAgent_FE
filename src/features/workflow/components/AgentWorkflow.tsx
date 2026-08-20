@@ -902,7 +902,7 @@
 //   );
 // };
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { AgentData, AgentHistoryItem } from '../types';
 import { Card, CardContent, CardHeader, Badge, Button } from '@/src/ui-kit';
 import { motion, AnimatePresence } from 'motion/react';
@@ -912,6 +912,7 @@ import { agentService } from '@/src/services/agent.service';
 import { ConnectorList } from '../../connectors/components/ConnectorList';
 import { Connector } from '../../connectors/types';
 import { ChatWindow } from '../../chat/components/ChatWindow';
+import { ChatSummaryCard } from '../../chat/components/ChatSummaryCard';
 import { useConnectorContext } from '../../../context/ConnectorContext';
 import { useAuthContext } from '../../../context/AuthContext';
 import { connectorService } from '@/src/services/connector.service';
@@ -934,6 +935,7 @@ interface AgentWorkflowProps {
 import { HistoryItemCard } from './HistoryItemCard';
 import { AgentStepper, getAgentIcon } from './AgentStepper';
 import { IngestDataView } from './IngestDataView';
+import React from 'react';
 
 
 const formatInsightsText = (text: string) => {
@@ -1388,7 +1390,7 @@ export const AgentWorkflow = ({
           } else if (historyItem.db_type === 'csv_upload' || historyItem.db_type === 'csv_chunk_upload') {
             const allCsvItems = selectedAgent.history.filter(h => h.db_type === 'csv_upload' || h.db_type === 'csv_chunk_upload');
             const connectionIds = allCsvItems.length > 0 ? allCsvItems.map(h => Number(h.id)) : [Number(historyItem.id)];
-            
+
             response = await connectorService.importCsvData({
               user_id: Number(userId),
               connection_ids: connectionIds,
@@ -1523,6 +1525,66 @@ export const AgentWorkflow = ({
     await forwardToNextAgent('ingest', scenario, activeConnector?.name);
   };
 
+  const chatSummaryData = useMemo(() => {
+    let rawText = '';
+    let extractedTitle: string | undefined = undefined;
+    let extractedContent: string | undefined = undefined;
+
+    try {
+      const storedSession = localStorage.getItem('selected_query_session');
+      if (storedSession) {
+        const parsed = JSON.parse(storedSession);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].answer) {
+          rawText = parsed[0].answer;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (!rawText) {
+      rawText = typeof connectorResults?.report_content === 'string'
+        ? connectorResults.report_content
+        : typeof connectorResults?.description === 'string'
+          ? connectorResults.description
+          : connectorResults?.description
+            ? JSON.stringify(connectorResults.description)
+            : '';
+    }
+
+    if (rawText) {
+      const lines = rawText.split('\n');
+      const titleLineIndex = lines.findIndex(line => line.toLowerCase().includes('title:'));
+
+      if (titleLineIndex !== -1) {
+        let titleLine = lines[titleLineIndex];
+        const match = titleLine.match(/title\s*:\s*(.*)/i);
+        if (match) {
+          extractedTitle = match[1].replace(/\*\*/g, '').replace(/#/g, '').trim();
+        }
+        lines.splice(titleLineIndex, 1);
+        extractedContent = lines.join('\n').trim();
+      } else {
+        extractedContent = rawText;
+      }
+    }
+
+    if (!extractedTitle) {
+      try {
+        const sessionName = localStorage.getItem('selected_query_session_name');
+        if (sessionName && sessionName !== 'null') {
+          extractedTitle = sessionName;
+        }
+      } catch (e) { }
+    }
+
+    if (!extractedTitle) {
+      extractedTitle = activeConnector?.name ? `${activeConnector.name} Summary` : undefined;
+    }
+
+    return { title: extractedTitle, content: extractedContent };
+  }, [connectorResults?.description, connectorResults?.report_content, chatKey, activeConnector?.name]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -1550,6 +1612,8 @@ export const AgentWorkflow = ({
       }
     }
   };
+
+
 
   return (
     <div className="w-full flex-col h-full py-1 flex gap-4">
@@ -1646,7 +1710,13 @@ export const AgentWorkflow = ({
                   )}
 
                   {selectedAgent.id === 'query' ? (
-                    <div className="flex-1 flex overflow-hidden">
+                    <div className="flex-1 flex overflow-hidden flex-col relative">
+                      <div className="px-6 pt-6 z-10 w-full shrink-0">
+                        <ChatSummaryCard
+                          title={chatSummaryData.title}
+                          content={chatSummaryData.content}
+                        />
+                      </div>
                       <div className="flex-1 min-w-0 flex flex-col min-h-0">
                         <div className="flex-1 flex flex-col h-full">
                           <ChatWindow
