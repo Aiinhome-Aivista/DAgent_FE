@@ -1538,8 +1538,50 @@ export const AgentWorkflow = ({
       const storedSession = localStorage.getItem('selected_query_session');
       if (storedSession) {
         const parsed = JSON.parse(storedSession);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].answer) {
-          rawText = parsed[0].answer;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (parsed[0].answer) {
+            rawText = parsed[0].answer;
+          }
+          if (parsed[0].visualizations && Array.isArray(parsed[0].visualizations)) {
+            parsed[0].visualizations.forEach((vis: any) => {
+              if (['bar_chart', 'line_chart', 'pie_chart', 'bar', 'line', 'pie'].includes(vis.type)) {
+                let chartType = vis.type.replace('_chart', '');
+                let labels = [];
+                let datasets = [];
+                
+                if (vis.data && vis.xKey && vis.yKey) {
+                  labels = vis.data.map((d: any) => String(d[vis.xKey]));
+                  datasets = [{
+                    label: vis.yKey,
+                    data: vis.data.map((d: any) => {
+                      const val = d[vis.yKey];
+                      return typeof val === 'number' ? val : parseFloat(val) || 0;
+                    })
+                  }];
+                } else if (vis.labels && vis.datasets) {
+                  labels = vis.labels;
+                  datasets = vis.datasets;
+                }
+                
+                if (labels.length > 0) {
+                  charts.push({
+                    chart_type: chartType,
+                    title: vis.title || '',
+                    description: vis.description || '',
+                    labels,
+                    datasets
+                  });
+                }
+              } else if (vis.type === 'kpi') {
+                kpis.push({
+                  title: vis.title || vis.label || 'Metric',
+                  value: String(vis.value || ''),
+                  description: vis.description || '',
+                  trend: vis.trend || 'neutral'
+                });
+              }
+            });
+          }
         }
       }
     } catch (e) {
