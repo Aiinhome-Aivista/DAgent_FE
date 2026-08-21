@@ -61,4 +61,5 @@ export interface MainContentProps {
   onNewSessionCreated?: () => void;
   sessionId?: string;
   workspaceName?: string;
+  onStartNewQueryWithMsg?: (msg: string) => void;
 }

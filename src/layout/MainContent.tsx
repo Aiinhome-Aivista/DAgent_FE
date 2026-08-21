@@ -20,6 +20,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   onNewSessionCreated,
   sessionId,
   workspaceName,
+  onStartNewQueryWithMsg,
 }) => {
   return (
     <div
@@ -45,6 +46,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               sessionId={sessionId}
               workspaceName={workspaceName}
               chatKey={chatKey}
+              onStartNewQueryWithMsg={onStartNewQueryWithMsg}
             />
           </motion.div>
         ) : activeTab === "new-connector" ? (

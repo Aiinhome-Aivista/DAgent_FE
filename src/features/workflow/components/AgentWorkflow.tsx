@@ -932,6 +932,7 @@ interface AgentWorkflowProps {
   sessionId?: string;
   workspaceName?: string;
   chatKey?: number;
+  onStartNewQueryWithMsg?: (msg: string) => void;
 }
 
 import { HistoryItemCard } from './HistoryItemCard';
@@ -1017,7 +1018,8 @@ export const AgentWorkflow = ({
   initialChatMessage,
   sessionId,
   workspaceName,
-  chatKey
+  chatKey,
+  onStartNewQueryWithMsg
 }: AgentWorkflowProps) => {
   const {
     selectedConnector: activeConnector,
@@ -1535,7 +1537,11 @@ export const AgentWorkflow = ({
     let charts: any[] = [];
 
     try {
-      const storedSession = localStorage.getItem('selected_query_session');
+      let storedSession = localStorage.getItem('default_workspace_analysis');
+      if (!storedSession || storedSession === '[]') {
+        storedSession = localStorage.getItem('selected_query_session');
+      }
+      
       if (storedSession) {
         const parsed = JSON.parse(storedSession);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1688,7 +1694,7 @@ export const AgentWorkflow = ({
     }
 
     return { title: extractedTitle, content: extractedContent, kpis, charts };
-  }, [connectorResults?.description, connectorResults?.report_content, chatKey, activeConnector?.name]);
+  }, [connectorResults?.description, connectorResults?.report_content, chatKey, activeConnector?.name, sessionId]);
 
   if (isLoading) {
     return (
@@ -1865,6 +1871,7 @@ export const AgentWorkflow = ({
                             workspaceName={workspaceName}
                             onCollapseChange={setChatCollapsed}
                             chatKey={chatKey}
+                            onStartNewQueryWithMsg={onStartNewQueryWithMsg}
                           />
                         </div>
                       </div>

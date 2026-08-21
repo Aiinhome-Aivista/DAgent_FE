@@ -461,6 +461,15 @@ function AppContent() {
           onNewSessionCreated={handleNewSessionCreated}
           sessionId={selectedWorkspace?.session_id}
           workspaceName={selectedWorkspace?.workspace_name}
+          onStartNewQueryWithMsg={(msg) => {
+            localStorage.removeItem("selected_query_session");
+            localStorage.setItem("current_visit_number", "new");
+            localStorage.removeItem("selected_query_session_name");
+            localStorage.removeItem("is_default_chat");
+            setInitialChatMessage(msg);
+            setActiveTab("chat");
+            setChatKey((prev) => prev + 1);
+          }}
         />
       </main>
     </div>

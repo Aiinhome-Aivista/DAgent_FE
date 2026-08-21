@@ -57,6 +57,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { userId, roleId, roleName } = useAuthContext();
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
+  React.useEffect(() => {
+    if (expandedWorkspaceId && queryHistories[expandedWorkspaceId]) {
+      const rawSessions = [...(queryHistories[expandedWorkspaceId] || [])].reverse();
+      const activeVisitNumber = localStorage.getItem("current_visit_number");
+      let defaultToKeep: any = null;
+      for (const s of rawSessions) {
+        const name = s.querySessionName?.trim().toLowerCase() || "";
+        if (name.startsWith("default")) {
+          const isThisActive = s.querySessionId && activeVisitNumber === String(s.querySessionId).replace("session_visit_", "").trim();
+          if (isThisActive) {
+            defaultToKeep = s;
+            break;
+          }
+          if (!defaultToKeep) {
+            defaultToKeep = s;
+          }
+        }
+      }
+      
+      if (defaultToKeep && defaultToKeep.querySessionHistory) {
+        localStorage.setItem("default_workspace_analysis", JSON.stringify(defaultToKeep.querySessionHistory));
+
+        if (!localStorage.getItem("current_visit_number")) {
+          localStorage.setItem("current_visit_number", String(defaultToKeep.querySessionId).replace("session_visit_", "").trim());
+          localStorage.setItem("selected_query_session", JSON.stringify(defaultToKeep.querySessionHistory));
+          localStorage.setItem("selected_query_session_name", defaultToKeep.querySessionName);
+          localStorage.setItem("is_default_chat", "true");
+          setInitialChatMessage(undefined);
+          setChatKey((prev: number) => prev + 1);
+        }
+      }
+    }
+  }, [expandedWorkspaceId, queryHistories, setChatKey, setInitialChatMessage]);
+
   return (
     <motion.aside
       initial={false}
@@ -518,8 +552,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             localStorage.removeItem(
                                               "selected_query_session",
                                             );
-                                            localStorage.removeItem(
+                                            localStorage.setItem(
                                               "current_visit_number",
+                                              "new"
                                             );
                                             localStorage.removeItem(
                                               "selected_query_session_name",
@@ -685,6 +720,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                           "is_default_chat",
                                                         );
                                                       }
+                                                      setInitialChatMessage(undefined);
                                                       setActiveTab("chat");
                                                       setChatKey(
                                                         (prev: number) =>

@@ -75,14 +75,17 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
         session_id: chatSessionId,
         question: content,
         user_id: userId,
-        ...(currentVisitNumber ? { visit_number: parseInt(currentVisitNumber, 10) } : {})
+        ...(currentVisitNumber && currentVisitNumber !== 'new' ? { visit_number: parseInt(currentVisitNumber, 10) } : {})
       });
 
       if (response?.visit_number) {
         localStorage.setItem('current_visit_number', response.visit_number.toString());
       }
 
-      const answerText = response?.answer || '';
+      let answerText = response?.answer || '';
+      if (!answerText && response?.report) {
+        answerText = JSON.stringify({ report: response?.report });
+      }
       const followUps: string[] = response?.follow_up_questions || response?.suggested_questions || [];
 
       const assistantMessage: Message = {
@@ -142,9 +145,14 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
       if (storedSession) {
         const querySessionHistory = JSON.parse(storedSession);
 
+        const isDefaultSession = localStorage.getItem('is_default_chat') === 'true';
         const historyMessages: Message[] = [];
         querySessionHistory.forEach((item: any, idx: number) => {
           const isSystemQuestion = item.question.startsWith('default_') || item.question === 'Updated Analysis from newly uploaded files' || item.question === 'Context Update';
+
+          if (isDefaultSession && !isSystemQuestion) {
+            return;
+          }
 
           if (!isSystemQuestion) {
             historyMessages.push({
@@ -155,10 +163,15 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
             });
           }
 
+          let answerContent = item.answer || '';
+          if (!answerContent && item.report) {
+            answerContent = JSON.stringify({ report: item.report });
+          }
+
           historyMessages.push({
             id: `assistant-${idx}`,
             role: 'assistant',
-            content: item.answer,
+            content: answerContent,
             timestamp: item.timestamp ? new Date(item.timestamp) : (item.created_at ? new Date(item.created_at) : new Date()),
             visualizations: item.visualizations || []
           });
@@ -168,7 +181,10 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
           setMessages(historyMessages);
 
           let hasFollowUps = false;
-          const lastItem = querySessionHistory[querySessionHistory.length - 1];
+          const validHistory = isDefaultSession 
+            ? querySessionHistory.filter((i: any) => i.question.startsWith('default_') || i.question === 'Updated Analysis from newly uploaded files' || i.question === 'Context Update')
+            : querySessionHistory;
+          const lastItem = validHistory[validHistory.length - 1];
           if (lastItem && lastItem.follow_up_questions && Array.isArray(lastItem.follow_up_questions) && lastItem.follow_up_questions.length > 0) {
             setFollowUpQuestions(lastItem.follow_up_questions);
             hasFollowUps = true;

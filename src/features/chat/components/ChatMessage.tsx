@@ -26,8 +26,26 @@ export const ChatMessage = React.memo(({ message }: ChatMessageProps) => {
       }
       
       const parsed = JSON.parse(jsonStr);
-      if (parsed.report) {
-        return parsed.report;
+      const report = parsed.report || (parsed.title ? parsed : null);
+      if (report) {
+        if (typeof report === 'string') {
+          return report;
+        }
+        let md = `# ${report.title || 'Report'}\n\n`;
+        if (report.key_findings && Array.isArray(report.key_findings) && report.key_findings.length > 0) {
+          md += `### Key Findings\n`;
+          report.key_findings.forEach((kf: string) => {
+            md += `- ${kf}\n`;
+          });
+          md += `\n`;
+        }
+        if (report.sections && Array.isArray(report.sections)) {
+          report.sections.forEach((sec: any) => {
+            if (sec.heading) md += `## ${sec.heading}\n`;
+            if (sec.content) md += `${sec.content}\n\n`;
+          });
+        }
+        return md;
       }
     } catch (e) {
       // Fallback

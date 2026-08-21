@@ -22,7 +22,7 @@ import {
   Minus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Connector } from "../../connectors/types";
 
 interface ChatWindowProps {
@@ -36,6 +36,7 @@ interface ChatWindowProps {
   workspaceName?: string;
   onCollapseChange?: (collapsed: boolean) => void;
   chatKey?: number;
+  onStartNewQueryWithMsg?: (msg: string) => void;
 }
 
 export const ChatWindow = ({
@@ -49,6 +50,7 @@ export const ChatWindow = ({
   workspaceName,
   onCollapseChange,
   chatKey,
+  onStartNewQueryWithMsg,
 }: ChatWindowProps) => {
   const {
     messages,
@@ -67,6 +69,19 @@ export const ChatWindow = ({
   const [chatInput, setChatInput] = useState("");
   const [chatSessionName, setChatSessionName] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const lastHandledChatKey = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (initialMessage && lastHandledChatKey.current !== chatKey && sessionId && mode === "chat") {
+      console.log('ChatWindow handling initialMessage:', initialMessage);
+      lastHandledChatKey.current = chatKey;
+      
+      // Delay slightly to ensure useChat has cleared messages from the old session
+      setTimeout(() => {
+        sendMessage(initialMessage);
+      }, 100);
+    }
+  }, [initialMessage, sessionId, chatKey, mode, sendMessage]);
 
   useEffect(() => {
     setChatSessionName(localStorage.getItem("selected_query_session_name"));
@@ -267,7 +282,14 @@ export const ChatWindow = ({
               <ChatInput
                 value={chatInput}
                 onChange={setChatInput}
-                onSend={sendMessage}
+                onSend={(msg) => {
+                  const isDefaultChat = localStorage.getItem('is_default_chat') === 'true';
+                  if (isDefaultChat && onStartNewQueryWithMsg) {
+                    onStartNewQueryWithMsg(msg);
+                  } else {
+                    sendMessage(msg);
+                  }
+                }}
                 disabled={isLoading || mode !== "chat"}
                 onOpenDataSource={onOpenDataSource}
               />
@@ -305,7 +327,12 @@ export const ChatWindow = ({
                     transition={{ delay: i * 0.1 }}
                     onClick={() => {
                       setChatInput("");
-                      sendMessage(q);
+                      const isDefaultChat = localStorage.getItem('is_default_chat') === 'true';
+                      if (isDefaultChat && onStartNewQueryWithMsg) {
+                        onStartNewQueryWithMsg(q);
+                      } else {
+                        sendMessage(q);
+                      }
                     }}
                     className="cursor-pointer w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
                   >
@@ -326,7 +353,12 @@ export const ChatWindow = ({
                     transition={{ delay: i * 0.1 }}
                     onClick={() => {
                       setChatInput("");
-                      sendMessage(q);
+                      const isDefaultChat = localStorage.getItem('is_default_chat') === 'true';
+                      if (isDefaultChat && onStartNewQueryWithMsg) {
+                        onStartNewQueryWithMsg(q);
+                      } else {
+                        sendMessage(q);
+                      }
                     }}
                     className="cursor-pointer w-full text-left px-3 py-2 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 transition-all shadow-sm flex items-start gap-2"
                   >
