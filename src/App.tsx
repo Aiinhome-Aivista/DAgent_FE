@@ -257,8 +257,9 @@ function AppContent() {
     }
   };
 
-  const handleCreateWorkspaceFromSummary = async (summary: string) => {
-    if (!userId || !selectedWorkspace) return;
+  const handleCreateWorkspaceFromSummary = async (summary: string, sessionId?: string) => {
+    const activeSessionId = sessionId || selectedWorkspace?.session_id || localStorage.getItem('DAgent_session_id');
+    if (!userId || !activeSessionId) return;
 
     // Format date as DD_MM_YYYY
     const date = new Date();
@@ -278,9 +279,9 @@ function AppContent() {
 
       // Try to determine next visit number or find existing session
       try {
-        const queryResponse = await chatHistoryService.getSessionChatHistory(selectedWorkspace.session_id, userId);
+        const queryResponse = await chatHistoryService.getSessionChatHistory(activeSessionId, userId);
         if (queryResponse && queryResponse.querySessions && queryResponse.querySessions.length > 0) {
-          const existingSession = queryResponse.querySessions.find(s => s.querySessionName === defaultName);
+          const existingSession = queryResponse.querySessions.find(s => s.querySessionName === defaultName || s.querySessionName === "Updated Analysis from newly uploaded files" || s.querySessionName?.startsWith('default_'));
 
           if (existingSession) {
             isExisting = true;
@@ -325,7 +326,7 @@ function AppContent() {
       // Save it to backend in background/await
       try {
         await chatHistoryService.saveSessionChatHistory({
-          session_id: selectedWorkspace.session_id,
+          session_id: activeSessionId,
           user_id: userId,
           question: questionToUse,
           answer: summary,
@@ -345,11 +346,12 @@ function AppContent() {
       };
 
       setQueryHistories(prev => {
-        const existing = prev[selectedWorkspace.id] || [];
+        const workspaceId = selectedWorkspace?.id || 'temp';
+        const existing = prev[workspaceId] || [];
         if (isExisting) {
           return {
             ...prev,
-            [selectedWorkspace.id]: existing.map(s => s.querySessionId === updatedSessionNode.querySessionId ? updatedSessionNode : s)
+            [workspaceId]: existing.map(s => s.querySessionId === updatedSessionNode.querySessionId ? updatedSessionNode : s)
           };
         } else {
           // Prevent duplicate if somehow fetch succeeded
@@ -358,7 +360,7 @@ function AppContent() {
           }
           return {
             ...prev,
-            [selectedWorkspace.id]: [...existing, updatedSessionNode]
+            [workspaceId]: [...existing, updatedSessionNode]
           };
         }
       });

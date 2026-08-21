@@ -19,7 +19,7 @@
 //   onChangeTab?: (tabId: string) => void;
 //   onNewConnector?: () => void;
 //   onForwardWithContext?: (agentId: string, context: string) => void;
-//   onCreateWorkspaceFromSummary?: (summary: string) => void;
+//   onCreateWorkspaceFromSummary?: (summary: string, sessionId?: string) => void;
 //   onNewSessionCreated?: () => void;
 //   initialChatMessage?: string;
 //   sessionId?: string;
@@ -399,7 +399,7 @@
 //         });
 
 //         if (response) {
-//           const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+//           const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
 //           const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
 //           const displayContent = report || errorMessage;
 
@@ -558,7 +558,7 @@
 //         });
 
 //         if (response) {
-//           const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+//           const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
 //           const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
 //           const displayContent = report || errorMessage;
 
@@ -926,7 +926,7 @@ interface AgentWorkflowProps {
   onChangeTab?: (tabId: string) => void;
   onNewConnector?: () => void;
   onForwardWithContext?: (agentId: string, context: string) => void;
-  onCreateWorkspaceFromSummary?: (summary: string) => void;
+  onCreateWorkspaceFromSummary?: (summary: string, sessionId?: string) => void;
   onNewSessionCreated?: () => void;
   initialChatMessage?: string;
   sessionId?: string;
@@ -1171,7 +1171,7 @@ export const AgentWorkflow = ({
             });
 
             if (response) {
-              const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+              const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
               const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
               const displayContent = report || errorMessage || "Analysis completed but no insights were generated.";
 
@@ -1311,7 +1311,7 @@ export const AgentWorkflow = ({
         });
 
         if (response) {
-          const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+          const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
           const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
           const displayContent = report || errorMessage;
 
@@ -1473,7 +1473,7 @@ export const AgentWorkflow = ({
         });
 
         if (response) {
-          const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+          const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
           const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
           const displayContent = report || errorMessage;
 
@@ -1548,7 +1548,7 @@ export const AgentWorkflow = ({
                 let chartType = vis.type.replace('_chart', '');
                 let labels = [];
                 let datasets = [];
-                
+
                 if (vis.data && vis.xKey && vis.yKey) {
                   labels = vis.data.map((d: any) => String(d[vis.xKey]));
                   datasets = [{
@@ -1562,7 +1562,7 @@ export const AgentWorkflow = ({
                   labels = vis.labels;
                   datasets = vis.datasets;
                 }
-                
+
                 if (labels.length > 0) {
                   charts.push({
                     chart_type: chartType,
@@ -1601,7 +1601,7 @@ export const AgentWorkflow = ({
     if (rawText) {
       try {
         let jsonStr = rawText;
-        
+
         // Handle markdown wrapped json like ```json ... ```
         const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
@@ -1614,14 +1614,14 @@ export const AgentWorkflow = ({
             jsonStr = rawText.slice(firstBrace, lastBrace + 1);
           }
         }
-        
+
         const parsedJson = JSON.parse(jsonStr);
 
         if (parsedJson.report || parsedJson.kpis || parsedJson.charts) {
           extractedContent = parsedJson.report || '';
           kpis = parsedJson.kpis || [];
           charts = parsedJson.charts || [];
-          
+
           // Try to extract title from the report string
           if (typeof extractedContent === 'string') {
             const lines = extractedContent.split('\n');
@@ -1670,36 +1670,7 @@ export const AgentWorkflow = ({
           extractedContent = rawText;
         }
 
-        // --- HELPER MOCK DATA FOR CURRENT VIEWING ---
-        if (kpis.length === 0 && charts.length === 0) {
-          kpis = [
-            { title: "Income Variance", value: "9.79%", description: "Total other incomes variance for 2025-26", trend: "up" },
-            { title: "Settlement", value: "16.11 Cr", description: "Approved NCLI settlement amount", trend: "neutral" },
-            { title: "Elec. Variance (23-24)", value: "-21%", description: "Electricity cost under budget", trend: "down" },
-            { title: "Maint. Peak (23-24)", value: "58.66 L", description: "Highest repair & maintenance cost", trend: "up" }
-          ];
-          charts = [
-            {
-              chart_type: 'bar',
-              title: 'Electricity Cost Trend',
-              description: 'Actual electricity cost across financial years.',
-              labels: ['2022-2023', '2023-2024', '2025-2026'],
-              datasets: [
-                { label: 'Actual Cost (₹)', data: [7876563.29, 6677227.90, 6335453.66] }
-              ]
-            },
-            {
-              chart_type: 'bar',
-              title: 'Repair & Maintenance Breakdown',
-              description: 'Comparison of maintenance expenses by category.',
-              labels: ['2022-2023', '2023-2024', '2024-2025'],
-              datasets: [
-                { label: 'Repair & Maintenance', data: [3980422.28, 5164004.15, 4235050.20] },
-                { label: 'Other Repair', data: [703546.16, 701650.27, 910896.84] }
-              ]
-            }
-          ];
-        }
+
       }
     }
 
@@ -1846,16 +1817,16 @@ export const AgentWorkflow = ({
                   {selectedAgent.id === 'query' ? (
                     <div className="flex-1 flex overflow-hidden flex-col relative">
                       {/* Dashboard Container: Sized to content, shrinks and scrolls only if too tall */}
-                      <div className={`px-6 pt-6 z-10 w-full flex-1 shrink overflow-y-auto pb-4 ${chatCollapsed ? '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden' : ''}`}>
+                      <div className="px-6 pt-6 z-10 w-full flex-1 shrink overflow-y-auto pb-4">
                         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
-                          
+
                           {/* Left Column: Summary and Charts */}
                           <div className={`flex flex-col gap-6 ${chatSummaryData.kpis?.length > 0 ? 'xl:col-span-3' : 'xl:col-span-4'}`}>
-                            <ChatSummaryCard 
+                            <ChatSummaryCard
                               title={chatSummaryData.title}
                               content={chatSummaryData.content}
                             />
-                            
+
                             {chatSummaryData.charts?.length > 0 && (
                               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-4">
                                 {chatSummaryData.charts.map((chart, idx) => (
@@ -1864,7 +1835,7 @@ export const AgentWorkflow = ({
                               </div>
                             )}
                           </div>
-                          
+
                           {/* Right Column: KPIs Sidebar */}
                           {chatSummaryData.kpis?.length > 0 && (
                             <div className="xl:col-span-1 flex flex-col gap-4">
@@ -1881,7 +1852,7 @@ export const AgentWorkflow = ({
 
                         </div>
                       </div>
-                      
+
                       {/* ChatWindow Container: Takes remaining space when open, just intrinsic height when collapsed */}
                       <div className={`w-full flex flex-col transition-all duration-300 ${chatCollapsed ? 'shrink-0' : 'flex-1 min-h-[350px]'}`}>
                         <div className="flex-1 flex flex-col h-full">
@@ -1936,7 +1907,9 @@ export const AgentWorkflow = ({
                                 <div className="prose prose-sm max-w-none text-[var(--text-primary)] leading-relaxed prose-a:text-[var(--accent)] hover:prose-a:underline">
                                   {typeof connectorResults.description === 'string'
                                     ? <div dangerouslySetInnerHTML={{ __html: formatInsightsText(connectorResults.description) }} />
-                                    : JSON.stringify(connectorResults.description, null, 2)}
+                                    : connectorResults.description && typeof connectorResults.description === 'object' && connectorResults.description.report
+                                      ? <div dangerouslySetInnerHTML={{ __html: formatInsightsText(connectorResults.description.report) }} />
+                                      : <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(connectorResults.description, null, 2)}</pre>}
                                 </div>
                               </motion.div>
 
@@ -1951,7 +1924,7 @@ export const AgentWorkflow = ({
                                         const summaryText = typeof connectorResults.description === 'string'
                                           ? connectorResults.description
                                           : JSON.stringify(connectorResults.description);
-                                        onCreateWorkspaceFromSummary(summaryText);
+                                        onCreateWorkspaceFromSummary(summaryText, sessionId);
                                       } else {
                                         handleStepperClick('query');
                                       }

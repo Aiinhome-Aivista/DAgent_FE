@@ -45,11 +45,6 @@ export const KPICard = ({ kpi, index }: KPICardProps) => {
         {kpi.value}
       </div>
       
-      {kpi.description && (
-        <p className="text-[10px] text-[var(--text-secondary)] leading-snug">
-          {kpi.description}
-        </p>
-      )}
     </motion.div>
   );
 };
