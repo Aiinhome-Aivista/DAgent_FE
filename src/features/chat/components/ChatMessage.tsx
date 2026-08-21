@@ -11,6 +11,32 @@ interface ChatMessageProps {
 export const ChatMessage = React.memo(({ message }: ChatMessageProps) => {
   const isAssistant = message.role === 'assistant';
 
+  const getDisplayContent = (content: string) => {
+    try {
+      let jsonStr = content;
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1];
+      } else {
+        const firstBrace = content.indexOf('{');
+        const lastBrace = content.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          jsonStr = content.slice(firstBrace, lastBrace + 1);
+        }
+      }
+      
+      const parsed = JSON.parse(jsonStr);
+      if (parsed.report) {
+        return parsed.report;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return content;
+  };
+
+  const displayContent = getDisplayContent(message.content);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -27,7 +53,7 @@ export const ChatMessage = React.memo(({ message }: ChatMessageProps) => {
       >
         <div
           className="prose-chat break-words"
-          dangerouslySetInnerHTML={{ __html: formatChatMessage(message.content, isAssistant) }}
+          dangerouslySetInnerHTML={{ __html: formatChatMessage(displayContent, isAssistant) }}
         />
 
         {isAssistant && message.visualizations && message.visualizations.length > 0 && (
