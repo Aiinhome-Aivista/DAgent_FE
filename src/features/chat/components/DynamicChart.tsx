@@ -30,15 +30,25 @@ export const DynamicChart = ({ config, index }: DynamicChartProps) => {
     return dataPoint;
   });
 
+  const formatYAxis = (val: number) => {
+    if (val === 0) return '0';
+    const absVal = Math.abs(val);
+    const sign = val < 0 ? '-' : '';
+    if (absVal >= 10000000) return `${sign}${(absVal / 10000000).toFixed(1)}Cr`;
+    if (absVal >= 100000) return `${sign}${(absVal / 100000).toFixed(1)}L`;
+    if (absVal >= 1000) return `${sign}${(absVal / 1000).toFixed(1)}K`;
+    return `${sign}${absVal}`;
+  };
+
   const renderChart = () => {
     switch (config.chart_type) {
       case 'bar':
         return (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} vertical={false} />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} tickFormatter={formatYAxis} />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', fontSize: '12px' }}
                 cursor={{ fill: 'currentColor', opacity: 0.05 }}
@@ -53,10 +63,10 @@ export const DynamicChart = ({ config, index }: DynamicChartProps) => {
       case 'line':
         return (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} vertical={false} />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} tickFormatter={formatYAxis} />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', fontSize: '12px' }}
               />

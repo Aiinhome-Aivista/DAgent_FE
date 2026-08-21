@@ -1804,7 +1804,7 @@ export const AgentWorkflow = ({
                   {selectedAgent.id === 'query' ? (
                     <div className="flex-1 flex overflow-hidden flex-col relative">
                       {/* Dashboard Container: Sized to content, shrinks and scrolls only if too tall */}
-                      <div className="px-6 pt-6 z-10 w-full flex-initial shrink overflow-y-auto pb-4">
+                      <div className={`px-6 pt-6 z-10 w-full flex-1 shrink overflow-y-auto pb-4 ${chatCollapsed ? '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden' : ''}`}>
                         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
                           
                           {/* Left Column: Summary and Charts */}
@@ -1840,8 +1840,8 @@ export const AgentWorkflow = ({
                         </div>
                       </div>
                       
-                      {/* ChatWindow Container: Takes remaining space, with a reasonable minimum height to prevent squashing the chat layout */}
-                      <div className="flex-1 min-w-0 flex flex-col min-h-[250px]">
+                      {/* ChatWindow Container: Takes remaining space when open, just intrinsic height when collapsed */}
+                      <div className={`w-full flex flex-col transition-all duration-300 ${chatCollapsed ? 'shrink-0' : 'flex-1 min-h-[350px]'}`}>
                         <div className="flex-1 flex flex-col h-full">
                           <ChatWindow
                             initialMode="chat"
