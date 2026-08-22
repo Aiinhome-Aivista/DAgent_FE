@@ -439,6 +439,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                           localStorage.removeItem("selected_query_session_name");
                                           localStorage.removeItem("current_visit_number");
                                           localStorage.removeItem("is_default_chat");
+                                          localStorage.removeItem("default_workspace_analysis");
                                           
                                           // Fetch and expand the workspace history
                                           const sessions = await fetchWorkspaceHistory(workspace.id, workspace.session_id, true);
@@ -470,7 +471,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                 localStorage.removeItem("is_default_chat");
                                               }
                                             }
+                                          } else {
+                                            localStorage.setItem("current_visit_number", "new");
                                           }
+                                          
+                                          setInitialChatMessage(undefined);
+                                          setActiveTab("chat");
                                           
                                           setChatKey((prev: number) => prev + 1);
 
@@ -558,6 +564,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             );
                                             localStorage.removeItem(
                                               "selected_query_session_name",
+                                            );
+                                            localStorage.removeItem(
+                                              "default_workspace_analysis",
                                             );
                                             setInitialChatMessage(undefined);
                                             setActiveTab("chat");

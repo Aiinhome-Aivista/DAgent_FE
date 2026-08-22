@@ -1536,11 +1536,14 @@ export const AgentWorkflow = ({
     let kpis: any[] = [];
     let charts: any[] = [];
 
-    try {
-      let storedSession = localStorage.getItem('default_workspace_analysis');
-      if (!storedSession || storedSession === '[]') {
-        storedSession = localStorage.getItem('selected_query_session');
-      }
+    const isNewVisit = localStorage.getItem("current_visit_number") === "new";
+
+    if (!isNewVisit) {
+      try {
+        let storedSession = localStorage.getItem('default_workspace_analysis');
+        if (!storedSession || storedSession === '[]') {
+          storedSession = localStorage.getItem('selected_query_session');
+        }
       
       if (storedSession) {
         const parsed = JSON.parse(storedSession);
@@ -1592,6 +1595,7 @@ export const AgentWorkflow = ({
       }
     } catch (e) {
       console.error(e);
+    }
     }
 
     if (!rawText) {
@@ -1680,7 +1684,7 @@ export const AgentWorkflow = ({
       }
     }
 
-    if (!extractedTitle) {
+    if (!extractedTitle && !isNewVisit) {
       try {
         const sessionName = localStorage.getItem('selected_query_session_name');
         if (sessionName && sessionName !== 'null') {
