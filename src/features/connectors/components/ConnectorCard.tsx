@@ -1,6 +1,6 @@
 import { Connector } from '../types';
 import { Card, CardContent, Badge, Button } from '@/src/ui-kit';
-import { Database, Server, Share2, ArrowUpRight, Globe, Search, FileSpreadsheet, FileCode2, Upload, Network } from 'lucide-react';
+import { Database, Server, Share2, ArrowUpRight, Globe, Search, FileSpreadsheet, FileCode2, Upload, Network, BarChart3 } from 'lucide-react';
 
 const getBrandIcon = (name: string) => {
   const lower = name.toLowerCase();
@@ -44,8 +44,11 @@ export const ConnectorCard = ({ connector, onClick }: ConnectorCardProps) => {
             ) : connector.name === 'Upload SQL File' ? (
               <FileCode2 className="w-5 h-5 text-blue-500" />
             ) : connector.name === 'FTP Connector' ? (
-              // ── FTP icon ──────────────────────────────────────────
+              // ── FTP icon ───────────────────────────────────────────────────
               <Network className="w-5 h-5 text-violet-500" />
+            ) : connector.name === 'Tally ERP' ? (
+              // ── Tally ERP icon ───────────────────────────────────────────
+              <BarChart3 className="w-5 h-5 text-amber-400" />
             ) : brandIcon ? (
               <img src={brandIcon} alt={connector.name} className="w-5 h-5 object-contain" />
             ) : (

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect  } from 'react';
 import { Card, CardContent, CardHeader, Input, Button } from '@/src/ui-kit';
-import { Server, Globe, ChevronLeft, Search, FileSpreadsheet, FileCode2, Network } from 'lucide-react';
+import { Server, Globe, ChevronLeft, Search, FileSpreadsheet, FileCode2, Network, BarChart3 } from 'lucide-react';
 import { connectorService } from '@/src/services/connector.service';
 import { useConnectorContext } from '../../../context/ConnectorContext';
 import { useAuthContext } from '../../../context/AuthContext';
@@ -10,7 +10,8 @@ import { WebSearchForm } from './connector_form/WebSearchForm';
 import { FileUploadForm } from './connector_form/FileUploadForm';
 import { DatabaseForm }   from './connector_form/DatabaseForm';
 import { DAgentAssistant } from './connector_form/DAgentAssistant';
-import { FtpForm }        from './connector_form/FtpForm';          // ← NEW
+import { FtpForm }        from './connector_form/FtpForm';          // ← FTP
+import { TallyForm }     from './connector_form/TallyForm';        // ← Tally ERP
 import { FieldGuide, ConnectorFormData } from '@/src/types/connector';
 
 const GUIDES: Record<string, FieldGuide> = {
@@ -80,6 +81,27 @@ const GUIDES: Record<string, FieldGuide> = {
     description: "The directory on the FTP server to fetch files from.",
     tip: "Use '/' for the root directory, or '/data/exports' for a specific folder."
   },
+  // ─── Tally ERP guides ─────────────────────────────────────────────────────
+  tally_name: {
+    title: "Data Source Name",
+    description: "A friendly label to identify this Tally connection in your dashboard.",
+    tip: "Example: 'My Tally ERP' or 'Production Tally – FY26'"
+  },
+  tally_host: {
+    title: "Tally Server Host",
+    description: "The IP address or domain of the machine running Tally ERP with the XML gateway enabled.",
+    tip: "Example: '43.kcloud.in' or '192.168.1.50'. Must be reachable from this server."
+  },
+  tally_port: {
+    title: "Tally XML Port",
+    description: "The port Tally's XML/HTTP gateway listens on (set in Gateway of Tally → Configuration).",
+    tip: "Common values: 9000 (default), 9001, or a custom port like 43087."
+  },
+  tally_database: {
+    title: "Database / Company Name",
+    description: "The exact name of the Tally company (database) you want to connect to.",
+    tip: "This must match the company name as it appears in Tally's Company Selection screen."
+  },
 };
 
 interface ConnectorFormProps {
@@ -112,6 +134,14 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     password:     '',
     remote_dir:   '/',
     passive_mode: true,
+  });
+
+  // ── Tally ERP-specific form data ────────────────────────────────
+  const [tallyFormData, setTallyFormData] = useState({
+    name:     '',
+    host:     '',
+    port:     '',
+    database: '',
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -243,7 +273,8 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
   const isSqlUpload  = connector?.name === 'Upload SQL File';
   const isDocUpload  = connector?.name === 'Upload Document';
   const isFileUpload = isCsvUpload || isSqlUpload || isDocUpload;
-  const isFtp        = connector?.name === 'FTP Connector';   // ← NEW
+  const isFtp        = connector?.name === 'FTP Connector';
+  const isTally      = connector?.name === 'Tally ERP';       // ← Tally ERP
 
   const acceptedFileTypes = isCsvUpload ? '.csv' : isSqlUpload ? '.sql' : isDocUpload ? '.pdf,.doc,.docx' : '';
 
@@ -358,7 +389,9 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                 ) : isSqlUpload ? (
                   <FileCode2 className="w-6 h-6" />
                 ) : isFtp ? (
-                  <Network className="w-6 h-6" />           // ← NEW icon
+                  <Network className="w-6 h-6" />
+                ) : isTally ? (
+                  <BarChart3 className="w-6 h-6 text-amber-400" />
                 ) : (
                   <Server className="w-6 h-6" />
                 )}
@@ -374,6 +407,8 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                     ? `Upload ${isCsvUpload ? 'CSV' : isSqlUpload ? 'SQL' : 'Document'} files for AI analysis`
                     : isFtp
                     ? 'Fetch files from an FTP server with scheduled sync'
+                    : isTally
+                    ? 'Connect to Tally ERP via XML API gateway'
                     : 'Configure your data source settings'}
                 </p>
               </div>
@@ -386,8 +421,8 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
               </div>
             )}
 
-            {/* Data source name field — hidden for file uploads and FTP (FTP manages its own name field) */}
-            {!isFileUpload && !isFtp && (
+            {/* Data source name field — hidden for file uploads, FTP and Tally (they manage their own name field) */}
+            {!isFileUpload && !isFtp && !isTally && (
               <div onMouseEnter={() => handleMouseEnter('name')} className="mb-6">
                 <Input
                   label="Data source Name"
@@ -447,6 +482,18 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                 userId={userId as number | null}
                 sessionId={localStorage.getItem('DAgent_session_id')}
                 onConnectSuccess={() => onTestSuccess?.(ftpFormData.name, false)}
+              />
+            ) : isTally ? (
+              // ── Tally ERP Form ────────────────────────────────────
+              <TallyForm
+                formData={tallyFormData}
+                setFormData={setTallyFormData}
+                handleFocus={handleFocus}
+                handleMouseEnter={handleMouseEnter}
+                onBack={onBack}
+                userId={userId as number | null}
+                sessionId={localStorage.getItem('DAgent_session_id')}
+                onConnectSuccess={() => onTestSuccess?.(tallyFormData.name, false)}
               />
             ) : (
               <DatabaseForm
