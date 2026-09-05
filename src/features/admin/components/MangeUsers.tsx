@@ -23,7 +23,7 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
     isModalOpen,
     setIsModalOpen
 }) => {
-    const [formData, setFormData] = React.useState({ name: '', email: '', password: '' });
+    const [formData, setFormData] = React.useState({ name: '', email: '', password: '', visibility: 1 });
     const [showPassword, setShowPassword] = React.useState(false);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -41,11 +41,12 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
             await adminService.createUser(adminId, {
                 name: formData.name,
                 email: formData.email,
-                password: formData.password
+                password: formData.password,
+                visibility: formData.visibility
             });
             toast.success('User created successfully');
             setIsModalOpen(false);
-            setFormData({ name: '', email: '', password: '' });
+            setFormData({ name: '', email: '', password: '', visibility: 1 });
             onRefresh();
         } catch (err: any) {
             console.error('Failed to create user:', err);
@@ -57,14 +58,15 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
 
     const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
     const [editingUser, setEditingUser] = React.useState<AdminUser | null>(null);
-    const [editFormData, setEditFormData] = React.useState({ name: '', email: '', password: '' });
+    const [editFormData, setEditFormData] = React.useState({ name: '', email: '', password: '', visibility: 1 });
 
     const handleOpenEditModal = (user: AdminUser) => {
         setEditingUser(user);
         setEditFormData({
             name: user.name || '',
             email: user.email || '',
-            password: user.password || ''
+            password: user.password || '',
+            visibility: user.visibility || 1
         });
         setIsEditModalOpen(true);
         setError(null);
@@ -163,7 +165,22 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
                     header="Email" 
                     headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
                     className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)]"
-                    style={{ width: '35%' }}
+                    style={{ width: '25%' }}
+                />
+                <Column 
+                    header="Account Privacy" 
+                    headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+                    className="!px-6 !py-4 !border-b !border-[var(--border)]"
+                    style={{ width: '15%' }}
+                    body={(user: AdminUser) => (
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            user.visibility === 2 
+                                ? 'bg-red-500/10 text-red-500' 
+                                : 'bg-emerald-500/10 text-emerald-500'
+                        }`}>
+                            {user.visibility === 2 ? 'Private' : 'Public'}
+                        </span>
+                    )}
                 />
                 <Column
                     field="created_at"
@@ -303,6 +320,34 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
                                         Password is securely encrypted in the database.
                                     </p>
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Visibility</label>
+                                    <div className="flex gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input 
+                                                type="radio" 
+                                                name="editVisibility" 
+                                                value="1" 
+                                                checked={editFormData.visibility === 1} 
+                                                onChange={() => setEditFormData({ ...editFormData, visibility: 1 })}
+                                                className="text-[var(--accent)] focus:ring-[var(--accent)]"
+                                            />
+                                            <span className="text-sm text-[var(--text-primary)]">Public</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input 
+                                                type="radio" 
+                                                name="editVisibility" 
+                                                value="2" 
+                                                checked={editFormData.visibility === 2} 
+                                                onChange={() => setEditFormData({ ...editFormData, visibility: 2 })}
+                                                className="text-[var(--accent)] focus:ring-[var(--accent)]"
+                                            />
+                                            <span className="text-sm text-[var(--text-primary)]">Private</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="pt-4 flex items-center gap-3">
@@ -399,6 +444,34 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
                                         >
                                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                         </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Account Privacy</label>
+                                    <div className="flex gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input 
+                                                type="radio" 
+                                                name="visibility" 
+                                                value="1" 
+                                                checked={formData.visibility === 1} 
+                                                onChange={() => setFormData({ ...formData, visibility: 1 })}
+                                                className="text-[var(--accent)] focus:ring-[var(--accent)]"
+                                            />
+                                            <span className="text-sm text-[var(--text-primary)]">Public</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input 
+                                                type="radio" 
+                                                name="visibility" 
+                                                value="2" 
+                                                checked={formData.visibility === 2} 
+                                                onChange={() => setFormData({ ...formData, visibility: 2 })}
+                                                className="text-[var(--accent)] focus:ring-[var(--accent)]"
+                                            />
+                                            <span className="text-sm text-[var(--text-primary)]">Private</span>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
