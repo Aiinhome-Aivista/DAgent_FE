@@ -55,6 +55,52 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
         }
     };
 
+    const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+    const [editingUser, setEditingUser] = React.useState<AdminUser | null>(null);
+    const [editFormData, setEditFormData] = React.useState({ name: '', email: '', password: '' });
+
+    const handleOpenEditModal = (user: AdminUser) => {
+        setEditingUser(user);
+        setEditFormData({
+            name: user.name || '',
+            email: user.email || '',
+            password: user.password || ''
+        });
+        setIsEditModalOpen(true);
+        setError(null);
+    };
+
+    const handleEditUserSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingUser) return;
+        setIsSubmitting(true);
+        setError(null);
+        try {
+            await adminService.editUser(adminId, editingUser.id, editFormData);
+            toast.success('User updated successfully');
+            setIsEditModalOpen(false);
+            onRefresh();
+        } catch (err: any) {
+            console.error('Failed to edit user:', err);
+            setError(err.message || 'Failed to update user.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteUser = async (userId: number) => {
+        if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+            try {
+                await adminService.deleteUser(adminId, userId);
+                toast.success('User deleted successfully');
+                onRefresh();
+            } catch (err: any) {
+                console.error('Failed to delete user:', err);
+                toast.error(err.message || 'Failed to delete user');
+            }
+        }
+    };
+
     return (
         <div className="space-y-4">
             <DataTable
@@ -99,11 +145,11 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
                 }}
             >
                 <Column 
-                    field="id" 
-                    header="ID" 
+                    header="SL" 
                     headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
                     className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
                     style={{ width: '10%' }}
+                    body={(user: AdminUser, options: any) => options.rowIndex + 1}
                 />
                 <Column 
                     field="name" 
@@ -136,9 +182,150 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
                         return `${d}/${m}/${y} ${hours}:${minutes}`;
                     }}
                 />
+                <Column 
+                    field="workspaces" 
+                    header="Workspaces" 
+                    headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+                    className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)]"
+                    style={{ width: '20%' }}
+                    body={(user: AdminUser) => (
+                        <div className="flex flex-wrap gap-1">
+                            {user.workspaces ? user.workspaces.split(',').map((ws, i) => (
+                                <span key={i} className="px-2 py-0.5 rounded-md bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-medium">
+                                    {ws.trim()}
+                                </span>
+                            )) : <span className="text-[var(--text-secondary)] text-xs italic">None</span>}
+                        </div>
+                    )}
+                />
+                <Column
+                    header="Actions"
+                    headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-center"
+                    className="!px-6 !py-4 !border-b !border-[var(--border)] text-center"
+                    style={{ width: '10%' }}
+                    body={(user: AdminUser) => (
+                        <div className="flex items-center justify-center gap-2">
+                            <button
+                                onClick={() => handleOpenEditModal(user)}
+                                className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors"
+                                title="Edit User"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                            </button>
+                            <button
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                                title="Delete User"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            </button>
+                        </div>
+                    )}
+                />
             </DataTable>
 
-            {/* Create User Modal */}
+            {/* Edit User Modal */}
+            {isEditModalOpen && editingUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+                                <UserIcon className="w-5 h-5 text-[var(--accent)]" />
+                                Edit User
+                            </h3>
+                            <button
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="p-2 hover:bg-[var(--surface-hover)] rounded-lg transition-colors text-[var(--text-secondary)]"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleEditUserSubmit} className="p-6 space-y-4">
+                            {error && (
+                                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-sm flex items-start gap-2">
+                                    <span>{error}</span>
+                                </div>
+                            )}
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">User Name</label>
+                                    <div className="relative">
+                                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+                                        <input
+                                            type="text"
+                                            required
+                                            value={editFormData.name}
+                                            onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                            placeholder="Enter full name"
+                                            className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Email Address</label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+                                        <input
+                                            type="email"
+                                            required
+                                            value={editFormData.email}
+                                            onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                                            placeholder="Enter email address"
+                                            className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Password</label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            required
+                                            value={editFormData.password}
+                                            onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                                            placeholder="Enter password"
+                                            className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-[var(--text-secondary)] mt-1">
+                                        Password is securely encrypted in the database.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    className="flex-1 py-2.5 text-sm font-medium rounded-xl border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="flex-[2] py-2.5 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserIcon className="w-4 h-4" />}
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">

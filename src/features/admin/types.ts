@@ -2,8 +2,10 @@ export interface AdminUser {
     id: number;
     name?: string | null;
     email: string;
+    password?: string;
     role?: string;
     created_at?: string;
+    workspaces?: string;
 }
 
 export interface PricingPlan {
