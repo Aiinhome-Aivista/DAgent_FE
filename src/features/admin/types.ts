@@ -5,7 +5,9 @@ export interface AdminUser {
     password?: string;
     role?: string;
     created_at?: string;
+    updated_at?: string;
     workspaces?: string;
+    visibility?: number;
 }
 
 export interface PricingPlan {
