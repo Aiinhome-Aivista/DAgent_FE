@@ -107,5 +107,8 @@ export const API_ENDPOINTS = {
     EXPORT_DOMESTIC_SALES: '/export-domestic-sales-report',
     EXPORT_DOMESTIC_SALES_PREVIEW: '/export-domestic-sales-preview',
   },
+  PRICING: {
+    BASE: '/api/pricing',
+  },
 }
 

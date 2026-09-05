@@ -11,6 +11,7 @@ import {
   Loader2,
   Calendar,
   FileText,
+  CreditCard,
 } from "lucide-react";
 import { adminService } from "../../services/admin.service";
 import { AdminUser, AdminTab } from "./types";
@@ -24,6 +25,7 @@ import { AdminChats } from "./components/AdminChats";
 import { AdminPendingKnowledge } from "./components/AdminPendingKnowledge";
 import { CustomPrompts } from "./components/CustomPrompts";
 import { ScheduledReports } from "./components/ScheduledReports";
+import { ManagePricing } from "./components/ManagePricing";
 
 interface AdminPanelProps {
   adminSubTab: AdminTab;
@@ -54,6 +56,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
+  const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
 
   useEffect(() => {
@@ -204,6 +207,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     pendingKnowledge: "KG History",
     customPrompts: "Custom Prompts",
     scheduledReports: "Scheduled Reports",
+    pricing: "Pricing",
   };
 
   const tabDetails: Record<AdminTab, { title: string; desc: string }> = {
@@ -238,6 +242,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     scheduledReports: {
       title: "Scheduled Reports",
       desc: "Configure automated scheduled reports and recipients.",
+    },
+    pricing: {
+      title: "Pricing Plans",
+      desc: "Manage subscription plans and feature allocations.",
     },
   };
 
@@ -298,6 +306,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             >
               <Calendar className="w-4 h-4" />
               Create Schedule
+            </button>
+          )}
+
+          {adminSubTab === "pricing" && (
+            <button
+              onClick={() => setIsCreatingPlan(true)}
+              className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+            >
+              <CreditCard className="w-4 h-4" />
+              Create Plan
             </button>
           )}
         </div>
@@ -411,6 +429,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     searchQuery={searchQuery}
                     isModalOpen={isCreatingSchedule}
                     setIsModalOpen={setIsCreatingSchedule}
+                  />
+                )}
+
+                {adminSubTab === "pricing" && (
+                  <ManagePricing
+                    searchQuery={searchQuery}
+                    isModalOpen={isCreatingPlan}
+                    setIsModalOpen={setIsCreatingPlan}
                   />
                 )}
               </motion.div>

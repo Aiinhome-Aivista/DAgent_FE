@@ -18,6 +18,7 @@ import {
   Database,
   Lock,
   FileText,
+  CreditCard,
 } from "lucide-react";
 import { Workspace, workspaceService } from "../services/workspace.service";
 import { SidebarProps } from "../types/layout";
@@ -105,7 +106,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 { id: 'adminChats', icon: MessageSquare, label: 'Chat Views' },
                 { id: 'pendingKnowledge', icon: Database, label: 'KG History' },
                 { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' },
-                { id: 'scheduledReports', icon: FileText, label: 'Scheduled Reports' }
+                { id: 'scheduledReports', icon: FileText, label: 'Scheduled Reports' },
+                { id: 'pricing', icon: CreditCard, label: 'Pricing' }
               ].map((tab) => (
                 <button
                   key={tab.id}
