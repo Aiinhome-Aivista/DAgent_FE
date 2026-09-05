@@ -26,7 +26,9 @@ import { Tab, ViewMode } from './types/layout';
 function AppContent() {
   const { theme, toggleTheme } = useTheme();
   const { userId, roleId, roleName, logout } = useAuthContext();
-  const [viewMode, setViewMode] = useState<ViewMode>(userId ? 'app' : 'landing');
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    window.location.pathname.startsWith('/admin/login') ? 'admin-login' : (userId ? 'app' : 'landing')
+  );
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>(roleName === 'Admin' ? 'admin' : 'chat');
   const { selectedConnector, setSelectedConnector, resetConnectorState } = useConnectorContext();
@@ -187,12 +189,16 @@ function AppContent() {
     const storedRoleName = localStorage.getItem('DAgent_role_name');
     setActiveTab(storedRoleName === 'Admin' ? 'admin' : 'chat');
   };
-  const handleBackToLanding = () => setViewMode('landing');
+  const handleBackToLanding = () => {
+    window.history.pushState({}, '', '/');
+    setViewMode('landing');
+  };
 
   const handleLogout = () => {
     logout();
     resetConnectorState();
     agentService.reset();
+    window.history.pushState({}, '', '/');
     setViewMode('landing');
     setIsWorkspaceOpen(false);
     setActiveTab('chat');
@@ -400,8 +406,8 @@ function AppContent() {
     return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')} />;
   }
 
-  if (viewMode === 'login') {
-    return <LoginPage onBack={handleBackToLanding} onLoginSuccess={handleLoginSuccess} />;
+  if (viewMode === 'login' || viewMode === 'admin-login') {
+    return <LoginPage onBack={handleBackToLanding} onLoginSuccess={handleLoginSuccess} isAdminLogin={viewMode === 'admin-login'} />;
   }
 
   if (viewMode === 'dashboard') {

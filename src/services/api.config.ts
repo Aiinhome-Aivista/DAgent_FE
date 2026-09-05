@@ -21,6 +21,7 @@ export const defaultConfig: ApiConfig = {
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/login',
+    ADMIN_LOGIN: '/admin_login',
   },
   DATA_SOURCE: {
     CONNECTION_HISTORY: '/connection_history',
