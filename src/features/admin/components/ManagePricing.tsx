@@ -29,16 +29,28 @@ interface ManagePricingProps {
   setIsModalOpen: (open: boolean) => void;
 }
 
-const initialFormData = {
+interface PricingFormData {
+  plan_name: string;
+  data_storage: number | "";
+  uploads: number | "";
+  insights_queries: number | "";
+  basic_features: string;
+  download_allowed: string;
+  number_of_users: number | "";
+  custom_kpi: string;
+  scheduled_email: string;
+}
+
+const initialFormData: PricingFormData = {
   plan_name: "",
   data_storage: "",
   uploads: "",
   insights_queries: "",
   basic_features: "",
-  download_allowed: "Yes",
-  number_of_users: "1",
-  custom_kpi: "Yes",
-  scheduled_email: "Yes",
+  download_allowed: "Available",
+  number_of_users: 1,
+  custom_kpi: "Available",
+  scheduled_email: "Available",
 };
 
 export const ManagePricing: React.FC<ManagePricingProps> = ({
@@ -52,7 +64,7 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
   const [editingPlan, setEditingPlan] = useState<PricingPlan | null>(null);
   const [planToDelete, setPlanToDelete] = useState<PricingPlan | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [formData, setFormData] = useState(initialFormData);
+  const [formData, setFormData] = useState<PricingFormData>(initialFormData);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPlans = async () => {
@@ -83,18 +95,27 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
     }
   }, [isModalOpen, editingPlan]);
 
+  const normalizeAvailability = (val: string | undefined) => {
+    const v = val?.trim().toLowerCase();
+    if (v === "available" || v === "allowed" || v === "yes" || v === "true") {
+      return "Available";
+    }
+    return "Unavailable";
+  };
+
   const handleOpenEdit = (plan: PricingPlan) => {
     setEditingPlan(plan);
+    const isGold = plan.plan_name?.trim().toLowerCase() === "gold";
     setFormData({
       plan_name: plan.plan_name || "",
-      data_storage: plan.data_storage || "",
-      uploads: plan.uploads || "",
-      insights_queries: plan.insights_queries || "",
+      data_storage: isGold || plan.data_storage === -1 ? "" : (plan.data_storage !== undefined ? plan.data_storage : ""),
+      uploads: isGold || plan.uploads === -1 ? "" : (plan.uploads !== undefined ? plan.uploads : ""),
+      insights_queries: isGold || plan.insights_queries === -1 ? "" : (plan.insights_queries !== undefined ? plan.insights_queries : ""),
       basic_features: plan.basic_features || "",
-      download_allowed: plan.download_allowed || "Yes",
-      number_of_users: plan.number_of_users || "1",
-      custom_kpi: plan.custom_kpi || "Yes",
-      scheduled_email: plan.scheduled_email || "Yes",
+      download_allowed: normalizeAvailability(plan.download_allowed),
+      number_of_users: isGold || plan.number_of_users === -1 ? "" : (plan.number_of_users !== undefined ? plan.number_of_users : 1),
+      custom_kpi: normalizeAvailability(plan.custom_kpi),
+      scheduled_email: normalizeAvailability(plan.scheduled_email),
     });
     setError(null);
     setIsModalOpen(true);
@@ -117,12 +138,25 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
     setIsSubmitting(true);
     setError(null);
 
+    const isGold = formData.plan_name.trim().toLowerCase() === "gold";
+    const payload = {
+      plan_name: formData.plan_name.trim(),
+      data_storage: isGold ? -1 : (formData.data_storage === "" ? 0 : Number(formData.data_storage)),
+      uploads: isGold ? -1 : (formData.uploads === "" ? 0 : Number(formData.uploads)),
+      insights_queries: isGold ? -1 : (formData.insights_queries === "" ? 0 : Number(formData.insights_queries)),
+      basic_features: formData.basic_features.trim(),
+      download_allowed: formData.download_allowed,
+      number_of_users: isGold ? -1 : (formData.number_of_users === "" ? 1 : Number(formData.number_of_users)),
+      custom_kpi: formData.custom_kpi,
+      scheduled_email: formData.scheduled_email,
+    };
+
     try {
       if (editingPlan) {
-        await pricingService.updatePlan(editingPlan.id, formData);
+        await pricingService.updatePlan(editingPlan.id, payload);
         toast.success("Pricing plan updated successfully");
       } else {
-        await pricingService.createPlan(formData);
+        await pricingService.createPlan(payload);
         toast.success("Pricing plan created successfully");
       }
       handleCloseModal();
@@ -156,25 +190,52 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
     return (
       p.plan_name?.toLowerCase().includes(q) ||
       p.basic_features?.toLowerCase().includes(q) ||
-      p.data_storage?.toLowerCase().includes(q) ||
-      p.number_of_users?.toLowerCase().includes(q)
+      p.data_storage?.toString().includes(q) ||
+      p.uploads?.toString().includes(q) ||
+      p.insights_queries?.toString().includes(q) ||
+      p.number_of_users?.toString().includes(q)
     );
   });
 
-  const renderBadge = (value: string) => {
-    const isYes =
-      value?.trim().toLowerCase() === "yes" ||
-      value?.trim().toLowerCase() === "true";
+  const renderLimit = (
+    val: number | undefined,
+    planName: string | undefined,
+    unit?: string
+  ) => {
+    const isGold = planName?.trim().toLowerCase() === "gold";
+    if (isGold || val === -1) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+          Unlimited
+        </span>
+      );
+    }
+    if (val === undefined || val === null) return <span>—</span>;
+    return (
+      <span>
+        {val}
+        {unit ? ` ${unit}` : ""}
+      </span>
+    );
+  };
+
+  const renderBadge = (value: string | undefined) => {
+    const v = value?.trim().toLowerCase();
+    const isAvailable =
+      v === "available" ||
+      v === "allowed" ||
+      v === "yes" ||
+      v === "true";
     return (
       <span
         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-          isYes
+          isAvailable
             ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
             : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
         }`}
       >
-        {isYes ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-        {value || "No"}
+        {isAvailable ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+        {isAvailable ? "Available" : "Unavailable"}
       </span>
     );
   };
@@ -290,24 +351,28 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
           header="Storage"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+          body={(row: PricingPlan) => renderLimit(row.data_storage, row.plan_name, "GB")}
         />
         <Column
           field="uploads"
-          header="Uploads"
+          header="Uploads / Day"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+          body={(row: PricingPlan) => renderLimit(row.uploads, row.plan_name, "/ day")}
         />
         <Column
           field="insights_queries"
-          header="Queries"
+          header="Queries / Day"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+          body={(row: PricingPlan) => renderLimit(row.insights_queries, row.plan_name, "/ day")}
         />
         <Column
           field="number_of_users"
           header="Users"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+          body={(row: PricingPlan) => renderLimit(row.number_of_users, row.plan_name)}
         />
         <Column
           field="basic_features"
@@ -399,71 +464,117 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
                 {/* Data Storage */}
                 <div>
                   <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
-                    Data Storage
+                    Data Storage (GB) <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 10 GB, Unlimited"
-                    value={formData.data_storage}
-                    onChange={(e) =>
-                      setFormData({ ...formData, data_storage: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                  />
+                  {formData.plan_name.trim().toLowerCase() === "gold" ? (
+                    <div className="w-full px-4 py-2.5 text-sm rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 font-semibold flex items-center justify-between">
+                      <span>Unlimited</span>
+                      <span className="text-xs text-[var(--text-secondary)] font-normal">Gold Plan Default</span>
+                    </div>
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      placeholder="e.g. 10"
+                      value={formData.data_storage}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          data_storage:
+                            e.target.value === "" ? "" : Number(e.target.value),
+                        })
+                      }
+                      className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                    />
+                  )}
                 </div>
 
                 {/* Uploads */}
                 <div>
                   <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
-                    Uploads
+                    Uploads (per day) <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 50 files, Unlimited"
-                    value={formData.uploads}
-                    onChange={(e) =>
-                      setFormData({ ...formData, uploads: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                  />
+                  {formData.plan_name.trim().toLowerCase() === "gold" ? (
+                    <div className="w-full px-4 py-2.5 text-sm rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 font-semibold flex items-center justify-between">
+                      <span>Unlimited</span>
+                      <span className="text-xs text-[var(--text-secondary)] font-normal">Gold Plan Default</span>
+                    </div>
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      placeholder="e.g. 50"
+                      value={formData.uploads}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          uploads:
+                            e.target.value === "" ? "" : Number(e.target.value),
+                        })
+                      }
+                      className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                    />
+                  )}
                 </div>
 
                 {/* Insights Queries */}
                 <div>
                   <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
-                    Insights Queries
+                    Insights Queries (per day) <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 1,000 Queries, Unlimited"
-                    value={formData.insights_queries}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        insights_queries: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                  />
+                  {formData.plan_name.trim().toLowerCase() === "gold" ? (
+                    <div className="w-full px-4 py-2.5 text-sm rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 font-semibold flex items-center justify-between">
+                      <span>Unlimited</span>
+                      <span className="text-xs text-[var(--text-secondary)] font-normal">Gold Plan Default</span>
+                    </div>
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      placeholder="e.g. 1000"
+                      value={formData.insights_queries}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          insights_queries:
+                            e.target.value === "" ? "" : Number(e.target.value),
+                        })
+                      }
+                      className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                    />
+                  )}
                 </div>
 
                 {/* Number of Users */}
                 <div>
                   <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
-                    Number of Users
+                    Number of Users <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 5 users, Unlimited"
-                    value={formData.number_of_users}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        number_of_users: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                  />
+                  {formData.plan_name.trim().toLowerCase() === "gold" ? (
+                    <div className="w-full px-4 py-2.5 text-sm rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 font-semibold flex items-center justify-between">
+                      <span>Unlimited</span>
+                      <span className="text-xs text-[var(--text-secondary)] font-normal">Gold Plan Default</span>
+                    </div>
+                  ) : (
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      placeholder="e.g. 5"
+                      value={formData.number_of_users}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          number_of_users:
+                            e.target.value === "" ? "" : Number(e.target.value),
+                        })
+                      }
+                      className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                    />
+                  )}
                 </div>
 
                 {/* Basic Features */}
@@ -500,8 +611,8 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
                     }
                     className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] cursor-pointer"
                   >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
+                    <option value="Available">Available</option>
+                    <option value="Unavailable">Unavailable</option>
                   </select>
                 </div>
 
@@ -517,8 +628,8 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
                     }
                     className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] cursor-pointer"
                   >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
+                    <option value="Available">Available</option>
+                    <option value="Unavailable">Unavailable</option>
                   </select>
                 </div>
 
@@ -537,8 +648,8 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
                     }
                     className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] cursor-pointer"
                   >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
+                    <option value="Available">Available</option>
+                    <option value="Unavailable">Unavailable</option>
                   </select>
                 </div>
               </div>

@@ -11,12 +11,12 @@ export interface AdminUser {
 export interface PricingPlan {
     id: number;
     plan_name: string;
-    data_storage: string;
-    uploads: string;
-    insights_queries: string;
+    data_storage: number;
+    uploads: number;
+    insights_queries: number;
     basic_features: string;
     download_allowed: string;
-    number_of_users: string;
+    number_of_users: number;
     custom_kpi: string;
     scheduled_email: string;
     created_at?: string;
