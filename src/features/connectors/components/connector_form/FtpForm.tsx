@@ -21,6 +21,7 @@ interface ProgressEvent {
   type:     string;
   message?: string;
   file?:    string;
+  size?:    number;
   current?: number;
   total?:   number;
   percent?: number;

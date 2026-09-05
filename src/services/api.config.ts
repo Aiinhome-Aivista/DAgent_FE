@@ -11,10 +11,10 @@ export const defaultConfig: ApiConfig = {
   // baseUrl: 'http://localhost:5005/',
   // baseUrl: 'http://157.173.221.226:3004',
   // baseUrl: 'http://187.127.163.17:3019',
-  // baseUrl: 'http://localhost:3019/',
+  baseUrl: 'http://localhost:3019/',
   // baseUrl: 'http://157.173.221.226:3004',
   // baseUrl: 'http://187.127.163.17:3019',
-  baseUrl: 'http://72.61.226.68:3019/',
+  // baseUrl: 'http://72.61.226.68:3019/',
   timeout: 10000,
 };
 
@@ -99,12 +99,12 @@ export const API_ENDPOINTS = {
     WORKSPACE_PROMPT: '/api/workspace-prompt',
     GET_ALL_WORKSPACE_PROMPTS: '/api/workspace-prompts-all',
     DELETE_WORKSPACE_PROMPT: '/api/delete-workspace-prompt',
-    REPORTS: {
-      RECIPIENTS: '/api/report-recipients',
-      SCHEDULES: '/api/scheduled-reports',
-      EXPORT_DOMESTIC_SALES: '/export-domestic-sales-report',
-      EXPORT_DOMESTIC_SALES_PREVIEW: '/export-domestic-sales-preview',
-    }
+  },
+  REPORTS: {
+    RECIPIENTS: '/api/report-recipients',
+    SCHEDULES: '/api/scheduled-reports',
+    EXPORT_DOMESTIC_SALES: '/export-domestic-sales-report',
+    EXPORT_DOMESTIC_SALES_PREVIEW: '/export-domestic-sales-preview',
   },
 }
 

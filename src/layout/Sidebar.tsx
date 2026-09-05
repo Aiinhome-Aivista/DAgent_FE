@@ -17,6 +17,7 @@ import {
   Terminal,
   Database,
   Lock,
+  FileText,
 } from "lucide-react";
 import { Workspace, workspaceService } from "../services/workspace.service";
 import { SidebarProps } from "../types/layout";
@@ -103,7 +104,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 { id: 'workspaceUsers', icon: Users, label: 'Workspace Users' },
                 { id: 'adminChats', icon: MessageSquare, label: 'Chat Views' },
                 { id: 'pendingKnowledge', icon: Database, label: 'KG History' },
-                { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' }
+                { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' },
+                { id: 'scheduledReports', icon: FileText, label: 'Scheduled Reports' }
               ].map((tab) => (
                 <button
                   key={tab.id}
