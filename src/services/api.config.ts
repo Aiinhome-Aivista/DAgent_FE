@@ -78,6 +78,8 @@ export const API_ENDPOINTS = {
   USERS: {
     GET_USERS: '/users',
     CREATE_USER: '/create_user',
+    EDIT_USER: '/edit_user',
+    DELETE_USER: '/delete_user',
   },
   // ─── FTP Connector ──────────────────────────────────────────────────────────
   FTP: {

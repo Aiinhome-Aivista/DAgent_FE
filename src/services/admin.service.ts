@@ -57,5 +57,18 @@ export const adminService = {
             admin_id: adminId,
             ...userData
         });
+    },
+
+    editUser: async (adminId: number, userId: number, userData: any): Promise<any> => {
+        return apiService.post(`${API_ENDPOINTS.USERS.EDIT_USER}/${userId}`, {
+            admin_id: adminId,
+            ...userData
+        });
+    },
+
+    deleteUser: async (adminId: number, userId: number): Promise<any> => {
+        return apiService.delete(`${API_ENDPOINTS.USERS.DELETE_USER}/${userId}`, {
+            admin_id: adminId
+        });
     }
 };
