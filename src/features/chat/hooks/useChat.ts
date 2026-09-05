@@ -32,14 +32,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
 
   const startChat = useCallback(() => {
     setMode('chat');
-    setMessages([
-      {
-        id: 'init-1',
-        role: 'assistant',
-        content: `Great! I've successfully connected to your data and synchronized the environment. How can I help you analyze this information today?`,
-        timestamp: new Date(),
-      },
-    ]);
+    setMessages([]);
   }, []);
 
   const completeWorkflow = useCallback(() => {
@@ -108,10 +101,10 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
         detail: { question: content, answer: answerText }
       }));
 
-      if (isDefaultChat) {
+      if (isDefaultChat || !currentVisitNumber) {
         // Update localStorage with the new session's data so the UI
         // (header + sidebar) reflects the newly created query session
-        // instead of staying stuck on the old default.
+        // instead of staying stuck on the old default or a blank unselected state.
         const newSessionHistory = [{
           question: content,
           answer: answerText,
@@ -184,9 +177,13 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
           return { hasHistory: true, hasFollowUps };
         }
       }
+      setMessages([]);
+      setFollowUpQuestions([]);
       return { hasHistory: false, hasFollowUps: false };
     } catch (error) {
       console.error('Failed to parse selected chat history:', error);
+      setMessages([]);
+      setFollowUpQuestions([]);
       return { hasHistory: false, hasFollowUps: false };
     }
   }, []);

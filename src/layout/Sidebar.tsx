@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Menu,
@@ -21,6 +21,7 @@ import {
 import { Workspace, workspaceService } from "../services/workspace.service";
 import { SidebarProps } from "../types/layout";
 import { useAuthContext } from "../context/AuthContext";
+import { SettingsModal } from "../features/settings/SettingsModal";
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isSidebarOpen,
@@ -60,6 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isWorkspacesLoading,
 }) => {
   const { userId, roleId, roleName } = useAuthContext();
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   return (
     <motion.aside
@@ -111,11 +113,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     setAdminSubTab(tab.id as any);
                   }}
                   title={!isSidebarOpen ? tab.label : undefined}
-                  className={`w-full flex items-center p-2.5 rounded-xl transition-all duration-300 border cursor-pointer ${
-                    activeTab === "admin" && adminSubTab === tab.id
+                  className={`w-full flex items-center p-2.5 rounded-xl transition-all duration-300 border cursor-pointer ${activeTab === "admin" && adminSubTab === tab.id
                       ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 text-[var(--accent)] shadow-sm"
                       : "border-transparent bg-transparent hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                  } ${!isSidebarOpen ? "justify-center" : "gap-3"}`}
+                    } ${!isSidebarOpen ? "justify-center" : "gap-3"}`}
                 >
                   <tab.icon className="w-5 h-5 shrink-0" />
                   {isSidebarOpen && (
@@ -389,11 +390,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             filtered.map((workspace) => (
                               <div
                                 key={workspace.id}
-                                className={`flex flex-col transition-all duration-300 overflow-hidden border ${
-                                  selectedWorkspace?.id === workspace.id
+                                className={`flex flex-col transition-all duration-300 overflow-hidden border ${selectedWorkspace?.id === workspace.id
                                     ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 shadow-sm"
                                     : "border-[var(--border)]/20 bg-[var(--bg)]/50"
-                                } ${expandedWorkspaceId === workspace.id ? "rounded-2xl" : "rounded-xl"}`}
+                                  } ${expandedWorkspaceId === workspace.id ? "rounded-2xl" : "rounded-xl"}`}
                               >
                                 <div className="w-full flex items-center overflow-hidden gap-1 p-0.5">
                                   {/* Workspace Selection Part (85% Width) */}
@@ -416,33 +416,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             "DAgent_session_id",
                                             workspace.session_id,
                                           );
-                                          
+
                                           // Clear selected chat session from previous workspace
                                           localStorage.removeItem("selected_query_session");
                                           localStorage.removeItem("selected_query_session_name");
                                           localStorage.removeItem("current_visit_number");
                                           localStorage.removeItem("is_default_chat");
-                                          
+
                                           // Fetch and expand the workspace history
                                           const sessions = await fetchWorkspaceHistory(workspace.id, workspace.session_id, true);
-                                          
-                                          // Auto-select the first session if available
+
+                                          // Auto-select the latest default session if available
                                           if (sessions && sessions.length > 0) {
-                                            const firstSession = sessions[0];
-                                            if (firstSession.querySessionHistory) {
-                                              localStorage.setItem("selected_query_session", JSON.stringify(firstSession.querySessionHistory));
+                                            let sessionToSelect = sessions[sessions.length - 1]; // fallback to latest
+                                            // Try to find the latest default session
+                                            for (let i = sessions.length - 1; i >= 0; i--) {
+                                              if (sessions[i].querySessionName?.trim().toLowerCase().startsWith('default')) {
+                                                sessionToSelect = sessions[i];
+                                                break;
+                                              }
                                             }
-                                            if (firstSession.querySessionId) {
-                                              localStorage.setItem("current_visit_number", firstSession.querySessionId.replace("session_visit_", ""));
-                                            }
-                                            if (firstSession.querySessionName) {
-                                              localStorage.setItem("selected_query_session_name", firstSession.querySessionName);
-                                            }
-                                            if (firstSession.querySessionName && firstSession.querySessionName.startsWith("default_")) {
-                                              localStorage.setItem("is_default_chat", "true");
+
+                                            if (sessionToSelect) {
+                                              if (sessionToSelect.querySessionHistory) {
+                                                localStorage.setItem("selected_query_session", JSON.stringify(sessionToSelect.querySessionHistory));
+                                              }
+                                              if (sessionToSelect.querySessionId) {
+                                                localStorage.setItem("current_visit_number", sessionToSelect.querySessionId.replace("session_visit_", ""));
+                                              }
+                                              if (sessionToSelect.querySessionName) {
+                                                localStorage.setItem("selected_query_session_name", sessionToSelect.querySessionName);
+                                              }
+                                              if (sessionToSelect.querySessionName && sessionToSelect.querySessionName.trim().toLowerCase().startsWith("default")) {
+                                                localStorage.setItem("is_default_chat", "true");
+                                              } else {
+                                                localStorage.removeItem("is_default_chat");
+                                              }
                                             }
                                           }
-                                          
+
                                           setChatKey((prev: number) => prev + 1);
 
                                           window.dispatchEvent(
@@ -535,11 +547,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                               (prev: number) => prev + 1,
                                             );
                                           }}
-                                          className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all text-[11px] font-bold cursor-pointer ${
-                                            !localStorage.getItem("current_visit_number")
+                                          className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all text-[11px] font-bold cursor-pointer ${!localStorage.getItem("current_visit_number")
                                               ? "bg-[var(--accent)]/10 text-[var(--accent)]"
                                               : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
-                                          }`}
+                                            }`}
                                         >
                                           New Query
                                         </button>
@@ -589,17 +600,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                           </div>
                                         ) : (
                                           (() => {
-                                            const filteredSessions = (
-                                              queryHistories[workspace.id] || []
-                                            ).filter(
-                                              (s) =>
-                                                !historySearch ||
-                                                s.querySessionName
-                                                  .toLowerCase()
-                                                  .includes(
-                                                    historySearch.toLowerCase(),
-                                                  ),
-                                            );
+                                            const rawSessions = [...(queryHistories[workspace.id] || [])].reverse();
+                                            const activeVisitNumber = localStorage.getItem("current_visit_number");
+
+                                            let defaultToKeep: any = null;
+                                            for (const s of rawSessions) {
+                                              const name = s.querySessionName?.trim().toLowerCase() || "";
+                                              if (name.startsWith("default")) {
+                                                const isThisActive = s.querySessionId && activeVisitNumber === String(s.querySessionId).replace("session_visit_", "").trim();
+                                                if (isThisActive) {
+                                                  defaultToKeep = s;
+                                                  break;
+                                                }
+                                                if (!defaultToKeep) {
+                                                  defaultToKeep = s;
+                                                }
+                                              }
+                                            }
+
+                                            const filteredSessions = rawSessions
+                                              .filter((s) => {
+                                                const name = s.querySessionName?.trim().toLowerCase() || "";
+                                                if (name.startsWith("default")) {
+                                                  return s === defaultToKeep;
+                                                }
+                                                return true;
+                                              })
+                                              .filter(
+                                                (s) =>
+                                                  !historySearch ||
+                                                  s.querySessionName
+                                                    .toLowerCase()
+                                                    .includes(
+                                                      historySearch.toLowerCase(),
+                                                    ),
+                                              )
+                                              .sort((a, b) => {
+                                                if (a === defaultToKeep) return -1;
+                                                if (b === defaultToKeep) return 1;
+                                                return 0;
+                                              });
 
                                             return filteredSessions.length ===
                                               0 ? (
@@ -667,31 +707,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                           prev + 1,
                                                       );
                                                     }}
-                                                    className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer group flex items-center gap-3 ${
-                                                      session.querySessionId &&
-                                                      localStorage.getItem("current_visit_number") ===
+                                                    className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer group flex items-center gap-3 ${session.querySessionId &&
+                                                        localStorage.getItem("current_visit_number") ===
                                                         String(session.querySessionId).replace("session_visit_", "").trim()
                                                         ? "border-[var(--accent)] bg-[var(--accent)]/10 shadow-sm"
                                                         : "border-[var(--border)] bg-[var(--bg)]/50 hover:bg-[var(--surface-hover)]"
-                                                    }`}
+                                                      }`}
                                                   >
                                                     <MessageSquare
-                                                      className={`w-4 h-4 shrink-0 transition-colors ${
-                                                        session.querySessionId &&
-                                                        localStorage.getItem("current_visit_number") ===
+                                                      className={`w-4 h-4 shrink-0 transition-colors ${session.querySessionId &&
+                                                          localStorage.getItem("current_visit_number") ===
                                                           String(session.querySessionId).replace("session_visit_", "").trim()
                                                           ? "text-[var(--accent)]"
                                                           : "text-[var(--text-secondary)] group-hover:text-[var(--accent)]"
-                                                      }`}
+                                                        }`}
                                                     />
                                                     <div
-                                                      className={`text-[11px] font-semibold truncate transition-colors ${
-                                                        session.querySessionId &&
-                                                        localStorage.getItem("current_visit_number") ===
+                                                      className={`text-[11px] font-semibold truncate transition-colors ${session.querySessionId &&
+                                                          localStorage.getItem("current_visit_number") ===
                                                           String(session.querySessionId).replace("session_visit_", "").trim()
                                                           ? "text-[var(--text-primary)]"
                                                           : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
-                                                      }`}
+                                                        }`}
                                                     >
                                                       {session.querySessionName}
                                                     </div>
@@ -720,38 +757,50 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
         </div>
-
-        {/* Settings + Logout — fixed at the bottom */}
-        <div className="px-3 pb-3 space-y-1 shrink-0 mt-auto border-t border-[var(--border)] pt-3">
-          <button className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200 cursor-pointer">
-            <Settings className="w-4 h-4 shrink-0" />
-            {isSidebarOpen && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-sm"
-              >
-                Settings
-              </motion.span>
-            )}
-          </button>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-500 transition-colors duration-200 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            {isSidebarOpen && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-sm"
-              >
-                Logout
-              </motion.span>
-            )}
-          </button>
-        </div>
       </div>
+
+      {/* Settings + Logout — fixed at the bottom */}
+      <div className="px-3 pb-3 space-y-1 shrink-0 mt-auto border-t border-[var(--border)] pt-3">
+        {/* <button className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200 cursor-pointer"> */}
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200"
+        >
+          <Settings className="w-4 h-4 shrink-0" />
+          {isSidebarOpen && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-sm"
+            >
+              Settings
+            </motion.span>
+          )}
+        </button>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-500 transition-colors duration-200 cursor-pointer"
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          {isSidebarOpen && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-sm"
+            >
+              Logout
+            </motion.span>
+          )}
+        </button>
+      </div>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </motion.aside>
   );
 };
+
+export default Sidebar;

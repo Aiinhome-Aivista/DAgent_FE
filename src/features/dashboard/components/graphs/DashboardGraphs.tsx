@@ -1,18 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { chatHistoryService } from "../../../../services/chatHistory.service";
+import toast from "react-hot-toast";
+import { apiService } from "../../../../services/api.service";
+import { API_ENDPOINTS, defaultConfig } from "../../../../services/api.config";
 import {
   Sparkles,
   ChevronDown,
   ChevronUp,
   TrendingUp,
   Zap,
+  X,
+  Download,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { formatChatMessage } from "../../../../utils/format";
+
 import { YearComparisonChartDynamic } from "./YearComparisonChartDynamic";
 import { ZonePieChartDynamic } from "./ZonePieChartDynamic";
 import { TyreSalesChartDynamic } from "./TyreSalesChartDynamic";
 import { YoYGrowthGraph } from "./YoYGrowthGraph";
 import { IndiaMapGraph } from "./IndiaCoverageMap";
+import { PlanVsSaleChartDynamic } from "./PlanVsSaleChartDynamic";
+import { CategorySalesCardDynamic } from "./CategorySalesCardDynamic";
+import { AccountCategorySalesCardDynamic } from "./AccountCategorySalesCardDynamic";
+import { NonBilledAccountsCardDynamic } from "./NonBilledAccountsCardDynamic";
+import { OverduePieChartDynamic } from "./OverduePieChartDynamic";
+import { ExposureCardDynamic } from "./ExposureCardDynamic";
 
 const formatInlineMarkdown = (text: string) => {
   if (!text) return "";
@@ -67,7 +82,7 @@ const parseSessionData = (session: any) => {
 
     const rawAnswer = firstTurn.answer;
     const lines = rawAnswer.split("\n").map((l: string) => l.trim());
-    
+
     let title = "";
     let titleIndex = -1;
 
@@ -294,14 +309,14 @@ const SummaryCard = () => {
           return;
         }
         const userId = parseInt(userIdStr, 10);
-        
+
         const response = await chatHistoryService.getSessionChatHistory(sessionId, userId);
         if (response && response.status === "success" && response.querySessions) {
           // Find the default session (name starts with "default_")
           const defaultSession = response.querySessions.find(
             (s: any) => s.querySessionName && s.querySessionName.toLowerCase().startsWith("default_")
           );
-          
+
           if (defaultSession) {
             const data = parseSessionData(defaultSession);
             if (active) {
@@ -365,13 +380,14 @@ const SummaryCard = () => {
         <div className="flex flex-col gap-1.5">
           {!isExpanded ? (
             <div className="flex items-end justify-between gap-4">
-              <p
+              <div
                 className="text-slate-600 text-sm leading-relaxed font-normal line-clamp-2 flex-1"
                 dangerouslySetInnerHTML={{
-                  __html: formatInlineMarkdown(
+                  __html: formatChatMessage(
                     execSummary
                       .map((para) => cleanParagraphText(para))
-                      .join(" "),
+                      .join("\n\n"),
+                    true
                   ),
                 }}
               />
@@ -390,17 +406,17 @@ const SummaryCard = () => {
               className="flex flex-col gap-4"
             >
               {/* Executive Summary Paragraphs */}
-              <div className="flex flex-col gap-2">
-                {execSummary.map((para, idx) => (
-                  <p
-                    key={idx}
-                    className="text-slate-600 text-sm leading-relaxed font-normal"
-                    dangerouslySetInnerHTML={{
-                      __html: formatInlineMarkdown(cleanParagraphText(para)),
-                    }}
-                  />
-                ))}
-              </div>
+              <div 
+                className="flex flex-col gap-2 text-slate-600 text-sm leading-relaxed font-normal"
+                dangerouslySetInnerHTML={{
+                  __html: formatChatMessage(
+                    execSummary
+                      .map((para) => cleanParagraphText(para))
+                      .join("\n\n"),
+                    true
+                  )
+                }}
+              />
 
               {/* Key Insights Section */}
               {keyInsights.length > 0 && (
@@ -413,7 +429,12 @@ const SummaryCard = () => {
                       {sectionTitles["Key Insights"] || "Key Insights"}
                     </span>
                   </div>
-                  {renderSectionItems(keyInsights)}
+                  <div 
+                    className="flex flex-col gap-2 mt-1.5 pl-1 text-slate-600 text-sm leading-relaxed font-normal"
+                    dangerouslySetInnerHTML={{
+                      __html: formatChatMessage(keyInsights.join("\n"), true)
+                    }}
+                  />
                 </div>
               )}
 
@@ -429,7 +450,12 @@ const SummaryCard = () => {
                         "Actionable Recommendations"}
                     </span>
                   </div>
-                  {renderSectionItems(recommendations)}
+                  <div 
+                    className="flex flex-col gap-2 mt-1.5 pl-1 text-slate-600 text-sm leading-relaxed font-normal"
+                    dangerouslySetInnerHTML={{
+                      __html: formatChatMessage(recommendations.join("\n"), true)
+                    }}
+                  />
                 </div>
               )}
 
@@ -450,31 +476,288 @@ const SummaryCard = () => {
   );
 };
 
+const TABS = [
+  { id: "s1", label: "Sheet 1", title: "Domestic Sales Value Achievement" },
+  { id: "s2", label: "Sheet 2", title: "Sales Number's" },
+  { id: "s3", label: "Sheet 3", title: "Sales Report by Values" },
+  { id: "s4", label: "Sheet 4", title: "Sales Summary in No's & Values" },
+];
+
+const fmt = (v: any) => {
+  if (v === null || v === undefined || v === '') return '–';
+  if (typeof v === 'number') {
+    if (Number.isInteger(v)) return v.toLocaleString('en-IN');
+    return parseFloat(v.toFixed(2)).toLocaleString('en-IN');
+  }
+  return String(v);
+};
+
+const SummaryRevisedDownloadCard = () => {
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const activeTab = TABS[activeTabIndex].id;
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [previewData, setPreviewData] = useState<Record<string, any> | null>(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getSessionId = () =>
+    localStorage.getItem('chatSessionId') || localStorage.getItem('DAgent_session_id') || '7b4c93ae-3d87-4696-92c2-f8119c0c923a';
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPreview = async (retryCount = 0) => {
+      if (retryCount === 0) setIsFetching(true);
+      setError(null);
+      try {
+        const res = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.REPORTS.EXPORT_DOMESTIC_SALES_PREVIEW}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: getSessionId() }),
+        });
+        const json = await res.json();
+        
+        if (!isMounted) return;
+        
+        if (json.status === 'success') {
+          setPreviewData(json.sections);
+          setIsFetching(false);
+        } else {
+          if (retryCount < 5) {
+            setTimeout(() => fetchPreview(retryCount + 1), 2000);
+          } else {
+            let customError = json.message;
+            if (json.message === 'Failed to generate Excel worksheets for preview.') {
+              customError = 'No data available. Please process your files first.';
+            }
+            setError(customError || 'No data available. Please process your files first.');
+            setIsFetching(false);
+          }
+        }
+      } catch (err: any) {
+        if (!isMounted) return;
+        if (retryCount < 5) {
+          setTimeout(() => fetchPreview(retryCount + 1), 2000);
+        } else {
+          setError(err.message || 'No data available. Please process your files first.');
+          setIsFetching(false);
+        }
+      }
+    };
+
+    fetchPreview();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDownloading(true);
+    const toastId = toast.loading("Generating report...");
+    try {
+      const now = new Date();
+      await apiService.download(
+        API_ENDPOINTS.REPORTS.EXPORT_DOMESTIC_SALES,
+        { session_id: getSessionId() },
+        `Summary_Revised_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}.xlsx`
+      );
+      toast.success("Downloaded!", { id: toastId });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed', { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const currentSection = previewData?.[activeTab];
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
+        <h3 className="font-bold text-slate-800 text-base w-40 shrink-0">Sales Summary</h3>
+        
+        {/* Carousel Controls Inline */}
+        <div className="flex items-center gap-4 flex-1 justify-center">
+          <button
+            onClick={() => setActiveTabIndex((prev) => (prev > 0 ? prev - 1 : TABS.length - 1))}
+            className="p-1.5 rounded-full hover:bg-slate-200 text-slate-600 transition-colors focus:outline-none"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          
+          <div className="flex flex-col items-center">
+            <span className="text-sm font-bold text-slate-800 text-center">{TABS[activeTabIndex].title}</span>
+            <div className="flex gap-1.5 mt-1.5">
+              {TABS.map((_, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setActiveTabIndex(idx)}
+                  className={`h-1.5 rounded-full transition-all duration-300 focus:outline-none ${activeTabIndex === idx ? 'w-4 bg-indigo-600' : 'w-1.5 bg-slate-300'}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => setActiveTabIndex((prev) => (prev < TABS.length - 1 ? prev + 1 : 0))}
+            className="p-1.5 rounded-full hover:bg-slate-200 text-slate-600 transition-colors focus:outline-none"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="w-40 flex justify-end shrink-0">
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading || isFetching || !!error || !previewData}
+            title="Download Full Report as Excel"
+            className={`flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed text-indigo-600 transition-colors focus:outline-none`}
+          >
+            <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+
+
+      {/* Table Content */}
+      <div className="overflow-auto" style={{ maxHeight: '350px' }}>
+        {isFetching ? (
+          <div className="flex items-center justify-center h-full gap-3">
+            <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <span className="text-slate-500 text-sm">Loading data...</span>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full min-h-[200px] text-slate-400 font-medium text-sm px-10 text-center">
+            {error}
+          </div>
+        ) : currentSection && currentSection.matrix && currentSection.matrix.length > 0 ? (
+          <table className="w-full text-[10px] border-collapse min-w-max bg-white">
+            <tbody>
+              {currentSection.matrix.map((row: any[], ri: number) => {
+                const isHeader = ri < 4;
+                return (
+                  <tr key={ri} className={`${isHeader ? 'sticky top-' + (ri * 24) + ' z-10' : ''} hover:bg-slate-50 transition-colors`}>
+                    {row.map((cell: any, ci: number) => {
+                      const val = String(cell.value);
+                      const isNum = !isNaN(Number(val.replace(/,/g, ''))) && val !== '';
+                      const isPct = val.includes('%');
+
+                      // Base classes
+                      let tdClass = "border border-slate-300 px-2 py-1.5 whitespace-nowrap text-slate-700 ";
+
+                      // Font weight
+                      if (cell.bold) tdClass += "font-bold ";
+
+                      // Text alignment
+                      if (cell.align === "center" || cell.align === "justify") tdClass += "text-center ";
+                      else if (cell.align === "right" || isNum) tdClass += "text-right font-mono ";
+                      else tdClass += "text-left ";
+
+                      // Highlight % values slightly if not already styled
+                      if (isPct && !cell.bold) tdClass += "text-indigo-700 font-semibold ";
+
+                      return (
+                        <td
+                          key={ci}
+                          colSpan={cell.colSpan || 1}
+                          rowSpan={cell.rowSpan || 1}
+                          className={tdClass.trim()}
+                          style={{
+                            backgroundColor: cell.bgColor || (ri % 2 === 0 ? '#ffffff' : '#f8fafc')
+                          }}
+                        >
+                          {val}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="flex items-center justify-center h-full min-h-[200px] text-slate-400 font-medium text-sm">
+            No sales data available.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
+
+
 export const DashboardGraphs = () => {
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+
+  const getZoneFullName = (zone: string) => {
+    const map: Record<string, string> = {
+      'WZ': 'West Zone',
+      'EZ': 'East Zone',
+      'NZ': 'North Zone',
+      'SZ': 'South Zone',
+      'CZ': 'Central Zone'
+    };
+    return map[zone.toUpperCase()] || zone;
+  };
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("zone-changed", { detail: selectedZone }));
+  }, [selectedZone]);
+
   return (
     <div className="flex flex-col gap-6 overflow-x-hidden">
+      {selectedZone && (
+        <div className="flex items-center justify-center relative py-2">
+          <h2 className="text-2xl font-bold text-slate-700 font-serif">
+            Sales Dashboard - {getZoneFullName(selectedZone)}
+          </h2>
+          <button
+            onClick={() => setSelectedZone(null)}
+            className="absolute right-4 p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Clear Filter"
+          >
+            <X className="w-5 h-5 text-slate-400 hover:text-red-500 transition-colors" />
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3">
         {/* Executive Summary Card */}
         <SummaryCard />
 
-        {/* Year-wise Comparison Filterable Chart */}
-        <YearComparisonChartDynamic />
-      </div>
+        {/* Summary Revised Download Card */}
+        <SummaryRevisedDownloadCard />
 
-      {/* Future use: YoY Growth & India Coverage Map (currently commented out) */}
-      {/* 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <YoYGrowthGraph />
-        <IndiaMapGraph />
+        {/* Plan vs Sale & Achievement */}
+        <PlanVsSaleChartDynamic onZoneClick={(zone) => setSelectedZone(zone)} />
+
+        {/* Year-wise Comparison Filterable Chart */}
+        <YearComparisonChartDynamic zone={selectedZone} />
       </div>
-      */}
 
       <div className="grid grid-cols-1 gap-6">
         {/* Sales by Zone */}
-        <ZonePieChartDynamic />
+        <ZonePieChartDynamic zone={selectedZone} />
 
         {/* Top 10 Tyre Types by Sales */}
-        <TyreSalesChartDynamic />
+        <TyreSalesChartDynamic zone={selectedZone} />
+
+        {/* Category Sales */}
+        <CategorySalesCardDynamic zone={selectedZone} />
+
+        {/* Actual Sales by Account Category */}
+        <AccountCategorySalesCardDynamic zone={selectedZone} />
+
+        {/* Non Billed Accounts % */}
+        <NonBilledAccountsCardDynamic zone={selectedZone} />
+
+        {/* Overdue% (as on Date) */}
+        <OverduePieChartDynamic zone={selectedZone} />
+
+        {/* Exposure % */}
+        <ExposureCardDynamic zone={selectedZone} />
       </div>
     </div>
   );

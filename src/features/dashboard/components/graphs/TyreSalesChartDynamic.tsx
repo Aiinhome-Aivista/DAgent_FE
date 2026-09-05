@@ -15,7 +15,7 @@ import { COLORS } from "./mockData";
 import { FilterSelect, useAvailableYears, useSessionId } from "./dashboardHooks";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
-export const TyreSalesChartDynamic = () => {
+export const TyreSalesChartDynamic = ({ zone }: { zone?: string | null }) => {
   const {
     availableYears,
     availableZones,
@@ -62,7 +62,9 @@ export const TyreSalesChartDynamic = () => {
               user_id: userId,
               year: tyreYear === "All" ? ["All"] : [Number(tyreYear)],
               customer_category: [tyreCustomerCategory],
-              zone: [tyreZone],
+              zone: zone && zone.toLowerCase() !== "all" 
+                ? [zone] 
+                : tyreZone.toLowerCase() === "all" ? ["All"] : [tyreZone],
               region: [tyreRegion],
               construction_type: [tyreConstructionType],
             }),
@@ -120,6 +122,7 @@ export const TyreSalesChartDynamic = () => {
     tyreRegion,
     tyreConstructionType,
     sessionId,
+    zone,
   ]);
 
   return (

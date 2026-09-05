@@ -1,26 +1,19 @@
-import React, { useState, useEffect } from "react";
-import toast from "react-hot-toast";
-import { motion, AnimatePresence } from "motion/react";
-import {
-  Users,
-  Layout,
-  ShieldAlert,
-  Check,
-  X,
-  Search,
-  Loader2,
-} from "lucide-react";
-import { adminService } from "../../services/admin.service";
-import { AdminUser, AdminTab } from "./types";
-import { workspaceService, Workspace } from "../../services/workspace.service";
-import { useAuthContext } from "../../context/AuthContext";
-import { MangeUser } from "./components/MangeUsers";
-import { MangeWorkspace } from "./components/MangeWorkspaces";
-import { AssignWorkspace } from "./components/AssignWorkspaces";
-import { WorkspaceUsers } from "./components/WorkspaceUsers";
-import { AdminChats } from "./components/AdminChats"; // forces TS refresh
-import { AdminPendingKnowledge } from "./components/AdminPendingKnowledge";
-import { CustomPrompts } from "./components/CustomPrompts"; // forces TS refresh
+import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'motion/react';
+import { Users, Layout, ShieldAlert, Check, X, Search, Loader2, FileText } from 'lucide-react';
+import { adminService } from '../../services/admin.service';
+import { AdminUser, AdminTab } from './types';
+import { workspaceService, Workspace } from '../../services/workspace.service';
+import { useAuthContext } from '../../context/AuthContext';
+import { MangeUser } from './components/MangeUsers';
+import { MangeWorkspace } from './components/MangeWorkspaces';
+import { AssignWorkspace } from './components/AssignWorkspaces';
+import { WorkspaceUsers } from './components/WorkspaceUsers';
+import { AdminChats } from './components/AdminChats'; // forces TS refresh
+import { AdminPendingKnowledge } from './components/AdminPendingKnowledge';
+import { ScheduledReports } from './components/ScheduledReports';
+import { Calendar, UserPlus, Plus } from 'lucide-react';
 
 interface AdminPanelProps {
   adminSubTab: AdminTab;
@@ -40,10 +33,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
   // UI State
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
-  const [isCreatingUser, setIsCreatingUser] = useState(false);
-  const [newWorkspaceName, setNewWorkspaceName] = useState("");
 
   // Assignment State
   const [selectedUserIdsForAssignment, setSelectedUserIdsForAssignment] =
@@ -51,6 +40,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [selectedWorkspaceForAssignment, setSelectedWorkspaceForAssignment] =
     useState<number | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
+  // UI State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -263,6 +258,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
             />
           </div>
+    const filteredWorkspaces = workspaces.filter(w =>
+          w?.workspace_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          w?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+
+          const tabDisplayNames: Record<AdminTab, string> = {
+            users: 'Users',
+          workspaces: 'Workspaces',
+          assignUsers: 'Assignments',
+          workspaceUsers: 'Workspace Users',
+          adminChats: 'Chat Views',
+          pendingKnowledge: 'KG History',
+          scheduledReports: 'Scheduled Reports'
+    };
 
           {adminSubTab === "users" && (
             <button
@@ -326,63 +335,162 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     isModalOpen={isCreatingUser}
                     setIsModalOpen={setIsCreatingUser}
                   />
-                )}
 
-                {adminSubTab === "workspaces" && (
-                  <MangeWorkspace
-                    workspaces={workspaces}
-                    searchQuery={searchQuery}
-                    isCreatingWorkspace={isCreatingWorkspace}
-                    setIsCreatingWorkspace={setIsCreatingWorkspace}
-                    newWorkspaceName={newWorkspaceName}
-                    setNewWorkspaceName={setNewWorkspaceName}
-                    handleCreateWorkspace={handleCreateWorkspace}
-                    handleDeleteWorkspace={handleDeleteWorkspace}
-                    isLoading={isLoading}
-                  />
-                )}
+            {/* Tabs */}
+                <div className="flex border-b border-[var(--border)] px-6 shrink-0 bg-[var(--bg)]/30 overflow-x-auto custom-scrollbar">
+                  {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge', 'scheduledReports'] as AdminTab[]).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => {
+                        setActiveTab(tab);
+                        setSearchQuery('');
+                        setError(null);
+                      }}
+                      className={`
+                            px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize flex items-center gap-2
+                            ${activeTab === tab
+                          ? 'border-[var(--accent)] text-[var(--accent)]'
+                          : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'
+                        }
+                        `}
+                    >
+                      {tab === 'users' && <Users className="w-4 h-4" />}
+                      {tab === 'workspaces' && <Layout className="w-4 h-4" />}
+                      {tab === 'assignUsers' && <ShieldAlert className="w-4 h-4" />}
+                      {tab === 'workspaceUsers' && <Layout className="w-4 h-4" />}
+                      {tab === 'adminChats' && <Users className="w-4 h-4" />}
+                      {tab === 'pendingKnowledge' && <Layout className="w-4 h-4" />}
+                      {tab === 'scheduledReports' && <FileText className="w-4 h-4" />}
+                      {tabDisplayNames[tab]}
+                    </button>
+                  ))}
+                </div>
 
-                {adminSubTab === "assignUsers" && (
-                  <AssignWorkspace
-                    users={users}
-                    workspaces={workspaces}
-                    selectedUserIds={selectedUserIdsForAssignment}
-                    setSelectedUserIds={setSelectedUserIdsForAssignment}
-                    selectedWorkspaceForAssignment={
-                      selectedWorkspaceForAssignment
-                    }
-                    setSelectedWorkspaceForAssignment={
-                      setSelectedWorkspaceForAssignment
-                    }
-                    isAssigning={isAssigning}
-                    handleAssignWorkspace={handleAssignWorkspace}
-                  />
-                )}
+                {/* Content Area */}
+                <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-[var(--bg)]">
+                  {/* Search & Actions Bar */}
+                  <div className="shrink-0 p-4 border-b border-[var(--border)] flex items-center justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+                      <input
+                        type="text"
+                        placeholder={`Search ${tabDisplayNames[activeTab]}...`}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                      />
+                    </div>
 
-                {adminSubTab === "workspaceUsers" && (
-                  <WorkspaceUsers
-                    workspaces={filteredWorkspaces}
-                    searchQuery={searchQuery}
-                  />
-                )}
+                    {activeTab === 'users' && (
+                      <button
+                        onClick={() => setIsCreatingUser(true)}
+                        className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
+                      >
+                        <Users className="w-4 h-4" />
+                        Add User
+                      </button>
+                    )}
 
-                {adminSubTab === "adminChats" && <AdminChats />}
+                    {activeTab === 'workspaces' && (
+                      <button
+                        onClick={() => setIsCreatingWorkspace(true)}
+                        className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
+                      >
+                        <Layout className="w-4 h-4" />
+                        Create Workspace
+                      </button>
+                    )}
 
-                {adminSubTab === "pendingKnowledge" && (
-                  <AdminPendingKnowledge />
-                )}
+                    {activeTab === 'scheduledReports' && (
+                      <button
+                        onClick={() => setIsCreatingSchedule(true)}
+                        className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
+                      >
+                        <Calendar className="w-4 h-4" />
+                        Create Schedule
+                      </button>
+                    )}
+                  </div>
 
-                {adminSubTab === "customPrompts" && (
-                  <CustomPrompts
-                    workspaces={workspaces}
-                    searchQuery={searchQuery}
-                  />
-                )}
+                  {/* Error Banner */}
+                  {error && (
+                    <div className="m-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-sm flex items-start gap-2 max-w-3xl">
+                      <span>{error}</span>
+                      <button onClick={() => setError(null)} className="ml-auto hover:text-rose-600"><X className="w-4 h-4" /></button>
+                    </div>
+                  )}
+
+                  {adminSubTab === "workspaces" && (
+                    <MangeWorkspace
+                      workspaces={workspaces}
+                      searchQuery={searchQuery}
+                      isCreatingWorkspace={isCreatingWorkspace}
+                      setIsCreatingWorkspace={setIsCreatingWorkspace}
+                      newWorkspaceName={newWorkspaceName}
+                      setNewWorkspaceName={setNewWorkspaceName}
+                      handleCreateWorkspace={handleCreateWorkspace}
+                      handleDeleteWorkspace={handleDeleteWorkspace}
+                      isLoading={isLoading}
+                    />
+                  )}
+
+                  {adminSubTab === "assignUsers" && (
+                    <AssignWorkspace
+                      users={users}
+                      workspaces={workspaces}
+                      selectedUserIds={selectedUserIdsForAssignment}
+                      setSelectedUserIds={setSelectedUserIdsForAssignment}
+                      selectedWorkspaceForAssignment={
+                        selectedWorkspaceForAssignment
+                      }
+                      setSelectedWorkspaceForAssignment={
+                        setSelectedWorkspaceForAssignment
+                      }
+                      isAssigning={isAssigning}
+                      handleAssignWorkspace={handleAssignWorkspace}
+                    />
+                  )}
+
+                  {adminSubTab === "workspaceUsers" && (
+                    <WorkspaceUsers
+                      workspaces={filteredWorkspaces}
+                      searchQuery={searchQuery}
+                    />
+                  )}
+
+                  {adminSubTab === "adminChats" && <AdminChats />}
+
+                  {adminSubTab === "pendingKnowledge" && (
+                    <AdminPendingKnowledge />
+                  )}
+
+                  {adminSubTab === "customPrompts" && (
+                    <CustomPrompts
+                      workspaces={workspaces}
+                      searchQuery={searchQuery}
+                    />
+                  )}
               </motion.div>
             </AnimatePresence>
           )}
-        </div>
-      </div>
+          {activeTab === 'pendingKnowledge' && (
+            <AdminPendingKnowledge />
+          )}
+
+          {activeTab === 'scheduledReports' && (
+            <ScheduledReports
+              searchQuery={searchQuery}
+              isModalOpen={isCreatingSchedule}
+              setIsModalOpen={setIsCreatingSchedule}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+                    )}
     </div>
+            </div >
+        </div >
+      </div >
+    </div >
   );
 };

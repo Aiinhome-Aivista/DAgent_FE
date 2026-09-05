@@ -27,7 +27,7 @@ import {
 } from "./dashboardHooks";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
-export const YearComparisonChartDynamic = () => {
+export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) => {
   const {
     availableYears,
     availableZones,
@@ -89,7 +89,9 @@ export const YearComparisonChartDynamic = () => {
               session_id: sessionId,
               selected_years: selectedYears,
               selected_zones:
-                yearComparisonZone.toLowerCase() === "all"
+                zone && zone.toLowerCase() !== "all" 
+                  ? [zone] 
+                  : yearComparisonZone.toLowerCase() === "all"
                   ? ["all"]
                   : [yearComparisonZone],
               selected_regions:
@@ -165,13 +167,14 @@ export const YearComparisonChartDynamic = () => {
     };
     fetchYearComparisonData();
   }, [
+    sessionId,
     selectedYears,
     yearComparisonZone,
     yearComparisonRegion,
     yearComparisonMonth,
     yearComparisonCustomerType,
     yearComparisonConstructionType,
-    sessionId,
+    zone
   ]);
 
   const yearColors: Record<number, string> = {

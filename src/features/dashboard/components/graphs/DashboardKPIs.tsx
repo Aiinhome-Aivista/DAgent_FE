@@ -50,20 +50,21 @@ export const DashboardKPIs = () => {
           subtext?: string;
         }>;
 
-        if (newMetrics.length > 0) {
-          setMetrics((prev) => {
-            const updated = [...prev];
-            newMetrics.forEach((m, i) => {
-              if (i < 4 && m) {
-                updated[i] = {
-                  label: m.label ?? updated[i].label,
-                  value: m.value ?? m.revenue ?? m.change ?? updated[i].value,
-                  subtext: m.subtext ?? m.name ?? updated[i].subtext,
-                };
-              }
-            });
-            return updated;
+        if (Object.keys(data.data).length > 0) {
+          const sortedKeys = Object.keys(data.data).sort((a, b) => {
+            const numA = parseInt(a.replace(/\D/g, "")) || 0;
+            const numB = parseInt(b.replace(/\D/g, "")) || 0;
+            return numA - numB;
           });
+          const sortedMetrics = sortedKeys.map(k => data.data[k]).filter(Boolean) as Array<{
+            label?: string; name?: string; value?: string; revenue?: string; change?: string; subtext?: string;
+          }>;
+
+          setMetrics(sortedMetrics.map((m, i) => ({
+            label: m.label ?? "Metric " + (i + 1),
+            value: m.value ?? m.revenue ?? m.change ?? "N/A",
+            subtext: m.subtext ?? m.name ?? "",
+          })));
         }
       }
     } catch (error) {
@@ -73,11 +74,14 @@ export const DashboardKPIs = () => {
     }
   };
 
-  const fetchDefaultMetrics = async (sessionId: string) => {
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+
+  const fetchDefaultMetrics = async (sessionId: string, zone?: string | null) => {
     setIsLoading(true);
     try {
+      const url = `${defaultConfig.baseUrl}/default-dashboard-metrics${zone ? `?zone=${encodeURIComponent(zone)}` : ''}`;
       const response = await fetch(
-        `${defaultConfig.baseUrl}/default-dashboard-metrics`,
+        url,
         {
           method: "POST",
           headers: {
@@ -94,20 +98,21 @@ export const DashboardKPIs = () => {
           subtext?: string;
         }>;
 
-        if (newMetrics.length > 0) {
-          setMetrics((prev) => {
-            const updated = [...prev];
-            newMetrics.forEach((m, i) => {
-              if (i < 4 && m) {
-                updated[i] = {
-                  label: m.label ?? updated[i].label,
-                  value: m.value ?? updated[i].value,
-                  subtext: m.subtext ?? updated[i].subtext,
-                };
-              }
-            });
-            return updated;
+        if (Object.keys(data.data).length > 0) {
+          const sortedKeys = Object.keys(data.data).sort((a, b) => {
+            const numA = parseInt(a.replace(/\D/g, "")) || 0;
+            const numB = parseInt(b.replace(/\D/g, "")) || 0;
+            return numA - numB;
           });
+          const sortedMetrics = sortedKeys.map(k => data.data[k]).filter(Boolean) as Array<{
+            label?: string; value?: string; subtext?: string;
+          }>;
+
+          setMetrics(sortedMetrics.map((m, i) => ({
+            label: m.label ?? "Metric " + (i + 1),
+            value: m.value ?? "N/A",
+            subtext: m.subtext ?? "",
+          })));
         }
       } else if (data.status === "error") {
         toast.error(
@@ -125,20 +130,30 @@ export const DashboardKPIs = () => {
   useEffect(() => {
     const sessionId = localStorage.getItem("DAgent_session_id");
     if (sessionId) {
-      fetchDefaultMetrics(sessionId);
+      fetchDefaultMetrics(sessionId, selectedZone);
     }
 
     const handleSessionIdUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.sessionId) {
-        fetchDefaultMetrics(customEvent.detail.sessionId);
+        fetchDefaultMetrics(customEvent.detail.sessionId, selectedZone);
       }
+    };
+    
+    const handleZoneChange = (e: any) => {
+      setSelectedZone(e.detail);
+      const sid = localStorage.getItem("DAgent_session_id");
+      if (sid) fetchDefaultMetrics(sid, e.detail);
     };
 
     window.addEventListener("session-id-updated", handleSessionIdUpdated);
-    return () =>
+    window.addEventListener("zone-changed", handleZoneChange);
+    
+    return () => {
       window.removeEventListener("session-id-updated", handleSessionIdUpdated);
-  }, []);
+      window.removeEventListener("zone-changed", handleZoneChange);
+    };
+  }, [selectedZone]);
 
   useEffect(() => {
     const handleChatMetricsUpdate = (event: CustomEvent) => {
@@ -165,16 +180,16 @@ export const DashboardKPIs = () => {
   };
 
   const renderSkeleton = () => (
-    <div className="flex flex-col gap-3 w-full">
-      {[...Array(4)].map((_, i) => (
+    <div className="flex flex-col gap-2 w-full flex-1 min-h-0 overflow-y-auto pr-1">
+      {[...Array(6)].map((_, i) => (
         <div
           key={i}
-          className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2"
+          className="bg-white p-[14px] rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2 shrink-0"
         >
-          <div className="h-2.5 bg-slate-200 rounded w-24 mt-1.5 animate-pulse"></div>
+          <div className="h-2.5 bg-slate-200 rounded w-24 mt-1 animate-pulse"></div>
           <div className="min-w-0">
             <div className="h-5 bg-slate-200 rounded w-20 my-1 animate-pulse"></div>
-            <div className="h-2 bg-slate-100 rounded w-28 mt-1.5 animate-pulse"></div>
+            <div className="h-2 bg-slate-100 rounded w-28 mt-1 animate-pulse"></div>
           </div>
         </div>
       ))}
@@ -202,33 +217,38 @@ export const DashboardKPIs = () => {
       {isLoading ? (
         renderSkeleton()
       ) : (
-        <div className="flex flex-col gap-3 w-full flex-1 min-h-0">
+        <div className="flex flex-col gap-2 w-full flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           {metrics.map((metric, index) => (
             <div
               key={index}
-              className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center gap-2 flex-1"
+              className="bg-white p-[14px] rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center gap-1.5 shrink-0"
             >
               <p
-                className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1.5"
+                className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 truncate"
                 title={metric.label}
               >
                 {metric.label}
               </p>
               <div className="min-w-0">
-                <h3 className="text-lg font-black text-slate-700 leading-tight my-1 uppercase">
+                <h3 className="text-[1.1rem] font-black text-slate-700 leading-tight my-0.5 uppercase truncate">
                   {(() => {
                     let formattedVal: React.ReactNode = "";
+                    const nonCurrencyMetrics = ["Billing Scope", "Dealer Spread", "Attrition", "New Dealer", "Rotation"];
+                    
                     if (
                       typeof metric.value === "string" &&
                       /^\s*[\d,.]+/.test(metric.value) &&
                       !metric.value.includes("₹") &&
-                      !metric.value.includes("%")
+                      !metric.value.includes("%") &&
+                      !nonCurrencyMetrics.includes(metric.label)
                     ) {
                       formattedVal = `₹${metric.value.replace(/\$/g, "").trim()}`;
                     } else if (typeof metric.value === "string") {
                       formattedVal = metric.value.replace(/\$/g, "₹");
                     } else if (typeof metric.value === "number") {
-                      formattedVal = `₹${metric.value}`;
+                      formattedVal = nonCurrencyMetrics.includes(metric.label) 
+                        ? String(metric.value) 
+                        : `₹${metric.value}`;
                     } else {
                       return metric.value as React.ReactNode;
                     }
@@ -251,7 +271,7 @@ export const DashboardKPIs = () => {
                     return formattedVal;
                   })()}
                 </h3>
-                <p className="text-[10px] text-slate-400 mt-0.5">
+                <p className="text-[9px] text-slate-400 mt-0.5 truncate" title={metric.subtext}>
                   {metric.subtext}
                 </p>
               </div>

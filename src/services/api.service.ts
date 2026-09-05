@@ -4,6 +4,7 @@ export interface IApiService {
   get<T>(endpoint: string): Promise<T>;
   post<T>(endpoint: string, data: any): Promise<T>;
   delete<T>(endpoint: string, data?: any): Promise<T>;
+  download(endpoint: string, data: any, filename: string): Promise<void>;
 }
 
 class ApiService implements IApiService {
@@ -90,7 +91,34 @@ class ApiService implements IApiService {
       throw error;
     }
   }
+
+  async download(endpoint: string, data: any, filename: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.config.baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
 }
 
 // Export as a singleton instance of the interface
-export const apiService: IApiService = new ApiService();
+export const apiService = new ApiService();

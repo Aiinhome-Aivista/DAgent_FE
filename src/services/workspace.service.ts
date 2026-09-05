@@ -8,6 +8,7 @@ export interface Workspace {
     is_active: number;
     created_at?: string;
     user_id?: number;
+    name?: string;
 }
 
 class WorkspaceService {
