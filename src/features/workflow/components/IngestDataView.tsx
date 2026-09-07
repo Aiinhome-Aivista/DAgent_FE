@@ -105,9 +105,10 @@ export const IngestDataView = ({
                 <div className="text-center">
                   <p className="text-sm font-bold text-[var(--text-primary)]">Importing your data...</p>
                   <p className="text-xs text-[var(--text-secondary)]">
-                    {isWebSearch ? 'Processing web search results and extracting data' :
-                      isCsvSource ? 'Reading CSV files and extracting data structures' :
-                        'Mapping schemas and fetching table structures'}
+                    {(() => {
+                      const name = activeConnector?.name || 'data';
+                      return `Reading ${name} data and extracting ${name} data structures`;
+                    })()}
                   </p>
                 </div>
               </div>
