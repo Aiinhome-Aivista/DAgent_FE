@@ -6,6 +6,7 @@ import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { ChatWindow } from './features/chat';
 import { AgentWorkflow } from './features/workflow';
 import { LandingPage } from './features/marketing/components/LandingPage';
+import { PricingPage } from './features/marketing/components/PricingPage';
 import { LoginPage } from './features/auth/components/LoginPage';
 import { Dashboard } from './features/dashboard/components/Dashboard';
 import { Moon, Sun, Layout, Settings, LogOut, Menu, MessageSquare, Database, Plus, Sparkles, BarChart3, Clock, Search, ChevronDown, User, Check, X, Star } from 'lucide-react';
@@ -27,7 +28,9 @@ function AppContent() {
   const { theme, toggleTheme } = useTheme();
   const { userId, roleId, roleName, logout } = useAuthContext();
   const [viewMode, setViewMode] = useState<ViewMode>(
-    window.location.pathname.startsWith('/admin/login') ? 'admin-login' : (userId ? 'app' : 'landing')
+    window.location.pathname.startsWith('/admin/login') ? 'admin-login' : 
+    window.location.pathname.startsWith('/pricing') ? 'pricing' : 
+    (userId ? 'app' : 'landing')
   );
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>(roleName === 'Admin' ? 'admin' : 'chat');
@@ -402,8 +405,22 @@ function AppContent() {
     }
   };
 
+  const navigateToPricing = () => {
+    window.history.pushState({}, '', '/pricing');
+    setViewMode('pricing');
+  };
+
+  const navigateToLanding = () => {
+    window.history.pushState({}, '', '/');
+    setViewMode('landing');
+  };
+
   if (viewMode === 'landing') {
-    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')} />;
+    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')} onPricingClick={navigateToPricing} />;
+  }
+
+  if (viewMode === 'pricing') {
+    return <PricingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} />;
   }
 
   if (viewMode === 'login' || viewMode === 'admin-login') {

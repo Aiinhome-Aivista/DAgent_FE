@@ -1,0 +1,212 @@
+import React, { useState } from 'react';
+import { motion } from 'motion/react';
+import { Menu, X, Check, Twitter, Github, Linkedin, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/src/ui-kit';
+import { TwitterIcon } from 'lucide-react';
+
+interface PricingPageProps {
+  onGetStarted: () => void;
+  onLogin: () => void;
+  onBackToLanding: () => void;
+}
+
+export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin, onBackToLanding }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    <div className="theme-landing min-h-screen bg-white text-slate-900 font-sans selection:bg-accent/10 selection:text-accent">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={onBackToLanding}>
+              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold">
+                D
+              </div>
+              <span className="text-xl font-bold tracking-tight text-slate-900">DAgent</span>
+            </div>
+            
+            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+              <button onClick={onBackToLanding} className="hover:text-accent transition-colors">Features</button>
+              <button onClick={onBackToLanding} className="hover:text-accent transition-colors">Use Cases</button>
+              <button onClick={onBackToLanding} className="hover:text-accent transition-colors">Security</button>
+              <button className="text-accent transition-colors">Pricing</button>
+            </div>
+
+            <div className="hidden md:flex items-center gap-4">
+              <button 
+                onClick={onLogin}
+                className="text-sm font-medium text-slate-600 hover:text-accent transition-colors"
+              >
+                Log in
+              </button>
+              <Button 
+                onClick={onGetStarted}
+                className="bg-accent hover:bg-accent-hover text-white rounded-full px-6"
+              >
+                Sign Up
+              </Button>
+            </div>
+
+            <div className="md:hidden">
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 text-slate-600"
+              >
+                {isMenuOpen ? <X /> : <Menu />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="md:hidden bg-white border-b border-slate-100 px-4 py-6 space-y-4"
+          >
+            <button onClick={onBackToLanding} className="block text-lg font-medium w-full text-left">Features</button>
+            <button onClick={onBackToLanding} className="block text-lg font-medium w-full text-left">Use Cases</button>
+            <button onClick={onBackToLanding} className="block text-lg font-medium w-full text-left">Security</button>
+            <button className="block text-lg font-medium w-full text-left text-accent">Pricing</button>
+            <div className="pt-4 flex flex-col gap-3">
+              <Button variant="outline" onClick={onLogin} className="w-full">Log in</Button>
+              <Button onClick={onGetStarted} className="w-full bg-accent text-white">Sign Up</Button>
+            </div>
+          </motion.div>
+        )}
+      </nav>
+
+      {/* Pricing Header */}
+      <section className="pt-32 pb-10 px-4 text-center max-w-3xl mx-auto">
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">
+          Pricing Plans
+        </h1>
+        <p className="text-lg text-slate-600">
+          Choose the perfect plan to scale your data-driven workflows.
+        </p>
+      </section>
+
+      {/* Pricing Cards */}
+      <section className="pb-20 px-4 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Free Plan */}
+          <div className="border border-slate-200 rounded-3xl p-8 bg-white shadow-sm flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+            <h3 className="text-xl font-bold mb-2 text-slate-900">Free Plan</h3>
+            <div className="text-4xl font-extrabold mb-4 text-slate-900">Free</div>
+            <ul className="space-y-3 flex-1">
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Up to 1 GB Data Storage</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">2 uploads per day</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">5 Insights / Queries per day</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">1 User</span></li>
+            </ul>
+
+          </div>
+
+          {/* Silver Plan */}
+          <div className="border-2 border-accent rounded-3xl p-8 bg-white shadow-md flex flex-col relative hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-white px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase">
+              Most Popular
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-slate-900">Silver Plan</h3>
+            <div className="text-4xl font-extrabold mb-4 text-slate-900">&nbsp;</div>
+            <ul className="space-y-3 flex-1">
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Up to 5 GB Data Storage</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Multiple uploads</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">50 Insights / Queries</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Up to 3 Users</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Download Allowed</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Scheduled Email</span></li>
+            </ul>
+
+          </div>
+
+          {/* Gold Plan */}
+          <div className="border border-slate-200 rounded-3xl p-8 bg-white shadow-sm flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+            <h3 className="text-xl font-bold mb-2 text-slate-900">Gold Plan</h3>
+            <div className="text-4xl font-extrabold mb-4 text-slate-900">Contact Us</div>
+            <ul className="space-y-3 flex-1">
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Data Storage</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited uploads</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Insights / Queries</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Users</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Custom KPI</span></li>
+              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Scheduled Email</span></li>
+            </ul>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="pb-20 px-4 text-center max-w-3xl mx-auto">
+        <div className="bg-slate-50 border border-slate-100 rounded-3xl p-8 md:p-10">
+          <h3 className="text-2xl font-bold mb-3 text-slate-900">Need a Custom Plan?</h3>
+          <p className="text-slate-600 mb-8 text-lg">
+            Have specific requirements or need help choosing the right plan? Our team is here to help.
+          </p>
+          <a 
+            href="mailto:support@aivistatech.com" 
+            className="inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white rounded-full px-8 py-4 font-semibold transition-colors"
+          >
+            Contact us at support@aivistatech.com
+          </a>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-20 px-4 bg-white border-t border-slate-100">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-12">
+          <div className="col-span-2 space-y-6">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={onBackToLanding}>
+              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold">
+                D
+              </div>
+              <span className="text-xl font-bold tracking-tight text-slate-900">DAgent</span>
+            </div>
+            <p className="text-slate-500 text-sm max-w-xs">
+              Early stage AI lab based in San Francisco with a mission to build the most powerful AI tools for knowledge workers.
+            </p>
+            <div className="flex gap-4 text-slate-400">
+              <Twitter className="w-5 h-5 cursor-pointer hover:text-accent" />
+              <Github className="w-5 h-5 cursor-pointer hover:text-accent" />
+              <Linkedin className="w-5 h-5 cursor-pointer hover:text-accent" />
+              <TwitterIcon className="w-5 h-5 cursor-pointer hover:text-accent" />
+            </div>
+          </div>
+          <div>
+            <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Company</h4>
+            <ul className="space-y-4 text-sm text-slate-600">
+              <li className="hover:text-accent cursor-pointer transition-colors">Careers</li>
+              <li className="hover:text-accent cursor-pointer transition-colors">Affiliate Program</li>
+              <li className="hover:text-accent cursor-pointer transition-colors">Privacy Policy</li>
+              <li className="hover:text-accent cursor-pointer transition-colors">Terms & Conditions</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Product</h4>
+            <ul className="space-y-4 text-sm text-slate-600">
+              <li className="text-accent cursor-pointer transition-colors">Pricing</li>
+              <li className="hover:text-accent cursor-pointer transition-colors">Connectors</li>
+              <li className="hover:text-accent cursor-pointer transition-colors">Slack Agent</li>
+              <li className="hover:text-accent cursor-pointer transition-colors">DAgent for Labs</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Resources</h4>
+            <ul className="space-y-4 text-sm text-slate-600">
+              <li className="hover:text-accent cursor-pointer transition-colors">Blog</li>
+              <li className="hover:text-accent cursor-pointer transition-colors">Help Center</li>
+              <li className="hover:text-accent cursor-pointer transition-colors">Community</li>
+              <li className="hover:text-accent cursor-pointer transition-colors">Capabilities</li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400">
+          <p>© 2025 DAgent Labs, Inc. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  );
+};
