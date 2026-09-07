@@ -228,11 +228,10 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
       v === "true";
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-          isAvailable
-            ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-            : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-        }`}
+        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${isAvailable
+          ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+          : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+          }`}
       >
         {isAvailable ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
         {isAvailable ? "Available" : "Unavailable"}
@@ -304,11 +303,10 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
                 "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
             },
             pageButton: ({ context }: any) => ({
-              className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${
-                context.active
-                  ? "!bg-[var(--accent)] !text-white !font-semibold"
-                  : "hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent"
-              }`,
+              className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${context.active
+                ? "!bg-[var(--accent)] !text-white !font-semibold"
+                : "hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent"
+                }`,
             }),
             RPPDropdown: {
               root: {
@@ -325,11 +323,10 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
                   "!bg-[var(--surface)] !border border-[var(--border)] !rounded-lg !shadow-lg !py-1 !mt-1 !z-50",
               },
               item: ({ context }: any) => ({
-                className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${
-                  context.selected
-                    ? "!bg-[var(--accent)] !text-white !font-semibold"
-                    : "hover:!bg-[var(--surface-hover)] !text-[var(--text-primary)]"
-                }`,
+                className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${context.selected
+                  ? "!bg-[var(--accent)] !text-white !font-semibold"
+                  : "hover:!bg-[var(--surface-hover)] !text-[var(--text-primary)]"
+                  }`,
               }),
             },
           },
@@ -355,14 +352,14 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
         />
         <Column
           field="uploads"
-          header="Uploads / Day"
+          header="Uploads"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
           body={(row: PricingPlan) => renderLimit(row.uploads, row.plan_name, "/ day")}
         />
         <Column
           field="insights_queries"
-          header="Queries / Day"
+          header="Queries / Insights"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
           body={(row: PricingPlan) => renderLimit(row.insights_queries, row.plan_name, "/ day")}
@@ -380,9 +377,26 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
           body={(row: PricingPlan) => (
-            <span className="truncate block max-w-xs" title={row.basic_features}>
-              {row.basic_features || "—"}
-            </span>
+            <div className="flex flex-wrap gap-1 max-w-xs">
+              {row.basic_features ? (
+                row.basic_features.split(',').map((feat, idx) => {
+                  const featureName = feat.trim();
+                  if (!featureName) return null;
+                  return (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                      title={featureName}
+                    >
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span className="truncate max-w-[120px]">{featureName}</span>
+                    </span>
+                  );
+                })
+              ) : (
+                <span>—</span>
+              )}
+            </div>
           )}
         />
         <Column
