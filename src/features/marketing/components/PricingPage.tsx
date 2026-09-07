@@ -1,8 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Menu, X, Check, Twitter, Github, Linkedin, CheckCircle2 } from 'lucide-react';
+import { Menu, X, Check, Twitter, Github, Linkedin, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/src/ui-kit';
 import { TwitterIcon } from 'lucide-react';
+import { defaultConfig } from '@/src/services/api.config';
+
+interface PricingPlan {
+  id: number;
+  plan_name: string;
+  data_storage: number;
+  uploads: number;
+  insights_queries: number;
+  basic_features: string;
+  download_allowed: string;
+  number_of_users: number;
+  custom_kpi: string;
+  scheduled_email: string;
+}
 
 interface PricingPageProps {
   onGetStarted: () => void;
@@ -12,6 +26,28 @@ interface PricingPageProps {
 
 export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin, onBackToLanding }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const response = await fetch(`${defaultConfig.baseUrl}api/pricing`);
+        const data = await response.json();
+        if (data.status === 'success') {
+          setPlans(data.pricing);
+        } else {
+          setError(data.message || 'Failed to fetch pricing');
+        }
+      } catch (err) {
+        setError('Error fetching pricing data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPricing();
+  }, []);
 
   return (
     <div className="theme-landing min-h-screen bg-white text-slate-900 font-sans selection:bg-accent/10 selection:text-accent">
@@ -90,53 +126,74 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
 
       {/* Pricing Cards */}
       <section className="pb-20 px-4 max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Free Plan */}
-          <div className="border border-slate-200 rounded-3xl p-8 bg-white shadow-sm flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
-            <h3 className="text-xl font-bold mb-2 text-slate-900">Free Plan</h3>
-            <div className="text-4xl font-extrabold mb-4 text-slate-900">Free</div>
-            <ul className="space-y-3 flex-1">
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Up to 1 GB Data Storage</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">2 uploads per day</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">5 Insights / Queries per day</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">1 User</span></li>
-            </ul>
-
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin text-accent" />
           </div>
+        ) : error ? (
+          <div className="text-center text-red-500 py-10">{error}</div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-8">
+            {plans.map((plan) => {
+              const isPopular = plan.plan_name.toLowerCase().includes('silver');
+              return (
+                <div 
+                  key={plan.id}
+                  className={`${isPopular ? 'border-2 border-accent shadow-md relative' : 'border border-slate-200 shadow-sm'} rounded-3xl p-8 bg-white flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-300`}
+                >
+                  {isPopular && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-white px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase">
+                      Most Popular
+                    </div>
+                  )}
+                  <h3 className="text-xl font-bold mb-2 text-slate-900">{plan.plan_name} Plan</h3>
+                  <div className="text-4xl font-extrabold mb-4 text-slate-900">
+                    {plan.plan_name.toLowerCase() === 'free' ? 'Free' : plan.plan_name.toLowerCase() === 'gold' ? 'Contact Us' : '\u00A0'}
+                  </div>
+                  <ul className="space-y-3 flex-1">
+                    {plan.data_storage > 0 ? (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Up to {plan.data_storage} GB Data Storage</span></li>
+                    ) : (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Data Storage</span></li>
+                    )}
+                    
+                    {plan.uploads > 0 ? (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.uploads} uploads per day</span></li>
+                    ) : plan.plan_name.toLowerCase() === 'silver' ? (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Multiple uploads</span></li>
+                    ) : (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited uploads</span></li>
+                    )}
 
-          {/* Silver Plan */}
-          <div className="border-2 border-accent rounded-3xl p-8 bg-white shadow-md flex flex-col relative hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-white px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase">
-              Most Popular
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-slate-900">Silver Plan</h3>
-            <div className="text-4xl font-extrabold mb-4 text-slate-900">&nbsp;</div>
-            <ul className="space-y-3 flex-1">
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Up to 5 GB Data Storage</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Multiple uploads</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">50 Insights / Queries</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Up to 3 Users</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Download Allowed</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Scheduled Email</span></li>
-            </ul>
+                    {plan.insights_queries > 0 ? (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.insights_queries} Insights / Queries {plan.plan_name.toLowerCase() === 'free' ? 'per day' : ''}</span></li>
+                    ) : (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Insights / Queries</span></li>
+                    )}
 
+                    {plan.number_of_users > 0 ? (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.number_of_users === 1 ? '1 User' : `Up to ${plan.number_of_users} Users`}</span></li>
+                    ) : (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Users</span></li>
+                    )}
+
+                    {plan.download_allowed === 'Allowed' && (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Download Allowed</span></li>
+                    )}
+
+                    {plan.custom_kpi === 'Available' && (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Custom KPI</span></li>
+                    )}
+
+                    {plan.scheduled_email === 'Available' && (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Scheduled Email</span></li>
+                    )}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
-
-          {/* Gold Plan */}
-          <div className="border border-slate-200 rounded-3xl p-8 bg-white shadow-sm flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
-            <h3 className="text-xl font-bold mb-2 text-slate-900">Gold Plan</h3>
-            <div className="text-4xl font-extrabold mb-4 text-slate-900">Contact Us</div>
-            <ul className="space-y-3 flex-1">
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Data Storage</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited uploads</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Insights / Queries</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Users</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Custom KPI</span></li>
-              <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Scheduled Email</span></li>
-            </ul>
-
-          </div>
-        </div>
+        )}
       </section>
 
       {/* Contact Section */}
