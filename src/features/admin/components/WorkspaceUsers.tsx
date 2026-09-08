@@ -92,6 +92,7 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({
           paginator
           rows={5}
           rowsPerPageOptions={[5, 10, 25, 50]}
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
           tableStyle={{ minWidth: "50rem" }}
           emptyMessage={
             <div className="p-8 text-center text-[var(--text-secondary)]">
@@ -114,26 +115,29 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({
             paginator: {
               root: {
                 className:
-                  "!bg-[var(--surface)] !border-t !border-[var(--border)] !py-3 !px-4 !flex !items-center !justify-center !gap-1",
+                  "!bg-[var(--surface)] !border-t !border-[var(--border)] !py-3 !px-4 !flex !flex-row !flex-nowrap !items-center !justify-center !gap-1.5",
+              },
+              pages: {
+                className: "!flex !flex-row !items-center !gap-1",
               },
               firstPageButton: {
                 className:
-                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
+                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !inline-flex !items-center !justify-center",
               },
               prevPageButton: {
                 className:
-                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
+                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !inline-flex !items-center !justify-center",
               },
               nextPageButton: {
                 className:
-                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
+                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !inline-flex !items-center !justify-center",
               },
               lastPageButton: {
                 className:
-                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
+                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !inline-flex !items-center !justify-center",
               },
               pageButton: ({ context }: any) => ({
-                className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${
+                className: `!w-9 !h-9 !rounded-lg !transition-colors !inline-flex !items-center !justify-center text-sm ${
                   context.active
                     ? "!bg-[var(--accent)] !text-white !font-semibold"
                     : "hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent"
@@ -142,16 +146,19 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({
               RPPDropdown: {
                 root: {
                   className:
-                    "!bg-[var(--surface)] !border !border-[var(--border)] hover:!border-[var(--accent)] !rounded-lg !px-2 !py-1 text-sm !text-[var(--text-primary)] !flex !items-center !gap-1.5 !cursor-pointer !outline-none !transition-colors",
+                    "!bg-[var(--surface)] !border !border-[var(--border)] hover:!border-[var(--accent)] !rounded-lg !px-2 !py-1 text-sm !text-[var(--text-primary)] !inline-flex !flex-row !items-center !gap-1.5 !cursor-pointer !outline-none !transition-colors",
                 },
-                input: { className: "!px-1 !font-medium" },
+                input: { className: "!px-1 !font-medium !inline-block" },
                 trigger: {
                   className:
-                    "!w-5 !text-[var(--text-secondary)] !flex !items-center !justify-center",
+                    "!w-5 !text-[var(--text-secondary)] !inline-flex !items-center !justify-center",
                 },
                 panel: {
                   className:
                     "!bg-[var(--surface)] !border border-[var(--border)] !rounded-lg !shadow-lg !py-1 !mt-1 !z-50",
+                },
+                list: {
+                  className: "!py-1 !m-0 !list-none !flex !flex-col",
                 },
                 item: ({ context }: any) => ({
                   className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${

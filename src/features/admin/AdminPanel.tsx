@@ -12,6 +12,7 @@ import {
   Calendar,
   FileText,
   CreditCard,
+  Building2,
 } from "lucide-react";
 import { adminService } from "../../services/admin.service";
 import { AdminUser, AdminTab } from "./types";
@@ -21,6 +22,7 @@ import { MangeUser } from "./components/MangeUsers";
 import { MangeWorkspace } from "./components/MangeWorkspaces";
 import { AssignWorkspace } from "./components/AssignWorkspaces";
 import { WorkspaceUsers } from "./components/WorkspaceUsers";
+import { CompanyList } from "./components/CompanyList";
 import { AdminChats } from "./components/AdminChats";
 import { AdminPendingKnowledge } from "./components/AdminPendingKnowledge";
 import { CustomPrompts } from "./components/CustomPrompts";
@@ -57,6 +59,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
+  const [isCreatingCompany, setIsCreatingCompany] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
 
   useEffect(() => {
@@ -203,6 +206,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     workspaces: "Workspaces",
     assignUsers: "Assignments",
     workspaceUsers: "Workspace Users",
+    company: "Company",
     adminChats: "Chat Views",
     pendingKnowledge: "KG History",
     customPrompts: "Custom Prompts",
@@ -226,6 +230,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     workspaceUsers: {
       title: "Workspace Members",
       desc: "View users grouped by their assigned workspaces.",
+    },
+    company: {
+      title: "Company Management",
+      desc: "View and manage company accounts, types, contact numbers, and subscription plans.",
     },
     adminChats: {
       title: "Chat Views",
@@ -306,6 +314,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             >
               <Calendar className="w-4 h-4" />
               Create Schedule
+            </button>
+          )}
+
+          {adminSubTab === "company" && (
+            <button
+              onClick={() => setIsCreatingCompany(true)}
+              className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+            >
+              <Building2 className="w-4 h-4" />
+              Add Company
             </button>
           )}
 
@@ -408,6 +426,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <WorkspaceUsers
                     workspaces={filteredWorkspaces}
                     searchQuery={searchQuery}
+                  />
+                )}
+
+                {adminSubTab === "company" && (
+                  <CompanyList
+                    searchQuery={searchQuery}
+                    isCreatingCompany={isCreatingCompany}
+                    setIsCreatingCompany={setIsCreatingCompany}
                   />
                 )}
 

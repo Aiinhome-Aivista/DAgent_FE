@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   RotateCcw,
   Users,
+  Building2,
   Terminal,
   Database,
   Lock,
@@ -103,6 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 { id: 'workspaces', icon: Layout, label: 'Workspaces' },
                 { id: 'assignUsers', icon: ShieldAlert, label: 'Assignments' },
                 { id: 'workspaceUsers', icon: Users, label: 'Workspace Users' },
+                { id: 'company', icon: Building2, label: 'Company' },
                 { id: 'adminChats', icon: MessageSquare, label: 'Chat Views' },
                 { id: 'pendingKnowledge', icon: Database, label: 'KG History' },
                 { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' },
@@ -118,8 +120,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }}
                   title={!isSidebarOpen ? tab.label : undefined}
                   className={`w-full flex items-center p-2.5 rounded-xl transition-all duration-300 border cursor-pointer ${activeTab === "admin" && adminSubTab === tab.id
-                      ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 text-[var(--accent)] shadow-sm"
-                      : "border-transparent bg-transparent hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 text-[var(--accent)] shadow-sm"
+                    : "border-transparent bg-transparent hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     } ${!isSidebarOpen ? "justify-center" : "gap-3"}`}
                 >
                   <tab.icon className="w-5 h-5 shrink-0" />
@@ -395,8 +397,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               <div
                                 key={workspace.id}
                                 className={`flex flex-col transition-all duration-300 overflow-hidden border ${selectedWorkspace?.id === workspace.id
-                                    ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 shadow-sm"
-                                    : "border-[var(--border)]/20 bg-[var(--bg)]/50"
+                                  ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 shadow-sm"
+                                  : "border-[var(--border)]/20 bg-[var(--bg)]/50"
                                   } ${expandedWorkspaceId === workspace.id ? "rounded-2xl" : "rounded-xl"}`}
                               >
                                 <div className="w-full flex items-center overflow-hidden gap-1 p-0.5">
@@ -552,8 +554,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             );
                                           }}
                                           className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all text-[11px] font-bold cursor-pointer ${!localStorage.getItem("current_visit_number")
-                                              ? "bg-[var(--accent)]/10 text-[var(--accent)]"
-                                              : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+                                            ? "bg-[var(--accent)]/10 text-[var(--accent)]"
+                                            : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
                                             }`}
                                         >
                                           New Query
@@ -712,26 +714,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                       );
                                                     }}
                                                     className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer group flex items-center gap-3 ${session.querySessionId &&
-                                                        localStorage.getItem("current_visit_number") ===
-                                                        String(session.querySessionId).replace("session_visit_", "").trim()
-                                                        ? "border-[var(--accent)] bg-[var(--accent)]/10 shadow-sm"
-                                                        : "border-[var(--border)] bg-[var(--bg)]/50 hover:bg-[var(--surface-hover)]"
+                                                      localStorage.getItem("current_visit_number") ===
+                                                      String(session.querySessionId).replace("session_visit_", "").trim()
+                                                      ? "border-[var(--accent)] bg-[var(--accent)]/10 shadow-sm"
+                                                      : "border-[var(--border)] bg-[var(--bg)]/50 hover:bg-[var(--surface-hover)]"
                                                       }`}
                                                   >
                                                     <MessageSquare
                                                       className={`w-4 h-4 shrink-0 transition-colors ${session.querySessionId &&
-                                                          localStorage.getItem("current_visit_number") ===
-                                                          String(session.querySessionId).replace("session_visit_", "").trim()
-                                                          ? "text-[var(--accent)]"
-                                                          : "text-[var(--text-secondary)] group-hover:text-[var(--accent)]"
+                                                        localStorage.getItem("current_visit_number") ===
+                                                        String(session.querySessionId).replace("session_visit_", "").trim()
+                                                        ? "text-[var(--accent)]"
+                                                        : "text-[var(--text-secondary)] group-hover:text-[var(--accent)]"
                                                         }`}
                                                     />
                                                     <div
                                                       className={`text-[11px] font-semibold truncate transition-colors ${session.querySessionId &&
-                                                          localStorage.getItem("current_visit_number") ===
-                                                          String(session.querySessionId).replace("session_visit_", "").trim()
-                                                          ? "text-[var(--text-primary)]"
-                                                          : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
+                                                        localStorage.getItem("current_visit_number") ===
+                                                        String(session.querySessionId).replace("session_visit_", "").trim()
+                                                        ? "text-[var(--text-primary)]"
+                                                        : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
                                                         }`}
                                                     >
                                                       {session.querySessionName}

@@ -23,6 +23,7 @@ interface CustomPromptsProps {
 interface DeleteTarget {
   workspace_id: number;
   prompt_type: string;
+  data_category: string;
   workspace_name: string;
   prompt_type_label: string;
 }
@@ -40,7 +41,8 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
     "",
   );
   const [selectedPromptType, setSelectedPromptType] =
-    useState<string>("analysis");
+    useState<string>("");
+  const [selectedDataCategory, setSelectedDataCategory] = useState<string>("global");
   const [promptText, setPromptText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -91,9 +93,8 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
   const handleAddClick = () => {
     setIsEditMode(false);
     setSelectedWorkspaceId("");
-    if (promptTypes.length > 0) {
-      setSelectedPromptType(promptTypes[0].value);
-    }
+    setSelectedPromptType("");
+    setSelectedDataCategory("global");
     setPromptText("");
     setViewMode("form");
   };
@@ -102,6 +103,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
     setIsEditMode(true);
     setSelectedWorkspaceId(prompt.workspace_id);
     setSelectedPromptType(prompt.prompt_type);
+    setSelectedDataCategory(prompt.data_category || "global");
     setPromptText(prompt.custom_prompt);
     setViewMode("form");
   };
@@ -111,8 +113,16 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
       toast.error("Please select a workspace");
       return;
     }
+    if (!selectedPromptType) {
+      toast.error("Please select a prompt type");
+      return;
+    }
     if (!promptText.trim()) {
       toast.error("Prompt cannot be empty");
+      return;
+    }
+    if (!selectedDataCategory.trim()) {
+      toast.error("Data Category cannot be empty");
       return;
     }
     setIsSaving(true);
@@ -121,6 +131,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
         selectedWorkspaceId as number,
         selectedPromptType,
         promptText,
+        selectedDataCategory
       );
       if (response?.success) {
         toast.success(
@@ -144,6 +155,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
     setDeleteTarget({
       workspace_id: p.workspace_id,
       prompt_type: p.prompt_type,
+      data_category: p.data_category || "global",
       workspace_name:
         p.workspace_id === 0
           ? "Global Fallback"
@@ -159,6 +171,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
       const response = await promptService.deleteWorkspacePrompt(
         deleteTarget.workspace_id,
         deleteTarget.prompt_type,
+        deleteTarget.data_category
       );
       if (response?.success) {
         toast.success("Custom prompt deleted successfully!");
@@ -332,11 +345,10 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                         "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
                     },
                     pageButton: ({ context }: any) => ({
-                      className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${
-                        context.active
-                          ? "!bg-[var(--accent)] !text-white !font-semibold"
-                          : "hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent"
-                      }`,
+                      className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${context.active
+                        ? "!bg-[var(--accent)] !text-white !font-semibold"
+                        : "hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent"
+                        }`,
                     }),
                     RPPDropdown: {
                       root: {
@@ -353,11 +365,10 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                           "!bg-[var(--surface)] !border border-[var(--border)] !rounded-lg !shadow-lg !py-1 !mt-1 !z-50",
                       },
                       item: ({ context }: any) => ({
-                        className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${
-                          context.selected
-                            ? "!bg-[var(--accent)] !text-white !font-semibold"
-                            : "hover:!bg-[var(--surface-hover)] !text-[var(--text-primary)]"
-                        }`,
+                        className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${context.selected
+                          ? "!bg-[var(--accent)] !text-white !font-semibold"
+                          : "hover:!bg-[var(--surface-hover)] !text-[var(--text-primary)]"
+                          }`,
                       }),
                     },
                   },
@@ -367,11 +378,11 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                   header="Workspace"
                   headerClassName="!bg-[var(--bg)] !text-[var(--text-secondary)] font-bold text-xs uppercase tracking-tight !px-4 !py-4 !border-t !border-b !border-[var(--border)] text-left"
                   className="!px-4 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-primary)] font-medium truncate"
-                  style={{ width: "25%" }}
+                  style={{ width: "20%" }}
                   body={(p: any) => (
                     <div className="truncate" title={p.workspace_name}>
                       {p.workspace_id === 0
-                        ? "[ GLOBAL FALLBACK ]"
+                        ? "Global"
                         : p.workspace_name || `Workspace #${p.workspace_id}`}
                     </div>
                   )}
@@ -380,7 +391,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                   header="Prompt Type"
                   headerClassName="!bg-[var(--bg)] !text-[var(--text-secondary)] font-bold text-xs uppercase tracking-tight !px-4 !py-4 !border-t !border-b !border-[var(--border)] text-left"
                   className="!px-4 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] truncate"
-                  style={{ width: "25%" }}
+                  style={{ width: "20%" }}
                   body={(p: any) => (
                     <div className="truncate">
                       {p.prompt_type_label || p.prompt_type}
@@ -388,10 +399,21 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                   )}
                 />
                 <Column
+                  header="Data Category"
+                  headerClassName="!bg-[var(--bg)] !text-[var(--text-secondary)] font-bold text-xs uppercase tracking-tight !px-4 !py-4 !border-t !border-b !border-[var(--border)] text-left"
+                  className="!px-4 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] truncate"
+                  style={{ width: "20%" }}
+                  body={(p: any) => (
+                    <div className="truncate capitalize">
+                      {p.data_category === 'global' ? 'Global/Generic' : (p.data_category || 'Global/Generic')}
+                    </div>
+                  )}
+                />
+                <Column
                   header="Prompt"
                   headerClassName="!bg-[var(--bg)] !text-[var(--text-secondary)] font-bold text-xs uppercase tracking-tight !px-4 !py-4 !border-t !border-b !border-[var(--border)] text-left"
                   className="!px-4 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] truncate"
-                  style={{ width: "35%" }}
+                  style={{ width: "25%" }}
                   body={(p: any) => (
                     <div className="truncate" title={p.custom_prompt}>
                       {p.custom_prompt?.length > 80
@@ -450,6 +472,45 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
           </div>
 
           <div className="shrink-0 flex flex-col sm:flex-row gap-4 mb-3">
+
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                Select Prompt Type
+              </label>
+              <select
+                value={selectedPromptType}
+                onChange={(e) => setSelectedPromptType(e.target.value)}
+                disabled={isEditMode}
+                className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer disabled:cursor-auto"
+              >
+                <option value="">-- Select --</option>
+                {promptTypes.map((pt) => (
+                  <option key={pt.value} value={pt.value}>
+                    {pt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                Prompt Category
+              </label>
+              <select
+                value={selectedDataCategory}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedDataCategory(val);
+                  if (val === "global") {
+                    setSelectedWorkspaceId(0);
+                  }
+                }}
+                disabled={isEditMode}
+                className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer disabled:cursor-auto"
+              >
+                <option value="global">Global / Generic</option>
+                <option value="sales">Sales / Tyre Sales</option>
+              </select>
+            </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                 Select Workspace
@@ -461,31 +522,14 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                     e.target.value === "" ? "" : Number(e.target.value),
                   )
                 }
-                disabled={isEditMode}
+                disabled={isEditMode || selectedDataCategory === "global"}
                 className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer disabled:cursor-auto"
               >
                 <option value="">-- Choose a workspace --</option>
-                <option value={0}>Global Fallback Prompts</option>
+                <option value={0}>Global</option>
                 {workspaces.map((ws) => (
                   <option key={ws.id} value={ws.id}>
                     {ws.workspace_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                Select Prompt Type
-              </label>
-              <select
-                value={selectedPromptType}
-                onChange={(e) => setSelectedPromptType(e.target.value)}
-                disabled={isEditMode}
-                className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer disabled:cursor-auto"
-              >
-                {promptTypes.map((pt) => (
-                  <option key={pt.value} value={pt.value}>
-                    {pt.label}
                   </option>
                 ))}
               </select>

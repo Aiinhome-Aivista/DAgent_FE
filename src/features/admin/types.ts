@@ -25,4 +25,4 @@ export interface PricingPlan {
     updated_at?: string;
 }
 
-export type AdminTab = 'users' | 'workspaces' | 'assignUsers' | 'workspaceUsers' | 'adminChats' | 'pendingKnowledge' | 'customPrompts' | 'scheduledReports' | 'pricing';
+export type AdminTab = 'users' | 'workspaces' | 'assignUsers' | 'workspaceUsers' | 'company' | 'adminChats' | 'pendingKnowledge' | 'customPrompts' | 'scheduledReports' | 'pricing';

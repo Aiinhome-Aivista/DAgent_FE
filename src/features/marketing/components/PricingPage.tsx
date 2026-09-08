@@ -33,7 +33,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
   useEffect(() => {
     const fetchPricing = async () => {
       try {
-        const response = await fetch(`${defaultConfig.baseUrl}api/pricing`);
+        const response = await fetch(`${defaultConfig.baseUrl}/api/pricing`);
         const data = await response.json();
         if (data.status === 'success') {
           setPlans(data.pricing);
@@ -61,7 +61,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900">DAgent</span>
             </div>
-            
+
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
               <button onClick={onBackToLanding} className="hover:text-accent transition-colors">Features</button>
               <button onClick={onBackToLanding} className="hover:text-accent transition-colors">Use Cases</button>
@@ -70,13 +70,13 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
             </div>
 
             <div className="hidden md:flex items-center gap-4">
-              <button 
+              <button
                 onClick={onLogin}
                 className="text-sm font-medium text-slate-600 hover:text-accent transition-colors"
               >
                 Log in
               </button>
-              <Button 
+              <Button
                 onClick={onGetStarted}
                 className="bg-accent hover:bg-accent-hover text-white rounded-full px-6"
               >
@@ -85,7 +85,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
             </div>
 
             <div className="md:hidden">
-              <button 
+              <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="p-2 text-slate-600"
               >
@@ -97,7 +97,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="md:hidden bg-white border-b border-slate-100 px-4 py-6 space-y-4"
@@ -137,7 +137,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
             {plans.map((plan) => {
               const isPopular = plan.plan_name.toLowerCase().includes('silver');
               return (
-                <div 
+                <div
                   key={plan.id}
                   className={`${isPopular ? 'border-2 border-accent shadow-md relative' : 'border border-slate-200 shadow-sm'} rounded-3xl p-8 bg-white flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-300`}
                 >
@@ -156,7 +156,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
                     ) : (
                       <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Data Storage</span></li>
                     )}
-                    
+
                     {plan.uploads > 0 ? (
                       <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.uploads} uploads per day</span></li>
                     ) : plan.plan_name.toLowerCase() === 'silver' ? (
@@ -203,8 +203,8 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
           <p className="text-slate-600 mb-8 text-lg">
             Have specific requirements or need help choosing the right plan? Our team is here to help.
           </p>
-          <a 
-            href="mailto:support@aivistatech.com" 
+          <a
+            href="mailto:support@aivistatech.com"
             className="inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white rounded-full px-8 py-4 font-semibold transition-colors"
           >
             Contact us at support@aivistatech.com

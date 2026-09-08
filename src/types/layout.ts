@@ -4,7 +4,7 @@ import { QuerySession } from '../services/chatHistory.service';
 
 export type Tab = 'chat' | 'connectors' | 'new-connector' | 'collection' | 'analysis' | 'admin';
 export type ViewMode = 'landing' | 'login' | 'admin-login' | 'app' | 'dashboard' | 'pricing';
-export type AdminTab = 'users' | 'workspaces' | 'assignUsers' | 'workspaceUsers' | 'adminChats' | 'pendingKnowledge' | 'customPrompts' | 'scheduledReports' | 'pricing';
+export type AdminTab = 'users' | 'workspaces' | 'assignUsers' | 'workspaceUsers' | 'company' | 'adminChats' | 'pendingKnowledge' | 'customPrompts' | 'scheduledReports' | 'pricing';
 
 export interface SidebarProps {
   isSidebarOpen: boolean;
