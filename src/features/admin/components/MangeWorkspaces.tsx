@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Workspace } from "../../../services/workspace.service";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { Captcha } from "../../../ui-kit";
 
 interface MangeWorkspaceProps {
   workspaces: Workspace[];
@@ -32,10 +33,16 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
     null,
   );
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [isCaptchaValid, setIsCaptchaValid] = useState(false);
 
   const filteredWorkspaces = workspaces.filter((w) =>
     w.workspace_name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const displayWorkspaces = filteredWorkspaces.map((w, index) => ({
+    ...w,
+    displayIndex: index + 1
+  }));
 
   return (
     <div className="space-y-6">
@@ -84,7 +91,7 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
       </AnimatePresence>
 
       <DataTable
-        value={filteredWorkspaces}
+        value={displayWorkspaces}
         paginator
         rows={5}
         rowsPerPageOptions={[5, 10, 25, 50]}
@@ -158,7 +165,7 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
         }}
       >
         <Column
-          field="id"
+          field="displayIndex"
           header="ID"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
@@ -197,6 +204,7 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                 onClick={() => {
                   setWorkspaceToDelete(ws);
                   setDeleteConfirmationText("");
+                  setIsCaptchaValid(false);
                 }}
                 className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors focus:opacity-100 cursor-pointer"
                 title="Delete Workspace"
@@ -235,15 +243,20 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                 type="text"
                 value={deleteConfirmationText}
                 onChange={(e) => setDeleteConfirmationText(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-[var(--accent)] mb-6"
+                className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] mb-4"
                 placeholder={`Type '${workspaceToDelete.workspace_name}' here...`}
               />
+
+              <div className="mb-6">
+                <Captcha onValidate={setIsCaptchaValid} expireTimeMs={60000} />
+              </div>
 
               <div className="flex justify-between items-center">
                 <button
                   onClick={() => {
                     setWorkspaceToDelete(null);
                     setDeleteConfirmationText("");
+                    setIsCaptchaValid(false);
                   }}
                   className="px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
                 >
@@ -254,9 +267,11 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                     handleDeleteWorkspace(workspaceToDelete.id);
                     setWorkspaceToDelete(null);
                     setDeleteConfirmationText("");
+                    setIsCaptchaValid(false);
                   }}
                   disabled={
-                    deleteConfirmationText !== workspaceToDelete.workspace_name
+                    deleteConfirmationText !== workspaceToDelete.workspace_name ||
+                    !isCaptchaValid
                   }
                   className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >

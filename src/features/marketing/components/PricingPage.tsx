@@ -194,23 +194,15 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
             })}
           </div>
         )}
+        
+        {/* Simple Contact Link under Pricing Grid */}
+        {!loading && !error && (
+          <div className="mt-12 text-center text-slate-600 text-lg">
+            For any queries, please contact us at <a href="mailto:support@dagent.ai" className="text-accent font-semibold hover:underline">support@dagent.ai</a>
+          </div>
+        )}
       </section>
 
-      {/* Contact Section */}
-      <section className="pb-20 px-4 text-center max-w-3xl mx-auto">
-        <div className="bg-slate-50 border border-slate-100 rounded-3xl p-8 md:p-10">
-          <h3 className="text-2xl font-bold mb-3 text-slate-900">Need a Custom Plan?</h3>
-          <p className="text-slate-600 mb-8 text-lg">
-            Have specific requirements or need help choosing the right plan? Our team is here to help.
-          </p>
-          <a
-            href="mailto:support@aivistatech.com"
-            className="inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white rounded-full px-8 py-4 font-semibold transition-colors"
-          >
-            Contact us at support@aivistatech.com
-          </a>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="py-20 px-4 bg-white border-t border-slate-100">

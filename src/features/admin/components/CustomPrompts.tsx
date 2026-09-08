@@ -11,10 +11,12 @@ import {
   Trash2,
   AlertTriangle,
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { Workspace } from "../../../services/workspace.service";
 import { promptService } from "../../../services/prompt.service";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { Captcha } from "../../../ui-kit";
 interface CustomPromptsProps {
   workspaces: Workspace[];
   searchQuery: string;
@@ -50,6 +52,8 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
   // Delete modal state
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [isCaptchaValid, setIsCaptchaValid] = useState(false);
 
   const [promptTypes, setPromptTypes] = useState<
     { value: string; label: string }[]
@@ -176,6 +180,8 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
       if (response?.success) {
         toast.success("Custom prompt deleted successfully!");
         setDeleteTarget(null);
+        setDeleteConfirmationText("");
+        setIsCaptchaValid(false);
         await fetchAllPrompts();
       } else {
         toast.error(response?.message || "Failed to delete prompt");
@@ -204,73 +210,68 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
   return (
     <div className="w-full h-full flex flex-col space-y-4 min-h-0">
       {/* ── Delete Confirmation Modal ── */}
-      {deleteTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={() => !isDeleting && setDeleteTarget(null)}
-        >
-          <div
-            className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Icon + Title */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                  Delete Custom Prompt
-                </h3>
-                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                  This action cannot be undone.
-                </p>
-              </div>
-            </div>
+      <AnimatePresence>
+        {deleteTarget && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-xl max-w-md w-full mx-4"
+            >
+              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">
+                Delete Custom Prompt
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-4 leading-relaxed">
+                Are you sure you want to delete the prompt for workspace <span className="font-semibold text-[var(--text-primary)]">{deleteTarget.workspace_name}</span>? This action cannot be undone. Please type <span className="font-bold text-[var(--text-primary)] select-all">{deleteTarget.prompt_type_label}</span> to confirm.
+              </p>
 
-            {/* Info */}
-            <div className="bg-[var(--bg)]/60 border border-[var(--border)] rounded-xl p-4 mb-6 space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">Workspace</span>
-                <span className="font-medium text-[var(--text-primary)]">
-                  {deleteTarget.workspace_name}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">
-                  Prompt Type
-                </span>
-                <span className="font-medium text-[var(--text-primary)]">
-                  {deleteTarget.prompt_type_label}
-                </span>
-              </div>
-            </div>
+              <input
+                autoFocus
+                type="text"
+                value={deleteConfirmationText}
+                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] mb-4"
+                placeholder={`Type '${deleteTarget.prompt_type_label}' here...`}
+              />
 
-            {/* Buttons */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg)] transition-all disabled:opacity-50"
-              >
-                No, Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-500 text-sm font-medium text-white hover:bg-rose-600 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
-              >
-                {isDeleting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
-                Yes, Delete
-              </button>
-            </div>
+              <div className="mb-6">
+                <Captcha onValidate={setIsCaptchaValid} expireTimeMs={60000} />
+              </div>
+
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={() => {
+                    setDeleteTarget(null);
+                    setDeleteConfirmationText("");
+                    setIsCaptchaValid(false);
+                  }}
+                  disabled={isDeleting}
+                  className="px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleConfirmDelete();
+                  }}
+                  disabled={
+                    isDeleting ||
+                    deleteConfirmationText !== deleteTarget.prompt_type_label ||
+                    !isCaptchaValid
+                  }
+                  className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : null}
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {viewMode === "list" ? (
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-sm flex flex-col flex-1 min-h-0">

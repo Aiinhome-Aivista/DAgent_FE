@@ -5,6 +5,8 @@ import { UserPlus, X, Loader2, Mail, Lock, User as UserIcon, Eye, EyeOff } from 
 import { adminService } from '../../../services/admin.service';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { motion, AnimatePresence } from 'motion/react';
+import { Captcha } from '../../../ui-kit';
 
 interface MangeUsersProps {
     users: AdminUser[];
@@ -27,6 +29,10 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
     const [showPassword, setShowPassword] = React.useState(false);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+
+    const [userToDelete, setUserToDelete] = React.useState<AdminUser | null>(null);
+    const [deleteConfirmationText, setDeleteConfirmationText] = React.useState("");
+    const [isCaptchaValid, setIsCaptchaValid] = React.useState(false);
 
     const filteredUsers = users.filter(u =>
         u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -91,15 +97,13 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
     };
 
     const handleDeleteUser = async (userId: number) => {
-        if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-            try {
-                await adminService.deleteUser(adminId, userId);
-                toast.success('User deleted successfully');
-                onRefresh();
-            } catch (err: any) {
-                console.error('Failed to delete user:', err);
-                toast.error(err.message || 'Failed to delete user');
-            }
+        try {
+            await adminService.deleteUser(adminId, userId);
+            toast.success('User deleted successfully');
+            onRefresh();
+        } catch (err: any) {
+            console.error('Failed to delete user:', err);
+            toast.error(err.message || 'Failed to delete user');
         }
     };
 
@@ -230,8 +234,11 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                             </button>
                             <button
-                                onClick={() => handleDeleteUser(user.id)}
-                                className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                                onClick={() => {
+                                    setUserToDelete(user);
+                                    setDeleteConfirmationText("");
+                                }}
+                                className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
                                 title="Delete User"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
@@ -497,6 +504,61 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
                     </div>
                 </div>
             )}
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {userToDelete && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-xl max-w-md w-full mx-4"
+                        >
+                            <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">Delete User</h3>
+                            <p className="text-sm text-[var(--text-secondary)] mb-4 leading-relaxed">
+                                Are you sure you want to delete this user? This action cannot be undone. Please type <span className="font-bold text-[var(--text-primary)] select-all">{userToDelete.name}</span> to confirm.
+                            </p>
+                            <input
+                                autoFocus
+                                type="text"
+                                value={deleteConfirmationText}
+                                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] mb-4"
+                                placeholder={`Type '${userToDelete.name}' here...`}
+                            />
+                            
+                            <div className="mb-6">
+                                <Captcha onValidate={setIsCaptchaValid} expireTimeMs={60000} />
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                                <button
+                                    onClick={() => {
+                                        setUserToDelete(null);
+                                        setDeleteConfirmationText("");
+                                        setIsCaptchaValid(false);
+                                    }}
+                                    className="px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        handleDeleteUser(userToDelete.id);
+                                        setUserToDelete(null);
+                                        setDeleteConfirmationText("");
+                                        setIsCaptchaValid(false);
+                                    }}
+                                    disabled={deleteConfirmationText !== userToDelete.name || !isCaptchaValid}
+                                    className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Confirm
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

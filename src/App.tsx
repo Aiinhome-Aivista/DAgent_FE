@@ -28,9 +28,10 @@ function AppContent() {
   const { theme, toggleTheme } = useTheme();
   const { userId, roleId, roleName, logout } = useAuthContext();
   const [viewMode, setViewMode] = useState<ViewMode>(
+    userId ? 'app' :
     window.location.pathname.startsWith('/admin/login') ? 'admin-login' : 
     window.location.pathname.startsWith('/pricing') ? 'pricing' : 
-    (userId ? 'app' : 'landing')
+    'landing'
   );
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>(roleName === 'Admin' ? 'admin' : 'chat');
@@ -186,6 +187,7 @@ function AppContent() {
   const handleLogin = () => setViewMode('login');
   const handleGetStarted = () => setViewMode('login');
   const handleLoginSuccess = () => {
+    window.history.pushState({}, '', '/');
     setViewMode('app');
     setIsWorkspaceOpen(false);
     setSidebarOpen(false);
