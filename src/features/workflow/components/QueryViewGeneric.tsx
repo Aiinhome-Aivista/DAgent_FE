@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ChatWindow } from '../../chat/components/ChatWindow';
+import { ChatSummaryCard } from '../../../features/chat/components/ChatSummaryCard';
+import { KPICard } from '../../../features/chat/components/KPICard';
+import { DynamicChart } from '../../../features/chat/components/DynamicChart';
+import { useConnectorContext } from '../../../context/ConnectorContext';
 
 interface QueryViewGenericProps {
   sessionId?: string;
@@ -24,18 +28,295 @@ export const QueryViewGeneric: React.FC<QueryViewGenericProps> = ({
   onChangeTab,
   onNewSessionCreated
 }) => {
+  const { connectorResults, selectedConnector: activeConnector, isAnalyzing } = useConnectorContext();
+
+  const chatSummaryData = useMemo(() => {
+    let rawText = '';
+    let extractedTitle: string | undefined = undefined;
+    let extractedContent: string | undefined = undefined;
+    let kpis: any[] = [];
+    let charts: any[] = [];
+
+    const isNewVisit = localStorage.getItem("current_visit_number") === "new";
+
+    if (!isNewVisit) {
+      try {
+        let storedSession = localStorage.getItem('default_workspace_analysis');
+        if (!storedSession || storedSession === '[]') {
+          storedSession = localStorage.getItem('selected_query_session');
+        }
+
+        if (storedSession) {
+          const parsed = JSON.parse(storedSession);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            if (parsed[0].answer) {
+              rawText = parsed[0].answer;
+            }
+            if (parsed[0].visualizations && Array.isArray(parsed[0].visualizations)) {
+              parsed[0].visualizations.forEach((vis: any) => {
+                if (['bar_chart', 'line_chart', 'pie_chart', 'bar', 'line', 'pie'].includes(vis.type)) {
+                  let chartType = vis.type.replace('_chart', '');
+                  let labels = [];
+                  let datasets = [];
+
+                  if (vis.data && vis.xKey && vis.yKey) {
+                    labels = vis.data.map((d: any) => String(d[vis.xKey]));
+                    datasets = [{
+                      label: vis.yKey,
+                      data: vis.data.map((d: any) => {
+                        const val = d[vis.yKey];
+                        return typeof val === 'number' ? val : parseFloat(val) || 0;
+                      })
+                    }];
+                  } else if (vis.labels && vis.datasets) {
+                    labels = vis.labels;
+                    datasets = vis.datasets;
+                  }
+
+                  if (labels.length > 0) {
+                    charts.push({
+                      chart_type: chartType,
+                      title: vis.title || '',
+                      description: vis.description || '',
+                      labels,
+                      datasets
+                    });
+                  }
+                } else if (vis.type === 'kpi') {
+                  kpis.push({
+                    title: vis.title || vis.label || 'Metric',
+                    value: String(vis.value || ''),
+                    description: vis.description || '',
+                    trend: vis.trend || 'neutral'
+                  });
+                }
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Prioritize connectorResults if it exists
+    if (connectorResults) {
+      // Clear out localStorage data if we have fresh connectorResults
+      rawText = '';
+      kpis = [];
+      charts = [];
+      
+      if (typeof connectorResults.report_content === 'object' && connectorResults.report_content !== null) {
+        let rc = connectorResults.report_content;
+        // Sometimes the API wraps the payload inside an extra "report_content" key
+        if (rc.report_content && typeof rc.report_content === 'object') {
+          rc = rc.report_content;
+        }
+
+        if (rc.report || rc.kpis || rc.charts || rc.visualizations) {
+          extractedContent = rc.report || '';
+          kpis = rc.kpis || [];
+          charts = rc.charts || rc.visualizations || [];
+          
+          // Try to extract title from the report text
+          if (typeof extractedContent === 'string') {
+            const lines = extractedContent.split('\n');
+            const titleLineIndex = lines.findIndex(line => line.toLowerCase().includes('title:'));
+            if (titleLineIndex !== -1) {
+              let titleLine = lines[titleLineIndex];
+              const match = titleLine.match(/title\s*:\s*(.*)/i);
+              if (match) {
+                extractedTitle = match[1].replace(/\*\*/g, '').replace(/#/g, '').trim();
+              }
+              lines.splice(titleLineIndex, 1);
+              extractedContent = lines.join('\n').trim();
+            }
+          }
+        } else {
+          rawText = JSON.stringify(connectorResults.report_content);
+        }
+      } else if (typeof connectorResults.report_content === 'string') {
+        rawText = connectorResults.report_content;
+      } else if (connectorResults.report && typeof connectorResults.report === 'string') {
+        // Fallback for when report is at root level
+        rawText = connectorResults.report;
+      } else if (typeof connectorResults.description === 'string') {
+        rawText = connectorResults.description;
+      } else if (connectorResults.description) {
+        rawText = JSON.stringify(connectorResults.description);
+      }
+    }
+
+    console.log('--- QueryViewGeneric Debug ---');
+    console.log('connectorResults:', connectorResults);
+    console.log('rawText extracted:', rawText);
+    console.log('kpis extracted:', kpis);
+    console.log('charts extracted:', charts);
+
+    if (rawText) {
+      try {
+        let jsonStr = rawText;
+
+        const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonStr = jsonMatch[1];
+        } else {
+          const firstBrace = rawText.indexOf('{');
+          const lastBrace = rawText.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            jsonStr = rawText.slice(firstBrace, lastBrace + 1);
+          }
+        }
+
+        const parsedJson = JSON.parse(jsonStr);
+
+        const rc = parsedJson.report_content || parsedJson;
+
+        if (rc.report || rc.kpis || rc.charts || parsedJson.report) {
+          extractedContent = rc.report || parsedJson.report || '';
+          kpis = rc.kpis || [];
+          charts = rc.charts || [];
+
+          if (typeof extractedContent === 'string') {
+            const lines = extractedContent.split('\n');
+            const titleLineIndex = lines.findIndex(line => line.toLowerCase().includes('title:'));
+            if (titleLineIndex !== -1) {
+              let titleLine = lines[titleLineIndex];
+              const match = titleLine.match(/title\s*:\s*(.*)/i);
+              if (match) {
+                extractedTitle = match[1].replace(/\*\*/g, '').replace(/#/g, '').trim();
+              }
+              lines.splice(titleLineIndex, 1);
+              extractedContent = lines.join('\n').trim();
+            }
+          }
+        } else {
+          if (Array.isArray(parsedJson) && parsedJson.length > 0 && typeof parsedJson[0] === 'object') {
+            const headers = Object.keys(parsedJson[0]);
+            let table = '| ' + headers.join(' | ') + ' |\n';
+            table += '| ' + headers.map(() => '---').join(' | ') + ' |\n';
+            parsedJson.forEach((row: any) => {
+              table += '| ' + headers.map(h => String(row[h] || '')).join(' | ') + ' |\n';
+            });
+            extractedContent = "### Data Table\n\n" + table;
+          } else {
+            extractedContent = "```json\n" + JSON.stringify(parsedJson, null, 2) + "\n```";
+          }
+        }
+      } catch (e) {
+        const lines = rawText.split('\n');
+        const titleLineIndex = lines.findIndex(line => line.toLowerCase().includes('title:'));
+
+        if (titleLineIndex !== -1) {
+          let titleLine = lines[titleLineIndex];
+          const match = titleLine.match(/title\s*:\s*(.*)/i);
+          if (match) {
+            extractedTitle = match[1].replace(/\*\*/g, '').replace(/#/g, '').trim();
+          }
+          lines.splice(titleLineIndex, 1);
+          extractedContent = lines.join('\n').trim();
+        } else {
+          extractedContent = rawText;
+        }
+      }
+    }
+
+    if (!extractedTitle && !isNewVisit) {
+      try {
+        const sessionName = localStorage.getItem('selected_query_session_name');
+        if (sessionName && sessionName !== 'null') {
+          extractedTitle = sessionName;
+        }
+      } catch (e) { }
+    }
+
+    if (!extractedTitle) {
+      extractedTitle = activeConnector?.name ? `${activeConnector.name} Summary` : undefined;
+    }
+
+    return { title: extractedTitle, content: extractedContent, kpis, charts };
+  }, [connectorResults?.description, connectorResults?.report_content, chatKey, activeConnector?.name, sessionId]);
+
+  const hasData = chatSummaryData.content || (chatSummaryData.kpis && chatSummaryData.kpis.length > 0) || (chatSummaryData.charts && chatSummaryData.charts.length > 0);
+
   return (
     <div key={`layout-${workspaceType}-${sessionId}`} className="flex-1 flex overflow-hidden">
       <div className="flex-1 min-w-0 flex flex-col min-h-0">
-        {/* Upper portion: Blank with simple message */}
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)] flex items-center justify-center">
-          <div className="text-center text-[var(--text-secondary)]">
-            <p className="text-lg font-medium">You have not processed any data.</p>
-            <p className="text-sm mt-3 opacity-80 max-w-md mx-auto leading-relaxed">
-              To start, expand the <b>"Speak to your data"</b> section below and click the three dots (...) menu to navigate to Data Sources and connect your data.
-            </p>
+
+        {/* Upper portion: Dynamic Content OR Blank state */}
+        <div className="flex-1 min-h-0 flex flex-row overflow-hidden bg-[var(--surface)]/30 border-b border-[var(--border)]">
+          
+          {/* Left Column: Summary and Charts (Scrollable) */}
+          <div className="flex-1 min-w-0 overflow-y-auto px-6 pt-6 pb-4">
+            <div className="flex flex-col gap-6 h-full">
+              {isAnalyzing ? (
+                <>
+                  <div className="h-32 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)] w-full"></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="h-64 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
+                    <div className="h-64 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
+                  </div>
+                </>
+              ) : hasData ? (
+                <>
+                  {/* Summary Card */}
+                  {(chatSummaryData.title || chatSummaryData.content) ? (
+                    <div className="w-full shrink-0">
+                      <ChatSummaryCard
+                        title={chatSummaryData.title}
+                        content={chatSummaryData.content}
+                      />
+                    </div>
+                  ) : null}
+
+                  {/* Charts Grid */}
+                  {chatSummaryData.charts?.length > 0 && (
+                    <div className="grid grid-cols-2 gap-6 pb-4">
+                      {chatSummaryData.charts.map((chart, idx) => (
+                        <DynamicChart key={idx} config={chart} index={idx} />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+                  <div className="text-center text-[var(--text-secondary)]">
+                    <p className="text-lg font-medium">You have not processed any data.</p>
+                    <p className="text-sm mt-3 opacity-80 max-w-md mx-auto leading-relaxed">
+                      To start, expand the <b>"Speak to your data"</b> section below and click the three dots (...) menu to navigate to Data Sources and connect your data.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Right Column: KPIs Sidebar (Fixed Width, Scrollable) */}
+          {(hasData || isAnalyzing) && (
+            <div className="w-64 xl:w-80 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] overflow-y-auto px-4 pt-6 pb-4">
+              {isAnalyzing ? (
+                <div className="flex flex-col gap-4">
+                  <div className="h-24 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
+                  <div className="h-24 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
+                  <div className="h-24 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
+                  <div className="h-24 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
+                </div>
+              ) : chatSummaryData.kpis?.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between px-1 mb-4">
+                    <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Key Metrics</h3>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    {chatSummaryData.kpis.map((kpi, idx) => (
+                      <KPICard key={idx} kpi={{ ...kpi, description: '' }} index={idx} />
+                    ))}
+                  </div>
+                </>
+              ) : null}
+            </div>
+          )}
         </div>
+
         {/* Lower portion: Chat */}
         <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
           <ChatWindow

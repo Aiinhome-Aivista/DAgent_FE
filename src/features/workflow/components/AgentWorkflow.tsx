@@ -1179,7 +1179,8 @@ export const AgentWorkflow = ({
 
               setConnectorResults(prev => ({
                 ...prev,
-                description: displayContent
+                description: displayContent,
+                report_content: response.report_content || null
               }));
             } else {
               setConnectorResults(prev => ({
@@ -1320,7 +1321,8 @@ export const AgentWorkflow = ({
           if (displayContent) {
             setConnectorResults(prev => ({
               ...prev,
-              description: displayContent
+              description: displayContent,
+              report_content: response.report_content || null
             }));
           }
         }
@@ -1482,7 +1484,8 @@ export const AgentWorkflow = ({
           if (displayContent) {
             setConnectorResults(prev => ({
               ...prev,
-              description: displayContent
+              description: displayContent,
+              report_content: response.report_content || null
             }));
           }
         }
@@ -1739,9 +1742,17 @@ export const AgentWorkflow = ({
                                     setTimeout(() => {
                                       setIsForwardingToQuery(false);
                                       if (onCreateWorkspaceFromSummary && connectorResults?.description) {
-                                        const summaryText = typeof connectorResults.description === 'string'
+                                        let summaryText = typeof connectorResults.description === 'string'
                                           ? connectorResults.description
                                           : JSON.stringify(connectorResults.description);
+                                          
+                                        // VERY IMPORTANT: If we have full report_content (with charts/kpis), save THAT to history!
+                                        if (connectorResults.report_content) {
+                                          summaryText = typeof connectorResults.report_content === 'object'
+                                            ? JSON.stringify(connectorResults.report_content)
+                                            : connectorResults.report_content;
+                                        }
+                                        
                                         onCreateWorkspaceFromSummary(summaryText);
                                       } else {
                                         handleStepperClick('query');
