@@ -938,6 +938,8 @@ import { IngestDataView } from './IngestDataView';
 import { DashboardKPIs, graphPanelItems, GraphSidePanel, DashboardGraphs } from '../../dashboard/components/DashboardCharts';
 import { GenericDashboardGraphs } from '../../dashboard/components/graphs/GenericDashboardGraphs';
 import { GenericDashboardKPIs } from '../../dashboard/components/graphs/GenericDashboardKPIs';
+import { QueryViewGeneric } from './QueryViewGeneric';
+import { QueryViewSales } from './QueryViewSales';
 
 const formatInsightsText = (text: string) => {
   if (typeof text !== 'string') return JSON.stringify(text, null, 2);
@@ -1651,43 +1653,40 @@ export const AgentWorkflow = ({
 
                   {selectedAgent.id === 'query' ? (
                     (() => {
-                      const isGeneric = workspaceType === 'Generic';
+                      if (!workspaceType) {
+                        return null; // Prevent rendering anything until workspaceType is known
+                      }
 
+                      if (workspaceType === 'Generic') {
+                        return (
+                          <QueryViewGeneric
+                            sessionId={sessionId}
+                            workspaceName={workspaceName}
+                            workspaceType={workspaceType}
+                            chatCollapsed={chatCollapsed}
+                            setChatCollapsed={setChatCollapsed}
+                            chatKey={chatKey}
+                            initialChatMessage={initialChatMessage}
+                            onChangeTab={onChangeTab}
+                            onNewSessionCreated={onNewSessionCreated}
+                          />
+                        );
+                      }
+                      
                       return (
-                        <div key={`layout-${workspaceType}-${sessionId}`} className="flex-1 flex overflow-hidden">
-                          {/* Left Side: Split into Charts (upper) and Chat (lower) */}
-                          <div className="flex-1 min-w-0 flex flex-col min-h-0">
-                            {/* Upper portion: Charts */}
-                            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
-                              {isGeneric ? <GenericDashboardGraphs /> : <DashboardGraphs />}
-                            </div>
-                            {/* Lower portion: Chat */}
-                            <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
-                              <ChatWindow
-                                initialMode="chat"
-                                initialMessage={initialChatMessage}
-                                onOpenDataSource={onChangeTab ? () => onChangeTab('connectors') : undefined}
-                                onNewSessionCreated={onNewSessionCreated}
-                                sessionId={sessionId}
-                                workspaceName={workspaceName}
-                                onCollapseChange={setChatCollapsed}
-                                chatKey={chatKey}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Right side strip - scrollable KPIs + Graph buttons */}
-                          {!activeGraphId && (
-                            <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                              <div className="p-3 flex flex-col h-full">
-                                {/* KPIs */}
-                                {isGeneric ? <GenericDashboardKPIs /> : <DashboardKPIs />}
-                              </div>
-                            </div>
-                          )}
-                          {/* Graph Side Panel overlay */}
-                          <GraphSidePanel activeGraphId={activeGraphId} onClose={() => setActiveGraphId(null)} inline={true} />
-                        </div>
+                        <QueryViewSales
+                          sessionId={sessionId}
+                          workspaceName={workspaceName}
+                          workspaceType={workspaceType}
+                          chatCollapsed={chatCollapsed}
+                          setChatCollapsed={setChatCollapsed}
+                          chatKey={chatKey}
+                          initialChatMessage={initialChatMessage}
+                          onChangeTab={onChangeTab}
+                          onNewSessionCreated={onNewSessionCreated}
+                          activeGraphId={activeGraphId}
+                          setActiveGraphId={setActiveGraphId}
+                        />
                       );
                     })()
                   ) : (

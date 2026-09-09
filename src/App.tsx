@@ -45,7 +45,14 @@ function AppContent() {
   // Workspace state
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [workspaceSearch, setWorkspaceSearch] = useState('');
-  const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
+  const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(() => {
+    try {
+      const stored = localStorage.getItem('DAgent_active_workspace');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
@@ -70,6 +77,7 @@ function AppContent() {
         if (activeWS) {
           setSelectedWorkspace(activeWS);
           localStorage.setItem('DAgent_session_id', activeWS.session_id);
+          localStorage.setItem('DAgent_active_workspace', JSON.stringify(activeWS));
           window.dispatchEvent(new CustomEvent('session-id-updated', { detail: { sessionId: activeWS.session_id } }));
 
           if (isInitialLoad) {

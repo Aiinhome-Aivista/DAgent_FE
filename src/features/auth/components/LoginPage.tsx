@@ -51,6 +51,10 @@ export const LoginPage = ({ onBack, onLoginSuccess, isAdminLogin = false }: Logi
           if (response.data.role_name !== undefined) {
             setRoleName(response.data.role_name);
           }
+          if (response.data.active_workspace) {
+            localStorage.setItem('DAgent_active_workspace', JSON.stringify(response.data.active_workspace));
+            localStorage.setItem('DAgent_session_id', response.data.active_workspace.session_id);
+          }
         }
         onLoginSuccess();
       } else {
