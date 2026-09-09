@@ -252,7 +252,7 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
         <button
           onClick={() => setPlanToDelete(rowData)}
           title="Delete Plan"
-          className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-rose-500 hover:border-rose-500/30 hover:bg-rose-500/10 transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg border border-[var(--border)] text-rose-500 hover:border-rose-500/30 hover:bg-rose-500/10 transition-colors cursor-pointer"
         >
           <Trash2 className="w-4 h-4" />
         </button>

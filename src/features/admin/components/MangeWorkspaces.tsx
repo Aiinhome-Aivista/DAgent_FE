@@ -13,6 +13,9 @@ interface MangeWorkspaceProps {
   setIsCreatingWorkspace: (val: boolean) => void;
   newWorkspaceName: string;
   setNewWorkspaceName: (val: string) => void;
+  newWorkspaceType: string;
+  setNewWorkspaceType: (val: string) => void;
+  workspaceTypes: any[];
   handleCreateWorkspace: () => void;
   handleDeleteWorkspace: (id: number) => void;
   isLoading: boolean;
@@ -25,6 +28,9 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
   setIsCreatingWorkspace,
   newWorkspaceName,
   setNewWorkspaceName,
+  newWorkspaceType,
+  setNewWorkspaceType,
+  workspaceTypes,
   handleCreateWorkspace,
   handleDeleteWorkspace,
   isLoading,
@@ -69,6 +75,25 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                   className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                 />
               </div>
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                  Workspace Type
+                </label>
+                <select
+                  value={newWorkspaceType}
+                  onChange={(e) => setNewWorkspaceType(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                >
+                  {workspaceTypes.map((t) => (
+                    <option key={t.id} value={t.type_name}>
+                      {t.type_name}
+                    </option>
+                  ))}
+                  {workspaceTypes.length === 0 && (
+                    <option value="Generic">Generic</option>
+                  )}
+                </select>
+              </div>
               <button
                 onClick={handleCreateWorkspace}
                 disabled={!newWorkspaceName.trim() || isLoading}
@@ -80,6 +105,7 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                 onClick={() => {
                   setIsCreatingWorkspace(false);
                   setNewWorkspaceName("");
+                  setNewWorkspaceType("Generic");
                 }}
                 className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors h-[46px] cursor-pointer"
               >
@@ -179,11 +205,23 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
           style={{ width: "35%" }}
         />
         <Column
+          field="workspace_type"
+          header="Type"
+          headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+          className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-primary)] font-medium"
+          style={{ width: "15%" }}
+          body={(ws: Workspace) => (
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-[var(--surface-hover)] text-[var(--text-primary)]">
+              {ws.workspace_type || 'Generic'}
+            </span>
+          )}
+        />
+        <Column
           field="session_id"
           header="Session/WorkSpace ID"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)]"
-          style={{ width: "40%" }}
+          style={{ width: "25%" }}
           body={(ws: Workspace) => (
             <div
               className="font-mono text-[11px] text-[var(--text-secondary)] break-all select-all inline-block"

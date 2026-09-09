@@ -33,10 +33,11 @@ export const adminService = {
         });
     },
 
-    createWorkspace: async (userId: number, workspaceName: string): Promise<any> => {
+    createWorkspace: async (userId: number, workspaceName: string, workspaceType: string = 'Generic'): Promise<any> => {
         return apiService.post(API_ENDPOINTS.WORKSPACE.CREATE, {
             user_id: userId,
-            workspace_name: workspaceName
+            workspace_name: workspaceName,
+            workspace_type: workspaceType
         });
     },
 

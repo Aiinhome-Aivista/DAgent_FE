@@ -18,6 +18,7 @@ import {
   Terminal,
   Database,
   Lock,
+  Cpu,
   FileText,
   CreditCard,
 } from "lucide-react";
@@ -109,7 +110,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 { id: 'pendingKnowledge', icon: Database, label: 'KG History' },
                 { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' },
                 { id: 'scheduledReports', icon: FileText, label: 'Scheduled Reports' },
-                { id: 'pricing', icon: CreditCard, label: 'Pricing' }
+                { id: 'pricing', icon: CreditCard, label: 'Pricing' },
+                { id: 'llmConfig', icon: Cpu, label: 'LLM Settings' }
               ].map((tab) => (
                 <button
                   key={tab.id}

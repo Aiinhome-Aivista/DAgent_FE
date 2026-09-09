@@ -13,6 +13,7 @@ import {
   FileText,
   CreditCard,
   Building2,
+  Plus,
 } from "lucide-react";
 import { adminService } from "../../services/admin.service";
 import { AdminUser, AdminTab } from "./types";
@@ -28,6 +29,7 @@ import { AdminPendingKnowledge } from "./components/AdminPendingKnowledge";
 import { CustomPrompts } from "./components/CustomPrompts";
 import { ScheduledReports } from "./components/ScheduledReports";
 import { ManagePricing } from "./components/ManagePricing";
+import { ManageLLM } from "./components/ManageLLM";
 
 interface AdminPanelProps {
   adminSubTab: AdminTab;
@@ -60,7 +62,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
+  const [isCreatingLLM, setIsCreatingLLM] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [newWorkspaceType, setNewWorkspaceType] = useState("Generic");
+  const [workspaceTypes, setWorkspaceTypes] = useState<any[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -109,6 +114,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           if (wsResponse?.workspaces) {
             setWorkspaces(wsResponse.workspaces);
           }
+          const typesResponse = await workspaceService.getWorkspaceTypes();
+          if (typesResponse?.data) {
+            setWorkspaceTypes(typesResponse.data);
+          }
         } catch (e) {
           console.log(
             "Admin workspaces endpoint not found, fetching user workspaces",
@@ -137,6 +146,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       const response = await adminService.createWorkspace(
         userId || 6,
         newWorkspaceName.trim(),
+        newWorkspaceType
       );
       if (response) {
         toast.success("Workspace created successfully");
@@ -212,6 +222,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     customPrompts: "Custom Prompts",
     scheduledReports: "Scheduled Reports",
     pricing: "Pricing",
+    llmConfig: "LLM Configuration",
   };
 
   const tabDetails: Record<AdminTab, { title: string; desc: string }> = {
@@ -254,6 +265,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     pricing: {
       title: "Pricing Plans",
       desc: "Manage subscription plans and feature allocations.",
+    },
+    llmConfig: {
+      title: "LLM Configuration",
+      desc: "Configure active LLM provider, models, and endpoints.",
     },
   };
 
@@ -336,6 +351,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               Create Plan
             </button>
           )}
+
+          {adminSubTab === "llmConfig" && (
+            <button
+              onClick={() => setIsCreatingLLM(true)}
+              className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Add Config
+            </button>
+          )}
         </div>
       </div>
 
@@ -399,6 +424,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     setIsCreatingWorkspace={setIsCreatingWorkspace}
                     newWorkspaceName={newWorkspaceName}
                     setNewWorkspaceName={setNewWorkspaceName}
+                    newWorkspaceType={newWorkspaceType}
+                    setNewWorkspaceType={setNewWorkspaceType}
+                    workspaceTypes={workspaceTypes}
                     handleCreateWorkspace={handleCreateWorkspace}
                     handleDeleteWorkspace={handleDeleteWorkspace}
                     isLoading={isLoading}
@@ -463,6 +491,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     searchQuery={searchQuery}
                     isModalOpen={isCreatingPlan}
                     setIsModalOpen={setIsCreatingPlan}
+                  />
+                )}
+
+                {adminSubTab === "llmConfig" && (
+                  <ManageLLM 
+                    searchQuery={searchQuery}
+                    isCreatingLLM={isCreatingLLM}
+                    setIsCreatingLLM={setIsCreatingLLM}
                   />
                 )}
               </motion.div>

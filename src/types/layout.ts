@@ -66,4 +66,5 @@ export interface MainContentProps {
   onNewSessionCreated?: () => void;
   sessionId?: string;
   workspaceName?: string;
+  workspaceType?: string;
 }

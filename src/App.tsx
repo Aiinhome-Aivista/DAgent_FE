@@ -499,6 +499,7 @@ function AppContent() {
           onNewSessionCreated={handleNewSessionCreated}
           sessionId={selectedWorkspace?.session_id}
           workspaceName={selectedWorkspace?.workspace_name}
+          workspaceType={selectedWorkspace?.workspace_type}
         />
       </main>
     </div>

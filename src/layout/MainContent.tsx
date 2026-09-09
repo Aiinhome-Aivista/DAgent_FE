@@ -22,6 +22,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   onNewSessionCreated,
   sessionId,
   workspaceName,
+  workspaceType,
 }) => {
   return (
     <div
@@ -46,6 +47,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               onNewSessionCreated={onNewSessionCreated}
               sessionId={sessionId}
               workspaceName={workspaceName}
+              workspaceType={workspaceType}
               chatKey={chatKey}
             />
           </motion.div>
@@ -99,6 +101,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               onCreateWorkspaceFromSummary={handleCreateWorkspaceFromSummary}
               sessionId={sessionId}
               workspaceName={workspaceName}
+              workspaceType={workspaceType}
             />
           </motion.div>
         ) : activeTab === "connectors" ? (
@@ -118,6 +121,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               onNewConnector={() => changeTab("new-connector")}
               sessionId={sessionId}
               workspaceName={workspaceName}
+              workspaceType={workspaceType}
             />
           </motion.div>
         ) : activeTab === "admin" ? (
