@@ -13,6 +13,7 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { formatChatMessage } from "../../../../utils/format";
@@ -353,7 +354,11 @@ const SummaryCard = () => {
   }, []);
 
   if (loading && !parsedData) {
-    return null;
+    return (
+      <div className="bg-white px-5 py-2 rounded-2xl border border-slate-200 border-l-4 border-l-indigo-500 shadow-sm flex flex-col items-center justify-center min-h-[150px] gap-3">
+        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+      </div>
+    );
   }
 
   if (!parsedData) return null;
@@ -406,7 +411,7 @@ const SummaryCard = () => {
               className="flex flex-col gap-4"
             >
               {/* Executive Summary Paragraphs */}
-              <div 
+              <div
                 className="flex flex-col gap-2 text-slate-600 text-sm leading-relaxed font-normal"
                 dangerouslySetInnerHTML={{
                   __html: formatChatMessage(
@@ -429,7 +434,7 @@ const SummaryCard = () => {
                       {sectionTitles["Key Insights"] || "Key Insights"}
                     </span>
                   </div>
-                  <div 
+                  <div
                     className="flex flex-col gap-2 mt-1.5 pl-1 text-slate-600 text-sm leading-relaxed font-normal"
                     dangerouslySetInnerHTML={{
                       __html: formatChatMessage(keyInsights.join("\n"), true)
@@ -450,7 +455,7 @@ const SummaryCard = () => {
                         "Actionable Recommendations"}
                     </span>
                   </div>
-                  <div 
+                  <div
                     className="flex flex-col gap-2 mt-1.5 pl-1 text-slate-600 text-sm leading-relaxed font-normal"
                     dangerouslySetInnerHTML={{
                       __html: formatChatMessage(recommendations.join("\n"), true)
@@ -515,9 +520,9 @@ const SummaryRevisedDownloadCard = () => {
           body: JSON.stringify({ session_id: getSessionId() }),
         });
         const json = await res.json();
-        
+
         if (!isMounted) return;
-        
+
         if (json.status === 'success') {
           setPreviewData(json.sections);
           setIsFetching(false);
@@ -574,7 +579,7 @@ const SummaryRevisedDownloadCard = () => {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
         <h3 className="font-bold text-slate-800 text-base w-40 shrink-0">Sales Summary</h3>
-        
+
         {/* Carousel Controls Inline */}
         <div className="flex items-center gap-4 flex-1 justify-center">
           <button
@@ -583,12 +588,12 @@ const SummaryRevisedDownloadCard = () => {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          
+
           <div className="flex flex-col items-center">
             <span className="text-sm font-bold text-slate-800 text-center">{TABS[activeTabIndex].title}</span>
             <div className="flex gap-1.5 mt-1.5">
               {TABS.map((_, idx) => (
-                <button 
+                <button
                   key={idx}
                   onClick={() => setActiveTabIndex(idx)}
                   className={`h-1.5 rounded-full transition-all duration-300 focus:outline-none ${activeTabIndex === idx ? 'w-4 bg-indigo-600' : 'w-1.5 bg-slate-300'}`}
@@ -622,9 +627,8 @@ const SummaryRevisedDownloadCard = () => {
       {/* Table Content */}
       <div className="overflow-auto" style={{ maxHeight: '350px' }}>
         {isFetching ? (
-          <div className="flex items-center justify-center h-full gap-3">
-            <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-            <span className="text-slate-500 text-sm">Loading data...</span>
+          <div className="flex flex-col items-center justify-center min-h-[200px]">
+            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-full min-h-[200px] text-slate-400 font-medium text-sm px-10 text-center">
