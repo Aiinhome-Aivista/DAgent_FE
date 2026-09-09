@@ -16,6 +16,8 @@ interface PricingPlan {
   number_of_users: number;
   custom_kpi: string;
   scheduled_email: string;
+  audit_memory?: string;
+  connectors?: string;
 }
 
 interface PricingPageProps {
@@ -187,6 +189,14 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
 
                     {plan.scheduled_email === 'Available' && (
                       <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Scheduled Email</span></li>
+                    )}
+
+                    {plan.audit_memory && (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.audit_memory} audit memory</span></li>
+                    )}
+
+                    {plan.connectors && (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.connectors}</span></li>
                     )}
                   </ul>
                 </div>

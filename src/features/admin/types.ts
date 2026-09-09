@@ -21,6 +21,8 @@ export interface PricingPlan {
     number_of_users: number;
     custom_kpi: string;
     scheduled_email: string;
+    audit_memory?: string;
+    connectors?: string;
     created_at?: string;
     updated_at?: string;
 }

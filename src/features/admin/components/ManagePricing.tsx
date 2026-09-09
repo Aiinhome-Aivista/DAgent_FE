@@ -39,6 +39,8 @@ interface PricingFormData {
   number_of_users: number | "";
   custom_kpi: string;
   scheduled_email: string;
+  audit_memory: string;
+  connectors: string;
 }
 
 const initialFormData: PricingFormData = {
@@ -51,6 +53,8 @@ const initialFormData: PricingFormData = {
   number_of_users: 1,
   custom_kpi: "Available",
   scheduled_email: "Available",
+  audit_memory: "",
+  connectors: "",
 };
 
 export const ManagePricing: React.FC<ManagePricingProps> = ({
@@ -116,6 +120,8 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
       number_of_users: isGold || plan.number_of_users === -1 ? "" : (plan.number_of_users !== undefined ? plan.number_of_users : 1),
       custom_kpi: normalizeAvailability(plan.custom_kpi),
       scheduled_email: normalizeAvailability(plan.scheduled_email),
+      audit_memory: plan.audit_memory || "",
+      connectors: plan.connectors || "",
     });
     setError(null);
     setIsModalOpen(true);
@@ -149,6 +155,8 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
       number_of_users: isGold ? -1 : (formData.number_of_users === "" ? 1 : Number(formData.number_of_users)),
       custom_kpi: formData.custom_kpi,
       scheduled_email: formData.scheduled_email,
+      audit_memory: formData.audit_memory.trim(),
+      connectors: formData.connectors.trim(),
     };
 
     try {
@@ -396,6 +404,24 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
               ) : (
                 <span>—</span>
               )}
+            </div>
+          )}
+        />
+        <Column
+          field="audit_memory"
+          header="Audit Memory"
+          headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+          className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+          body={(row: PricingPlan) => row.audit_memory || "—"}
+        />
+        <Column
+          field="connectors"
+          header="Connectors"
+          headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+          className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+          body={(row: PricingPlan) => (
+            <div className="max-w-[150px] truncate" title={row.connectors}>
+              {row.connectors || "—"}
             </div>
           )}
         />
@@ -665,6 +691,44 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
                     <option value="Available">Available</option>
                     <option value="Unavailable">Unavailable</option>
                   </select>
+                </div>
+
+                {/* Audit Memory */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
+                    Audit Memory
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 3 days, 7 days, unlimited"
+                    value={formData.audit_memory}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        audit_memory: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  />
+                </div>
+
+                {/* Connectors */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
+                    Connectors
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. File upload, LLM search"
+                    value={formData.connectors}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        connectors: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  />
                 </div>
               </div>
 
