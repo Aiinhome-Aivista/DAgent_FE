@@ -11,50 +11,6 @@ interface ChatMessageProps {
 export const ChatMessage = React.memo(({ message }: ChatMessageProps) => {
   const isAssistant = message.role === 'assistant';
 
-  const getDisplayContent = (content: string) => {
-    try {
-      let jsonStr = content;
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        jsonStr = jsonMatch[1];
-      } else {
-        const firstBrace = content.indexOf('{');
-        const lastBrace = content.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-          jsonStr = content.slice(firstBrace, lastBrace + 1);
-        }
-      }
-      
-      const parsed = JSON.parse(jsonStr);
-      const report = parsed.report || (parsed.title ? parsed : null);
-      if (report) {
-        if (typeof report === 'string') {
-          return report;
-        }
-        let md = `# ${report.title || 'Report'}\n\n`;
-        if (report.key_findings && Array.isArray(report.key_findings) && report.key_findings.length > 0) {
-          md += `### Key Findings\n`;
-          report.key_findings.forEach((kf: string) => {
-            md += `- ${kf}\n`;
-          });
-          md += `\n`;
-        }
-        if (report.sections && Array.isArray(report.sections)) {
-          report.sections.forEach((sec: any) => {
-            if (sec.heading) md += `## ${sec.heading}\n`;
-            if (sec.content) md += `${sec.content}\n\n`;
-          });
-        }
-        return md;
-      }
-    } catch (e) {
-      // Fallback
-    }
-    return content;
-  };
-
-  const displayContent = getDisplayContent(message.content);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -71,7 +27,7 @@ export const ChatMessage = React.memo(({ message }: ChatMessageProps) => {
       >
         <div
           className="prose-chat break-words"
-          dangerouslySetInnerHTML={{ __html: formatChatMessage(displayContent, isAssistant) }}
+          dangerouslySetInnerHTML={{ __html: formatChatMessage(message.content, isAssistant) }}
         />
 
         {isAssistant && message.visualizations && message.visualizations.length > 0 && (

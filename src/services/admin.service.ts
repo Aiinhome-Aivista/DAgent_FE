@@ -33,10 +33,11 @@ export const adminService = {
         });
     },
 
-    createWorkspace: async (userId: number, workspaceName: string): Promise<any> => {
+    createWorkspace: async (userId: number, workspaceName: string, workspaceType: string = 'Generic'): Promise<any> => {
         return apiService.post(API_ENDPOINTS.WORKSPACE.CREATE, {
             user_id: userId,
-            workspace_name: workspaceName
+            workspace_name: workspaceName,
+            workspace_type: workspaceType
         });
     },
 
@@ -47,15 +48,26 @@ export const adminService = {
     },
 
     deleteWorkspace: async (workspaceId: number): Promise<any> => {
-        return apiService.delete(API_ENDPOINTS.WORKSPACE.DELETE, {
-            workspace_id: workspaceId
-        });
+        return apiService.delete(`${API_ENDPOINTS.WORKSPACE.GET_WORKSPACES}/${workspaceId}`);
     },
 
     createUser: async (adminId: number, userData: any): Promise<any> => {
         return apiService.post(API_ENDPOINTS.USERS.CREATE_USER, {
             admin_id: adminId,
             ...userData
+        });
+    },
+
+    editUser: async (adminId: number, userId: number, userData: any): Promise<any> => {
+        return apiService.post(`${API_ENDPOINTS.USERS.EDIT_USER}/${userId}`, {
+            admin_id: adminId,
+            ...userData
+        });
+    },
+
+    deleteUser: async (adminId: number, userId: number): Promise<any> => {
+        return apiService.delete(`${API_ENDPOINTS.USERS.DELETE_USER}/${userId}`, {
+            admin_id: adminId
         });
     }
 };

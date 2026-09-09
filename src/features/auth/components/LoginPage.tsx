@@ -1,14 +1,14 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { 
-  ArrowLeft, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  Github, 
-  Chrome, 
-  Apple, 
+import {
+  ArrowLeft,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Github,
+  Chrome,
+  Apple,
   LayoutGrid
 } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, CardFooter } from '@/src/ui-kit';
@@ -19,9 +19,10 @@ import { useAuthContext } from '../../../context/AuthContext';
 interface LoginPageProps {
   onBack: () => void;
   onLoginSuccess: () => void;
+  isAdminLogin?: boolean;
 }
 
-export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
+export const LoginPage = ({ onBack, onLoginSuccess, isAdminLogin = false }: LoginPageProps) => {
   const { setUserId, setUserName, setRoleId, setRoleName } = useAuthContext();
   const [showPassword, setShowPassword] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -34,8 +35,10 @@ export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
     setIsLoading(true);
     setErrorMsg('');
     try {
-      const response: any = await authService.login(email, password);
-      
+      const response: any = isAdminLogin
+        ? await authService.adminLogin(email, password)
+        : await authService.login(email, password);
+
       if (response.status === true && response.statuscode === 200) {
         if (response.data && response.data.user_id) {
           setUserId(response.data.user_id);
@@ -72,14 +75,14 @@ export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
 
   return (
     <div className="theme-landing min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 selection:bg-accent/10 selection:text-accent relative">
-      <button 
+      <button
         onClick={onBack}
         className="absolute top-4 left-4 flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-accent transition-colors group"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         Back to home
       </button>
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -91,7 +94,7 @@ export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
             <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center text-white font-bold text-xl mx-auto mb-4 shadow-lg shadow-accent/20">
               D
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome back</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{isAdminLogin ? 'Admin Login' : 'Welcome back'}</h1>
             <p className="text-slate-500 text-sm">Enter your details to access your account</p>
           </CardHeader>
 
@@ -109,7 +112,7 @@ export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
               </Button>
               
             </div> */}
-{/* 
+            {/* 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-slate-100"></span>
@@ -120,18 +123,12 @@ export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
             </div> */}
 
             <form className="space-y-4" onSubmit={handleLogin}>
-              {errorMsg && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium text-center">
-                  {errorMsg}
-                </div>
-              )}
-
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Email address</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@company.com"
@@ -148,15 +145,15 @@ export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input 
-                    type={showPassword ? "text" : "password"} 
+                  <input
+                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
                     className="w-full h-12 pl-11 pr-12 rounded-xl border border-slate-200 focus:border-accent focus:ring-4 focus:ring-accent/5 outline-none transition-all text-sm text-slate-900"
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
@@ -166,7 +163,13 @@ export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
                 </div>
               </div>
 
-              <Button 
+              {errorMsg && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium text-center mt-2">
+                  {errorMsg}
+                </div>
+              )}
+
+              <Button
                 type="submit"
                 className="w-full h-12 rounded-xl bg-accent hover:bg-accent-hover text-white font-bold shadow-lg shadow-accent/20 mt-2"
                 disabled={isLoading}
@@ -177,7 +180,7 @@ export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
                     Signing in...
                   </div>
                 ) : (
-                  'Sign in to DAgent'
+                  isAdminLogin ? 'Sign in as Admin' : 'Sign in to DAgent'
                 )}
               </Button>
             </form>
@@ -189,7 +192,7 @@ export const LoginPage = ({ onBack, onLoginSuccess }: LoginPageProps) => {
             </p>
           </CardFooter>
         </Card>
-{/* 
+        {/* 
         <p className="mt-8 text-center text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
           By continuing, you agree to DAgent's <span className="underline cursor-pointer">Terms of Service</span> and <span className="underline cursor-pointer">Privacy Policy</span>.
         </p> */}

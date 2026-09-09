@@ -3,6 +3,7 @@ import { ApiConfig, defaultConfig } from './api.config';
 export interface IApiService {
   get<T>(endpoint: string): Promise<T>;
   post<T>(endpoint: string, data: any): Promise<T>;
+  put<T>(endpoint: string, data: any): Promise<T>;
   delete<T>(endpoint: string, data?: any): Promise<T>;
   download(endpoint: string, data: any, filename: string): Promise<void>;
 }
@@ -70,6 +71,20 @@ class ApiService implements IApiService {
         method: 'POST',
         headers: headers,
         body: isFormData ? data : JSON.stringify(data),
+      });
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
+
+  async put<T>(endpoint: string, data: any): Promise<T> {
+    try {
+      const response = await fetch(`${this.config.baseUrl}${endpoint}`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(data),
       });
       return this.handleResponse<T>(response);
     } catch (error) {

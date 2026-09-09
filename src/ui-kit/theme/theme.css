@@ -8,7 +8,7 @@
   --color-bg-default: #ffffff;
   --color-surface-default: #ffffff;
   --color-surface-hover-default: #f8fafc;
-  --color-border-default: #f1f5f9;
+  --color-border-default: #e2e8f0;
   --color-text-primary-default: #0f172a;
   --color-text-secondary-default: #475569;
   --color-accent-default: #3b82f6;
@@ -79,7 +79,7 @@
     --bg: #ffffff;
     --surface: #ffffff;
     --surface-hover: #f8fafc;
-    --border: #f1f5f9;
+    --border: #e2e8f0;
     --text-primary: #0f172a;
     --text-secondary: #475569;
     --accent: #3b82f6;

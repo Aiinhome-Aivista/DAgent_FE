@@ -3,7 +3,8 @@ import { Connector } from '../features/connectors';
 import { QuerySession } from '../services/chatHistory.service';
 
 export type Tab = 'chat' | 'connectors' | 'new-connector' | 'collection' | 'analysis' | 'admin';
-export type ViewMode = 'landing' | 'login' | 'app';
+export type ViewMode = 'landing' | 'login' | 'admin-login' | 'app' | 'dashboard' | 'pricing';
+export type AdminTab = 'users' | 'workspaces' | 'assignUsers' | 'workspaceUsers' | 'company' | 'adminChats' | 'pendingKnowledge' | 'customPrompts' | 'scheduledReports' | 'pricing';
 
 export interface SidebarProps {
   isSidebarOpen: boolean;
@@ -28,6 +29,8 @@ export interface SidebarProps {
   setHistorySearch: (search: string) => void;
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  adminSubTab: AdminTab;
+  setAdminSubTab: (tab: AdminTab) => void;
   workflowKey: number;
   setWorkflowKey: (key: number | ((prev: number) => number)) => void;
   chatKey: number;
@@ -48,6 +51,8 @@ export interface AppHeaderProps {
 
 export interface MainContentProps {
   activeTab: Tab;
+  adminSubTab: AdminTab;
+  setAdminSubTab: (tab: AdminTab) => void;
   workflowKey: number;
   chatKey: number;
   initialChatMessage: string | undefined;
@@ -61,5 +66,5 @@ export interface MainContentProps {
   onNewSessionCreated?: () => void;
   sessionId?: string;
   workspaceName?: string;
-  onStartNewQueryWithMsg?: (msg: string) => void;
+  workspaceType?: string;
 }

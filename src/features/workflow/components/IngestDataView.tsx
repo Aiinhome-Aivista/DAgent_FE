@@ -105,9 +105,10 @@ export const IngestDataView = ({
                 <div className="text-center">
                   <p className="text-sm font-bold text-[var(--text-primary)]">Importing your data...</p>
                   <p className="text-xs text-[var(--text-secondary)]">
-                    {isWebSearch ? 'Processing web search results and extracting data' :
-                      isCsvSource ? 'Reading CSV files and extracting data structures' :
-                        'Mapping schemas and fetching table structures'}
+                    {(() => {
+                      const name = activeConnector?.name || 'data';
+                      return `Reading ${name} data and extracting ${name} data structures`;
+                    })()}
                   </p>
                 </div>
               </div>
@@ -256,10 +257,11 @@ export const IngestDataView = ({
                 {databases.map((db: any, idx: number) => (
                   <div key={idx} className="p-4 rounded-xl bg-[var(--surface)]/30 border border-[var(--border)] space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-bold truncate">{db.new_user_db || db.external_database}</span>
+                      <span className="text-sm font-bold truncate">{db.external_database}</span>
                       <Badge variant="outline" className="text-[9px]">{db.table_count} tables</Badge>
                     </div>
-                    <div className="flex justify-end text-[10px] text-[var(--text-secondary)]">
+                    <div className="flex justify-between text-[10px] text-[var(--text-secondary)]">
+                      <span>{db.new_user_db}</span>
                       <span>{db.last_sync}</span>
                     </div>
                   </div>

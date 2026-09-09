@@ -25,9 +25,11 @@ import image2 from '@/src/assets/images/landing2.jpg';
 interface LandingPageProps {
   onGetStarted: () => void;
   onLogin: () => void;
+  onDashboardClick?: () => void;
+  onPricingClick?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin, onDashboardClick, onPricingClick }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   return (
@@ -47,7 +49,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
               <a href="#features" className="hover:text-accent transition-colors">Features</a>
               <a href="#use-cases" className="hover:text-accent transition-colors">Use Cases</a>
               <a href="#security" className="hover:text-accent transition-colors">Security</a>
-              <a href="#pricing" className="hover:text-accent transition-colors">Pricing</a>
+              <button onClick={onPricingClick} className="hover:text-accent transition-colors">Pricing</button>
             </div>
 
             <div className="hidden md:flex items-center gap-4">
@@ -86,7 +88,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             <a href="#features" className="block text-lg font-medium">Features</a>
             <a href="#use-cases" className="block text-lg font-medium">Use Cases</a>
             <a href="#security" className="block text-lg font-medium">Security</a>
-            <a href="#pricing" className="block text-lg font-medium">Pricing</a>
+            <button onClick={onPricingClick} className="block text-lg font-medium w-full text-left">Pricing</button>
             <div className="pt-4 flex flex-col gap-3">
               <Button variant="outline" onClick={onLogin} className="w-full">Log in</Button>
               <Button onClick={onGetStarted} className="w-full bg-accent text-white">Sign Up</Button>

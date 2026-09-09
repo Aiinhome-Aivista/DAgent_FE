@@ -9,6 +9,12 @@ export interface Workspace {
     created_at?: string;
     user_id?: number;
     name?: string;
+    workspace_type?: string;
+}
+
+export interface WorkspaceType {
+    id: number;
+    type_name: string;
 }
 
 class WorkspaceService {
@@ -18,11 +24,20 @@ class WorkspaceService {
         this.api = api;
     }
 
-    async createWorkspace(userId: number, name: string): Promise<any> {
+    async createWorkspace(userId: number, name: string, workspaceType: string = 'Generic'): Promise<any> {
         return this.api.post(API_ENDPOINTS.WORKSPACE.CREATE, {
             user_id: userId,
-            workspace_name: name
+            workspace_name: name,
+            workspace_type: workspaceType
         });
+    }
+
+    async getWorkspaceTypes(): Promise<any> {
+        return this.api.get('/workspace-types');
+    }
+
+    async createWorkspaceType(typeName: string): Promise<any> {
+        return this.api.post('/workspace-types', { type_name: typeName });
     }
 
     async getWorkspaces(userId: number): Promise<any> {
