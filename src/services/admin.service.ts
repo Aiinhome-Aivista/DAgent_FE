@@ -48,9 +48,7 @@ export const adminService = {
     },
 
     deleteWorkspace: async (workspaceId: number): Promise<any> => {
-        return apiService.delete(API_ENDPOINTS.WORKSPACE.DELETE, {
-            workspace_id: workspaceId
-        });
+        return apiService.delete(`${API_ENDPOINTS.WORKSPACE.GET_WORKSPACES}/${workspaceId}`);
     },
 
     createUser: async (adminId: number, userData: any): Promise<any> => {

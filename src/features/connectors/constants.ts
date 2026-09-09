@@ -72,4 +72,21 @@ export const SUPPORTED_CONNECTORS = [
     icon: 'ftp',
     status: 'disconnected',
   },
+  {
+    id: '10',
+    name: 'Upload Document',
+    description: 'Upload PDF, DOC, or DOCX files for AI analysis',
+    type: 'File Upload',
+    icon: 'file-text',
+    status: 'disconnected',
+  },
+  // ─── Tally ERP ─────────────────────────────────────────────────────────────
+  {
+    id: '11',
+    name: 'Tally ERP',
+    description: 'Connect to your Tally ERP server to fetch accounting, inventory and financial data via XML API',
+    type: 'Integration',
+    icon: 'tally',
+    status: 'disconnected',
+  },
 ];

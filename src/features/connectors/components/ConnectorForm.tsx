@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect  } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, Input, Button } from '@/src/ui-kit';
-import { Server, Globe, ChevronLeft, Search, FileSpreadsheet, FileCode2, Network } from 'lucide-react';
+import { Server, Globe, ChevronLeft, Search, FileSpreadsheet, FileCode2, Network, BarChart3 } from 'lucide-react';
 import { connectorService } from '@/src/services/connector.service';
 import { useConnectorContext } from '../../../context/ConnectorContext';
 import { useAuthContext } from '../../../context/AuthContext';
@@ -8,9 +8,10 @@ import { useAuthContext } from '../../../context/AuthContext';
 // Import Child Components
 import { WebSearchForm } from './connector_form/WebSearchForm';
 import { FileUploadForm } from './connector_form/FileUploadForm';
-import { DatabaseForm }   from './connector_form/DatabaseForm';
+import { DatabaseForm } from './connector_form/DatabaseForm';
 import { DAgentAssistant } from './connector_form/DAgentAssistant';
-import { FtpForm }        from './connector_form/FtpForm';          // ← NEW
+import { FtpForm } from './connector_form/FtpForm';          // ← FTP
+import { TallyForm } from './connector_form/TallyForm';        // ← Tally ERP
 import { FieldGuide, ConnectorFormData } from '@/src/types/connector';
 
 const GUIDES: Record<string, FieldGuide> = {
@@ -80,6 +81,27 @@ const GUIDES: Record<string, FieldGuide> = {
     description: "The directory on the FTP server to fetch files from.",
     tip: "Use '/' for the root directory, or '/data/exports' for a specific folder."
   },
+  // ─── Tally ERP guides ─────────────────────────────────────────────────────
+  tally_name: {
+    title: "Data Source Name",
+    description: "A friendly label to identify this Tally connection in your dashboard.",
+    tip: "Example: 'My Tally ERP' or 'Production Tally – FY26'"
+  },
+  tally_host: {
+    title: "Tally Server Host",
+    description: "The IP address or domain of the machine running Tally ERP with the XML gateway enabled.",
+    tip: "Example: '43.kcloud.in' or '192.168.1.50'. Must be reachable from this server."
+  },
+  tally_port: {
+    title: "Tally XML Port",
+    description: "The port Tally's XML/HTTP gateway listens on (set in Gateway of Tally → Configuration).",
+    tip: "Common values: 9000 (default), 9001, or a custom port like 43087."
+  },
+  tally_database: {
+    title: "Database / Company Name",
+    description: "The exact name of the Tally company (database) you want to connect to.",
+    tip: "This must match the company name as it appears in Tally's Company Selection screen."
+  },
 };
 
 interface ConnectorFormProps {
@@ -89,7 +111,7 @@ interface ConnectorFormProps {
 
 export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => {
   const { selectedConnector: connector, setSearchTopic } = useConnectorContext();
-  
+
   const { userId } = useAuthContext();
   const [activeField, setActiveField] = useState<string | null>(null);
   const [isTesting, setIsTesting] = useState(false);
@@ -105,13 +127,21 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
 
   // ── FTP-specific form data ──────────────────────────────────────
   const [ftpFormData, setFtpFormData] = useState({
-    name:         connector?.name || 'FTP Connector',
-    host:         '',
-    port:         '21',
-    username:     '',
-    password:     '',
-    remote_dir:   '/',
+    name: connector?.name || 'FTP Connector',
+    host: '',
+    port: '21',
+    username: '',
+    password: '',
+    remote_dir: '/',
     passive_mode: true,
+  });
+
+  // ── Tally ERP-specific form data ────────────────────────────────
+  const [tallyFormData, setTallyFormData] = useState({
+    name: '',
+    host: '',
+    port: '',
+    database: '',
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,9 +152,9 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
   const [selectedResultIds, setSelectedResultIds] = useState<Set<string>>(new Set());
 
   // File upload state from Context
-  const { 
-    uploadedFiles, setUploadedFiles, 
-    isUploading, setIsUploading, 
+  const {
+    uploadedFiles, setUploadedFiles,
+    isUploading, setIsUploading,
     uploadProgress, setUploadProgress,
     handleFileUploadConnect: handleContextUpload,
     resetConnectorState
@@ -238,27 +268,32 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     }
   };
 
-  const isWebSearch  = connector?.name === 'Web Search using LLM';
-  const isCsvUpload  = connector?.name === 'Upload CSV File';
-  const isSqlUpload  = connector?.name === 'Upload SQL File';
-  const isFileUpload = isCsvUpload || isSqlUpload;
-  const isFtp        = connector?.name === 'FTP Connector';   // ← NEW
+  const isWebSearch = connector?.name === 'Web Search using LLM';
+  const isCsvUpload = connector?.name === 'Upload CSV File';
+  const isSqlUpload = connector?.name === 'Upload SQL File';
+  const isDocUpload = connector?.name === 'Upload Document';
+  const isFileUpload = isCsvUpload || isSqlUpload || isDocUpload;
+  const isFtp = connector?.name === 'FTP Connector';
+  const isTally = connector?.name === 'Tally ERP';       // ← Tally ERP
 
-  const acceptedFileTypes = isCsvUpload ? '.csv' : isSqlUpload ? '.sql' : '';
+  const acceptedFileTypes = isCsvUpload ? '.csv' : isSqlUpload ? '.sql' : isDocUpload ? '.pdf,.doc,.docx' : '';
 
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files).filter(f =>
-      isCsvUpload ? f.name.endsWith('.csv') : f.name.endsWith('.sql')
-    );
+    const files = Array.from(e.dataTransfer.files).filter(f => {
+      if (isCsvUpload) return f.name.endsWith('.csv');
+      if (isSqlUpload) return f.name.endsWith('.sql');
+      if (isDocUpload) return f.name.endsWith('.pdf') || f.name.endsWith('.doc') || f.name.endsWith('.docx');
+      return false;
+    });
     if (files.length === 0) {
-      setErrorMsg(`Only ${isCsvUpload ? 'CSV' : 'SQL'} files are allowed.`);
+      setErrorMsg(`Only ${isCsvUpload ? 'CSV' : isSqlUpload ? 'SQL' : 'Document (PDF/DOC/DOCX)'} files are allowed.`);
       return;
     }
     const existingNames = new Set(uploadedFiles.map(f => `${f.name}-${f.size}`));
     const newFiles = files.filter(f => !existingNames.has(`${f.name}-${f.size}`));
-    
+
     if (newFiles.length < files.length) {
       setErrorMsg('Some duplicate files were skipped.');
       setTimeout(() => setErrorMsg(prev => prev === 'Some duplicate files were skipped.' ? '' : prev), 2000);
@@ -267,7 +302,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     }
 
     setUploadedFiles(prev => [...prev, ...newFiles]);
-    
+
     if (userId && isUploading && newFiles.length > 0) {
       setTimeout(() => handleContextUpload(userId as number), 0);
     }
@@ -277,7 +312,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     const files = Array.from(e.target.files || []);
     const existingNames = new Set(uploadedFiles.map(f => `${f.name}-${f.size}`));
     const newFiles = files.filter(f => !existingNames.has(`${f.name}-${f.size}`));
-    
+
     if (newFiles.length < files.length) {
       setErrorMsg('Some duplicate files were skipped.');
       setTimeout(() => setErrorMsg(prev => prev === 'Some duplicate files were skipped.' ? '' : prev), 2000);
@@ -287,7 +322,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
 
     setUploadedFiles(prev => [...prev, ...newFiles]);
     e.target.value = '';
-    
+
     if (userId && isUploading && newFiles.length > 0) {
       setTimeout(() => handleContextUpload(userId as number), 0);
     }
@@ -314,7 +349,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
   useEffect(() => {
     if (isFileUpload && !isUploading && uploadedFiles.length > 0) {
       const allDone = uploadedFiles.every(file => (uploadProgress[file.name] || 0) === 100);
-      
+
       if (allDone) {
         const connName = connector?.name || 'File Upload';
         const timer = setTimeout(() => {
@@ -354,7 +389,9 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                 ) : isSqlUpload ? (
                   <FileCode2 className="w-6 h-6" />
                 ) : isFtp ? (
-                  <Network className="w-6 h-6" />           // ← NEW icon
+                  <Network className="w-6 h-6" />
+                ) : isTally ? (
+                  <BarChart3 className="w-6 h-6 text-amber-400" />
                 ) : (
                   <Server className="w-6 h-6" />
                 )}
@@ -367,10 +404,12 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                   {isWebSearch
                     ? 'Identify live data for AI analysis'
                     : isFileUpload
-                    ? `Upload ${isCsvUpload ? 'CSV' : 'SQL'} files for AI analysis`
-                    : isFtp
-                    ? 'Fetch files from an FTP server with scheduled sync'
-                    : 'Configure your data source settings'}
+                      ? `Upload ${isCsvUpload ? 'CSV' : isSqlUpload ? 'SQL' : 'Document'} files for AI analysis`
+                      : isFtp
+                        ? 'Fetch files from an FTP server with scheduled sync'
+                        : isTally
+                          ? 'Connect to Tally ERP via XML API gateway'
+                          : 'Configure your data source settings'}
                 </p>
               </div>
             </div>
@@ -382,8 +421,8 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
               </div>
             )}
 
-            {/* Data source name field — hidden for file uploads and FTP (FTP manages its own name field) */}
-            {!isFileUpload && !isFtp && (
+            {/* Data source name field — hidden for file uploads, FTP and Tally (they manage their own name field) */}
+            {!isFileUpload && !isFtp && !isTally && (
               <div onMouseEnter={() => handleMouseEnter('name')} className="mb-6">
                 <Input
                   label="Data source Name"
@@ -417,6 +456,8 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
             ) : isFileUpload ? (
               <FileUploadForm
                 isCsvUpload={isCsvUpload}
+                isSqlUpload={isSqlUpload}
+                isDocUpload={isDocUpload}
                 isDragging={isDragging}
                 setIsDragging={setIsDragging}
                 handleFileDrop={handleFileDrop}
@@ -441,6 +482,18 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                 userId={userId as number | null}
                 sessionId={localStorage.getItem('DAgent_session_id')}
                 onConnectSuccess={() => onTestSuccess?.(ftpFormData.name, false)}
+              />
+            ) : isTally ? (
+              // ── Tally ERP Form ────────────────────────────────────
+              <TallyForm
+                formData={tallyFormData}
+                setFormData={setTallyFormData}
+                handleFocus={handleFocus}
+                handleMouseEnter={handleMouseEnter}
+                onBack={onBack}
+                userId={userId as number | null}
+                sessionId={localStorage.getItem('DAgent_session_id')}
+                onConnectSuccess={() => onTestSuccess?.(tallyFormData.name, false)}
               />
             ) : (
               <DatabaseForm

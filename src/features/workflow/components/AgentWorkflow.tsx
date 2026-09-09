@@ -936,6 +936,8 @@ import { HistoryItemCard } from './HistoryItemCard';
 import { AgentStepper, getAgentIcon } from './AgentStepper';
 import { IngestDataView } from './IngestDataView';
 import { DashboardKPIs, graphPanelItems, GraphSidePanel, DashboardGraphs } from '../../dashboard/components/DashboardCharts';
+import { GenericDashboardGraphs } from '../../dashboard/components/graphs/GenericDashboardGraphs';
+import { GenericDashboardKPIs } from '../../dashboard/components/graphs/GenericDashboardKPIs';
 
 const formatInsightsText = (text: string) => {
   if (typeof text !== 'string') return JSON.stringify(text, null, 2);
@@ -1649,46 +1651,15 @@ export const AgentWorkflow = ({
 
                   {selectedAgent.id === 'query' ? (
                     (() => {
-                      if (workspaceType === 'Generic') {
-                        // Show exact layout as Sales but without any charts or KPIs
-                        return (
-                          <div key={`layout-${workspaceType}-${sessionId}`} className="flex-1 flex overflow-hidden">
-                            <div className="flex-1 min-w-0 flex flex-col min-h-0">
-                              {/* Upper portion: Blank with simple message */}
-                              <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)] flex items-center justify-center">
-                                <div className="text-center text-[var(--text-secondary)]">
-                                  <p className="text-lg font-medium">You have not processed any data.</p>
-                                  <p className="text-sm mt-3 opacity-80 max-w-md mx-auto leading-relaxed">
-                                    To start, expand the <b>"Speak to your data"</b> section below and click the three dots (...) menu to navigate to Data Sources and connect your data.
-                                  </p>
-                                </div>
-                              </div>
-                              {/* Lower portion: Chat */}
-                              <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
-                                <ChatWindow
-                                  initialMode="chat"
-                                  initialMessage={initialChatMessage}
-                                  onOpenDataSource={onChangeTab ? () => onChangeTab('connectors') : undefined}
-                                  onNewSessionCreated={onNewSessionCreated}
-                                  sessionId={sessionId}
-                                  workspaceName={workspaceName}
-                                  onCollapseChange={setChatCollapsed}
-                                  chatKey={chatKey}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      }
+                      const isGeneric = workspaceType === 'Generic';
 
-                      // If workspaceType !== 'Generic', e.g., 'Sales', ALWAYS show the full dashboard
                       return (
                         <div key={`layout-${workspaceType}-${sessionId}`} className="flex-1 flex overflow-hidden">
                           {/* Left Side: Split into Charts (upper) and Chat (lower) */}
                           <div className="flex-1 min-w-0 flex flex-col min-h-0">
                             {/* Upper portion: Charts */}
                             <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
-                              <DashboardGraphs />
+                              {isGeneric ? <GenericDashboardGraphs /> : <DashboardGraphs />}
                             </div>
                             {/* Lower portion: Chat */}
                             <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
@@ -1710,7 +1681,7 @@ export const AgentWorkflow = ({
                             <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                               <div className="p-3 flex flex-col h-full">
                                 {/* KPIs */}
-                                <DashboardKPIs />
+                                {isGeneric ? <GenericDashboardKPIs /> : <DashboardKPIs />}
                               </div>
                             </div>
                           )}
@@ -1809,7 +1780,12 @@ export const AgentWorkflow = ({
                                   </motion.div>
                                 )
                               ) : (
-                                <>
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -10 }}
+                                  className="space-y-4"
+                                >
                                   {filteredHistory.map((item) => (
                                     <HistoryItemCard
                                       key={item.id}
@@ -1833,7 +1809,7 @@ export const AgentWorkflow = ({
                                       </Button>
                                     </div>
                                   )}
-                                </>
+                                </motion.div>
                               )}
                             </AnimatePresence>
                           )}

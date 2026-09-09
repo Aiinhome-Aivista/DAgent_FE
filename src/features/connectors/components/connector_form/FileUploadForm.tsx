@@ -1,10 +1,12 @@
 import { useRef } from 'react';
 import { motion } from 'motion/react';
-import { FileSpreadsheet, FileCode2, Upload, X, Loader2 } from 'lucide-react';
+import { FileSpreadsheet, FileCode2, Upload, X, Loader2, FileText } from 'lucide-react';
 import { Button } from '@/src/ui-kit';
 
 interface FileUploadFormProps {
   isCsvUpload: boolean;
+  isSqlUpload?: boolean;
+  isDocUpload?: boolean;
   isDragging: boolean;
   setIsDragging: (dragging: boolean) => void;
   handleFileDrop: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -22,6 +24,8 @@ interface FileUploadFormProps {
 
 export const FileUploadForm = ({
   isCsvUpload,
+  isSqlUpload,
+  isDocUpload,
   isDragging,
   setIsDragging,
   handleFileDrop,
@@ -65,7 +69,7 @@ export const FileUploadForm = ({
           onChange={handleFileInput}
         />
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-colors bg-[var(--accent)]/20 text-[var(--accent)]">
-          {isCsvUpload ? <FileSpreadsheet className="w-7 h-7" /> : <FileCode2 className="w-7 h-7" />}
+          {isDocUpload ? <FileText className="w-7 h-7" /> : isCsvUpload ? <FileSpreadsheet className="w-7 h-7" /> : <FileCode2 className="w-7 h-7" />}
         </div>
         <div className="text-center">
           <p className="text-sm font-semibold text-[var(--text-primary)]">
