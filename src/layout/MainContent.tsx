@@ -7,8 +7,6 @@ import { MainContentProps } from "../types/layout";
 
 export const MainContent: React.FC<MainContentProps> = ({
   activeTab,
-  adminSubTab,
-  setAdminSubTab,
   workflowKey,
   chatKey,
   initialChatMessage,
@@ -22,11 +20,11 @@ export const MainContent: React.FC<MainContentProps> = ({
   onNewSessionCreated,
   sessionId,
   workspaceName,
-  workspaceType,
+  onStartNewQueryWithMsg,
 }) => {
   return (
     <div
-      className={`py-4 w-full flex-1 min-h-0 overflow-hidden ${(activeTab === "chat" || activeTab === "admin") ? "max-w-none px-6" : "max-w-6xl mx-auto"}`}
+      className={`p-2 w-full flex-1 min-h-0 overflow-hidden ${activeTab === "chat" ? "max-w-none" : "max-w-6xl mx-auto"}`}
     >
       <AnimatePresence mode="wait">
         {activeTab === "chat" ? (
@@ -47,8 +45,8 @@ export const MainContent: React.FC<MainContentProps> = ({
               onNewSessionCreated={onNewSessionCreated}
               sessionId={sessionId}
               workspaceName={workspaceName}
-              workspaceType={workspaceType}
               chatKey={chatKey}
+              onStartNewQueryWithMsg={onStartNewQueryWithMsg}
             />
           </motion.div>
         ) : activeTab === "new-connector" ? (
@@ -101,7 +99,6 @@ export const MainContent: React.FC<MainContentProps> = ({
               onCreateWorkspaceFromSummary={handleCreateWorkspaceFromSummary}
               sessionId={sessionId}
               workspaceName={workspaceName}
-              workspaceType={workspaceType}
             />
           </motion.div>
         ) : activeTab === "connectors" ? (
@@ -121,7 +118,6 @@ export const MainContent: React.FC<MainContentProps> = ({
               onNewConnector={() => changeTab("new-connector")}
               sessionId={sessionId}
               workspaceName={workspaceName}
-              workspaceType={workspaceType}
             />
           </motion.div>
         ) : activeTab === "admin" ? (
@@ -133,7 +129,7 @@ export const MainContent: React.FC<MainContentProps> = ({
             transition={{ duration: 0.3 }}
             className="h-[calc(100vh-5.5rem)]"
           >
-            <AdminPanel adminSubTab={adminSubTab} setAdminSubTab={setAdminSubTab} />
+            <AdminPanel />
           </motion.div>
         ) : null}
       </AnimatePresence>

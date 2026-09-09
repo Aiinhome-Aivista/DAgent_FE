@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect  } from 'react';
 import { Card, CardContent, CardHeader, Input, Button } from '@/src/ui-kit';
 import { Server, Globe, ChevronLeft, Search, FileSpreadsheet, FileCode2, Network, BarChart3 } from 'lucide-react';
 import { connectorService } from '@/src/services/connector.service';
@@ -8,10 +8,10 @@ import { useAuthContext } from '../../../context/AuthContext';
 // Import Child Components
 import { WebSearchForm } from './connector_form/WebSearchForm';
 import { FileUploadForm } from './connector_form/FileUploadForm';
-import { DatabaseForm } from './connector_form/DatabaseForm';
+import { DatabaseForm }   from './connector_form/DatabaseForm';
 import { DAgentAssistant } from './connector_form/DAgentAssistant';
-import { FtpForm } from './connector_form/FtpForm';          // ← FTP
-import { TallyForm } from './connector_form/TallyForm';        // ← Tally ERP
+import { FtpForm }        from './connector_form/FtpForm';          // ← FTP
+import { TallyForm }     from './connector_form/TallyForm';        // ← Tally ERP
 import { FieldGuide, ConnectorFormData } from '@/src/types/connector';
 
 const GUIDES: Record<string, FieldGuide> = {
@@ -111,7 +111,7 @@ interface ConnectorFormProps {
 
 export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => {
   const { selectedConnector: connector, setSearchTopic } = useConnectorContext();
-
+  
   const { userId } = useAuthContext();
   const [activeField, setActiveField] = useState<string | null>(null);
   const [isTesting, setIsTesting] = useState(false);
@@ -127,20 +127,20 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
 
   // ── FTP-specific form data ──────────────────────────────────────
   const [ftpFormData, setFtpFormData] = useState({
-    name: connector?.name || 'FTP Connector',
-    host: '',
-    port: '21',
-    username: '',
-    password: '',
-    remote_dir: '/',
+    name:         connector?.name || 'FTP Connector',
+    host:         '',
+    port:         '21',
+    username:     '',
+    password:     '',
+    remote_dir:   '/',
     passive_mode: true,
   });
 
   // ── Tally ERP-specific form data ────────────────────────────────
   const [tallyFormData, setTallyFormData] = useState({
-    name: '',
-    host: '',
-    port: '',
+    name:     '',
+    host:     '',
+    port:     '',
     database: '',
   });
 
@@ -152,9 +152,9 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
   const [selectedResultIds, setSelectedResultIds] = useState<Set<string>>(new Set());
 
   // File upload state from Context
-  const {
-    uploadedFiles, setUploadedFiles,
-    isUploading, setIsUploading,
+  const { 
+    uploadedFiles, setUploadedFiles, 
+    isUploading, setIsUploading, 
     uploadProgress, setUploadProgress,
     handleFileUploadConnect: handleContextUpload,
     resetConnectorState
@@ -268,13 +268,13 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     }
   };
 
-  const isWebSearch = connector?.name === 'Web Search using LLM';
-  const isCsvUpload = connector?.name === 'Upload CSV File';
-  const isSqlUpload = connector?.name === 'Upload SQL File';
-  const isDocUpload = connector?.name === 'Upload Document';
+  const isWebSearch  = connector?.name === 'Web Search using LLM';
+  const isCsvUpload  = connector?.name === 'Upload CSV File';
+  const isSqlUpload  = connector?.name === 'Upload SQL File';
+  const isDocUpload  = connector?.name === 'Upload Document';
   const isFileUpload = isCsvUpload || isSqlUpload || isDocUpload;
-  const isFtp = connector?.name === 'FTP Connector';
-  const isTally = connector?.name === 'Tally ERP';       // ← Tally ERP
+  const isFtp        = connector?.name === 'FTP Connector';
+  const isTally      = connector?.name === 'Tally ERP';       // ← Tally ERP
 
   const acceptedFileTypes = isCsvUpload ? '.csv' : isSqlUpload ? '.sql' : isDocUpload ? '.pdf,.doc,.docx' : '';
 
@@ -293,7 +293,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     }
     const existingNames = new Set(uploadedFiles.map(f => `${f.name}-${f.size}`));
     const newFiles = files.filter(f => !existingNames.has(`${f.name}-${f.size}`));
-
+    
     if (newFiles.length < files.length) {
       setErrorMsg('Some duplicate files were skipped.');
       setTimeout(() => setErrorMsg(prev => prev === 'Some duplicate files were skipped.' ? '' : prev), 2000);
@@ -302,7 +302,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     }
 
     setUploadedFiles(prev => [...prev, ...newFiles]);
-
+    
     if (userId && isUploading && newFiles.length > 0) {
       setTimeout(() => handleContextUpload(userId as number), 0);
     }
@@ -312,7 +312,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     const files = Array.from(e.target.files || []);
     const existingNames = new Set(uploadedFiles.map(f => `${f.name}-${f.size}`));
     const newFiles = files.filter(f => !existingNames.has(`${f.name}-${f.size}`));
-
+    
     if (newFiles.length < files.length) {
       setErrorMsg('Some duplicate files were skipped.');
       setTimeout(() => setErrorMsg(prev => prev === 'Some duplicate files were skipped.' ? '' : prev), 2000);
@@ -322,7 +322,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
 
     setUploadedFiles(prev => [...prev, ...newFiles]);
     e.target.value = '';
-
+    
     if (userId && isUploading && newFiles.length > 0) {
       setTimeout(() => handleContextUpload(userId as number), 0);
     }
@@ -349,7 +349,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
   useEffect(() => {
     if (isFileUpload && !isUploading && uploadedFiles.length > 0) {
       const allDone = uploadedFiles.every(file => (uploadProgress[file.name] || 0) === 100);
-
+      
       if (allDone) {
         const connName = connector?.name || 'File Upload';
         const timer = setTimeout(() => {
@@ -404,12 +404,12 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                   {isWebSearch
                     ? 'Identify live data for AI analysis'
                     : isFileUpload
-                      ? `Upload ${isCsvUpload ? 'CSV' : isSqlUpload ? 'SQL' : 'Document'} files for AI analysis`
-                      : isFtp
-                        ? 'Fetch files from an FTP server with scheduled sync'
-                        : isTally
-                          ? 'Connect to Tally ERP via XML API gateway'
-                          : 'Configure your data source settings'}
+                    ? `Upload ${isCsvUpload ? 'CSV' : isSqlUpload ? 'SQL' : 'Document'} files for AI analysis`
+                    : isFtp
+                    ? 'Fetch files from an FTP server with scheduled sync'
+                    : isTally
+                    ? 'Connect to Tally ERP via XML API gateway'
+                    : 'Configure your data source settings'}
                 </p>
               </div>
             </div>

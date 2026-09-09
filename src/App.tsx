@@ -6,9 +6,8 @@ import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { ChatWindow } from './features/chat';
 import { AgentWorkflow } from './features/workflow';
 import { LandingPage } from './features/marketing/components/LandingPage';
-import { PricingPage } from './features/marketing/components/PricingPage';
 import { LoginPage } from './features/auth/components/LoginPage';
-import { Dashboard } from './features/dashboard/components/Dashboard';
+
 import { Moon, Sun, Layout, Settings, LogOut, Menu, MessageSquare, Database, Plus, Sparkles, BarChart3, Clock, Search, ChevronDown, User, Check, X, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useMemo } from 'react';
@@ -19,7 +18,6 @@ import { connectorService } from './services/connector.service';
 import { chatHistoryService, QuerySession } from './services/chatHistory.service';
 
 import { Sidebar } from './layout/Sidebar';
-import { AdminTab } from './types/layout';
 import { AppHeader } from './layout/AppHeader';
 import { MainContent } from './layout/MainContent';
 import { Tab, ViewMode } from './types/layout';
@@ -27,19 +25,13 @@ import { Tab, ViewMode } from './types/layout';
 function AppContent() {
   const { theme, toggleTheme } = useTheme();
   const { userId, roleId, roleName, logout } = useAuthContext();
-  const [viewMode, setViewMode] = useState<ViewMode>(
-    userId ? 'app' :
-    window.location.pathname.startsWith('/admin/login') ? 'admin-login' : 
-    window.location.pathname.startsWith('/pricing') ? 'pricing' : 
-    'landing'
-  );
+  const [viewMode, setViewMode] = useState<ViewMode>(userId ? 'app' : 'landing');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>(roleName === 'Admin' ? 'admin' : 'chat');
   const { selectedConnector, setSelectedConnector, resetConnectorState } = useConnectorContext();
   const [justFinishedWorkflow, setJustFinishedWorkflow] = useState(false);
   const [initialChatMessage, setInitialChatMessage] = useState<string | undefined>(undefined);
   const [chatKey, setChatKey] = useState(0);
-  const [adminSubTab, setAdminSubTab] = useState<AdminTab>('users');
   const [historySearch, setHistorySearch] = useState('');
 
   // Workspace state
@@ -187,23 +179,18 @@ function AppContent() {
   const handleLogin = () => setViewMode('login');
   const handleGetStarted = () => setViewMode('login');
   const handleLoginSuccess = () => {
-    window.history.pushState({}, '', '/');
     setViewMode('app');
     setIsWorkspaceOpen(false);
     setSidebarOpen(false);
     const storedRoleName = localStorage.getItem('DAgent_role_name');
     setActiveTab(storedRoleName === 'Admin' ? 'admin' : 'chat');
   };
-  const handleBackToLanding = () => {
-    window.history.pushState({}, '', '/');
-    setViewMode('landing');
-  };
+  const handleBackToLanding = () => setViewMode('landing');
 
   const handleLogout = () => {
     logout();
     resetConnectorState();
     agentService.reset();
-    window.history.pushState({}, '', '/');
     setViewMode('landing');
     setIsWorkspaceOpen(false);
     setActiveTab('chat');
@@ -270,8 +257,9 @@ function AppContent() {
     }
   };
 
-  const handleCreateWorkspaceFromSummary = async (summary: string) => {
-    if (!userId || !selectedWorkspace) return;
+  const handleCreateWorkspaceFromSummary = async (summary: string, sessionId?: string) => {
+    const activeSessionId = sessionId || selectedWorkspace?.session_id || localStorage.getItem('DAgent_session_id');
+    if (!userId || !activeSessionId) return;
 
     // Format date as DD_MM_YYYY
     const date = new Date();
@@ -289,11 +277,11 @@ function AppContent() {
       let existingSessionHistory: any[] = [];
       let isExisting = false;
 
-      // Try to determine next visit number or find existing session starting with "default_"
+      // Try to determine next visit number or find existing session
       try {
-        const queryResponse = await chatHistoryService.getSessionChatHistory(selectedWorkspace.session_id, userId);
+        const queryResponse = await chatHistoryService.getSessionChatHistory(activeSessionId, userId);
         if (queryResponse && queryResponse.querySessions && queryResponse.querySessions.length > 0) {
-          const existingSession = queryResponse.querySessions.find(s => s.querySessionName.startsWith('default_'));
+          const existingSession = queryResponse.querySessions.find(s => s.querySessionName === defaultName || s.querySessionName === "Updated Analysis from newly uploaded files" || s.querySessionName?.startsWith('default_'));
 
           if (existingSession) {
             isExisting = true;
@@ -312,8 +300,7 @@ function AppContent() {
         console.error('Failed to fetch chat history for visit number calculation', e);
       }
 
-      // Always keep the question as defaultName so its name in the DB remains default_DD_MM_YYYY
-      const questionToUse = defaultName;
+      const questionToUse = isExisting ? "Updated Analysis from newly uploaded files" : defaultName;
 
       const newTurn = {
         question: questionToUse,
@@ -322,16 +309,12 @@ function AppContent() {
         follow_up_questions: ["What are the key takeaways?", "Can we dive deeper into the anomalies?", "What actions should we take next?"]
       };
 
-      // Check if the summary actually changed
-      const isSummaryChanged = existingSessionHistory.length === 0 || existingSessionHistory[0].answer !== summary;
-
       // We maintain the history object for the sidebar and database
       let newSessionHistory = [];
       if (isExisting && existingSessionHistory.length > 0) {
         newSessionHistory = [...existingSessionHistory];
         newSessionHistory[0] = {
           ...newSessionHistory[0],
-          question: questionToUse, // ensure question is default_DD_MM_YYYY
           answer: summary,
           visualizations: [],
           follow_up_questions: newTurn.follow_up_questions
@@ -340,21 +323,19 @@ function AppContent() {
         newSessionHistory = [newTurn];
       }
 
-      if (isSummaryChanged) {
-        // Save/update in database only if summary/data has changed
-        try {
-          await chatHistoryService.saveSessionChatHistory({
-            session_id: selectedWorkspace.session_id,
-            user_id: userId,
-            question: questionToUse,
-            answer: summary,
-            visit_number: nextVisitNumber,
-            mode: 'answer',
-            is_update: isExisting
-          });
-        } catch (e) {
-          console.error("Failed to save to backend, continuing UI update", e);
-        }
+      // Save it to backend in background/await
+      try {
+        await chatHistoryService.saveSessionChatHistory({
+          session_id: activeSessionId,
+          user_id: userId,
+          question: questionToUse,
+          answer: summary,
+          visit_number: nextVisitNumber,
+          mode: 'answer',
+          is_update: isExisting
+        });
+      } catch (e) {
+        console.error("Failed to save to backend, continuing UI update", e);
       }
 
       // Optimistically add or update it in the sidebar
@@ -365,11 +346,12 @@ function AppContent() {
       };
 
       setQueryHistories(prev => {
-        const existing = prev[selectedWorkspace.id] || [];
+        const workspaceId = selectedWorkspace?.id || 'temp';
+        const existing = prev[workspaceId] || [];
         if (isExisting) {
           return {
             ...prev,
-            [selectedWorkspace.id]: existing.map(s => s.querySessionId === updatedSessionNode.querySessionId ? updatedSessionNode : s)
+            [workspaceId]: existing.map(s => s.querySessionId === updatedSessionNode.querySessionId ? updatedSessionNode : s)
           };
         } else {
           // Prevent duplicate if somehow fetch succeeded
@@ -378,7 +360,7 @@ function AppContent() {
           }
           return {
             ...prev,
-            [selectedWorkspace.id]: [...existing, updatedSessionNode]
+            [workspaceId]: [...existing, updatedSessionNode]
           };
         }
       });
@@ -407,31 +389,15 @@ function AppContent() {
     }
   };
 
-  const navigateToPricing = () => {
-    window.history.pushState({}, '', '/pricing');
-    setViewMode('pricing');
-  };
-
-  const navigateToLanding = () => {
-    window.history.pushState({}, '', '/');
-    setViewMode('landing');
-  };
-
   if (viewMode === 'landing') {
-    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')} onPricingClick={navigateToPricing} />;
+    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} />;
   }
 
-  if (viewMode === 'pricing') {
-    return <PricingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} />;
+  if (viewMode === 'login') {
+    return <LoginPage onBack={handleBackToLanding} onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (viewMode === 'login' || viewMode === 'admin-login') {
-    return <LoginPage onBack={handleBackToLanding} onLoginSuccess={handleLoginSuccess} isAdminLogin={viewMode === 'admin-login'} />;
-  }
 
-  if (viewMode === 'dashboard') {
-    return <Dashboard onBack={() => setViewMode('landing')} />;
-  }
 
   return (
     <div className="h-screen flex overflow-hidden text-[var(--text-primary)]">
@@ -458,8 +424,6 @@ function AppContent() {
         setHistorySearch={setHistorySearch}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        adminSubTab={adminSubTab}
-        setAdminSubTab={setAdminSubTab}
         workflowKey={workflowKey}
         setWorkflowKey={setWorkflowKey}
         chatKey={chatKey}
@@ -484,8 +448,6 @@ function AppContent() {
 
         <MainContent
           activeTab={activeTab}
-          adminSubTab={adminSubTab}
-          setAdminSubTab={setAdminSubTab}
           workflowKey={workflowKey}
           chatKey={chatKey}
           initialChatMessage={initialChatMessage}
@@ -499,7 +461,15 @@ function AppContent() {
           onNewSessionCreated={handleNewSessionCreated}
           sessionId={selectedWorkspace?.session_id}
           workspaceName={selectedWorkspace?.workspace_name}
-          workspaceType={selectedWorkspace?.workspace_type}
+          onStartNewQueryWithMsg={(msg) => {
+            localStorage.removeItem("selected_query_session");
+            localStorage.setItem("current_visit_number", "new");
+            localStorage.removeItem("selected_query_session_name");
+            localStorage.removeItem("is_default_chat");
+            setInitialChatMessage(msg);
+            setActiveTab("chat");
+            setChatKey((prev) => prev + 1);
+          }}
         />
       </main>
     </div>

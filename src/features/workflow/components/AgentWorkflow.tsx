@@ -19,7 +19,7 @@
 //   onChangeTab?: (tabId: string) => void;
 //   onNewConnector?: () => void;
 //   onForwardWithContext?: (agentId: string, context: string) => void;
-//   onCreateWorkspaceFromSummary?: (summary: string) => void;
+//   onCreateWorkspaceFromSummary?: (summary: string, sessionId?: string) => void;
 //   onNewSessionCreated?: () => void;
 //   initialChatMessage?: string;
 //   sessionId?: string;
@@ -29,7 +29,7 @@
 // import { HistoryItemCard } from './HistoryItemCard';
 // import { AgentStepper, getAgentIcon } from './AgentStepper';
 // import { IngestDataView } from './IngestDataView';
-// import { DashboardKPIs, graphPanelItems, GraphSidePanel, DashboardGraphs } from '../../dashboard/components/DashboardCharts';
+
 
 // const formatInsightsText = (text: string) => {
 //   if (typeof text !== 'string') return JSON.stringify(text, null, 2);
@@ -399,7 +399,7 @@
 //         });
 
 //         if (response) {
-//           const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+//           const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
 //           const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
 //           const displayContent = report || errorMessage;
 
@@ -558,7 +558,7 @@
 //         });
 
 //         if (response) {
-//           const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+//           const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
 //           const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
 //           const displayContent = report || errorMessage;
 
@@ -740,7 +740,7 @@
 //                       <div className="flex-1 min-w-0 flex flex-col min-h-0">
 //                         {/* Upper portion: Charts */}
 //                         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
-//                           <DashboardGraphs />
+
 //                         </div>
 //                         {/* Lower portion: Chat */}
 //                         <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
@@ -761,7 +761,7 @@
 //                         <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
 //                           <div className="p-3 flex flex-col h-full">
 //                           {/* KPIs */}
-//                           <DashboardKPIs />
+
 
 //                           {/* Divider */}
 //                           {/* <div className="flex items-center gap-2 pt-1">
@@ -902,7 +902,7 @@
 //   );
 // };
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { AgentData, AgentHistoryItem } from '../types';
 import { Card, CardContent, CardHeader, Badge, Button } from '@/src/ui-kit';
 import { motion, AnimatePresence } from 'motion/react';
@@ -912,6 +912,9 @@ import { agentService } from '@/src/services/agent.service';
 import { ConnectorList } from '../../connectors/components/ConnectorList';
 import { Connector } from '../../connectors/types';
 import { ChatWindow } from '../../chat/components/ChatWindow';
+import { ChatSummaryCard } from '../../chat/components/ChatSummaryCard';
+import { KPICard } from '../../chat/components/KPICard';
+import { DynamicChart } from '../../chat/components/DynamicChart';
 import { useConnectorContext } from '../../../context/ConnectorContext';
 import { useAuthContext } from '../../../context/AuthContext';
 import { connectorService } from '@/src/services/connector.service';
@@ -923,21 +926,20 @@ interface AgentWorkflowProps {
   onChangeTab?: (tabId: string) => void;
   onNewConnector?: () => void;
   onForwardWithContext?: (agentId: string, context: string) => void;
-  onCreateWorkspaceFromSummary?: (summary: string) => void;
+  onCreateWorkspaceFromSummary?: (summary: string, sessionId?: string) => void;
   onNewSessionCreated?: () => void;
   initialChatMessage?: string;
   sessionId?: string;
   workspaceName?: string;
-  workspaceType?: string;
   chatKey?: number;
+  onStartNewQueryWithMsg?: (msg: string) => void;
 }
 
 import { HistoryItemCard } from './HistoryItemCard';
 import { AgentStepper, getAgentIcon } from './AgentStepper';
 import { IngestDataView } from './IngestDataView';
-import { DashboardKPIs, graphPanelItems, GraphSidePanel, DashboardGraphs } from '../../dashboard/components/DashboardCharts';
-import { GenericDashboardGraphs } from '../../dashboard/components/graphs/GenericDashboardGraphs';
-import { GenericDashboardKPIs } from '../../dashboard/components/graphs/GenericDashboardKPIs';
+import React from 'react';
+
 
 const formatInsightsText = (text: string) => {
   if (typeof text !== 'string') return JSON.stringify(text, null, 2);
@@ -1016,8 +1018,8 @@ export const AgentWorkflow = ({
   initialChatMessage,
   sessionId,
   workspaceName,
-  workspaceType,
-  chatKey
+  chatKey,
+  onStartNewQueryWithMsg
 }: AgentWorkflowProps) => {
   const {
     selectedConnector: activeConnector,
@@ -1171,7 +1173,7 @@ export const AgentWorkflow = ({
             });
 
             if (response) {
-              const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+              const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
               const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
               const displayContent = report || errorMessage || "Analysis completed but no insights were generated.";
 
@@ -1311,7 +1313,7 @@ export const AgentWorkflow = ({
         });
 
         if (response) {
-          const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+          const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
           const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
           const displayContent = report || errorMessage;
 
@@ -1473,7 +1475,7 @@ export const AgentWorkflow = ({
         });
 
         if (response) {
-          const report = response.report || response.description || response.report_content || (typeof response === 'string' ? response : null);
+          const report = response.report_content || response.report || response.description || (typeof response === 'string' ? response : null);
           const errorMessage = (response.status === 'partial' || response.status === 'error') ? response.message : null;
           const displayContent = report || errorMessage;
 
@@ -1527,6 +1529,177 @@ export const AgentWorkflow = ({
     await forwardToNextAgent('ingest', scenario, activeConnector?.name);
   };
 
+  const chatSummaryData = useMemo(() => {
+    let rawText = '';
+    let extractedTitle: string | undefined = undefined;
+    let extractedContent: string | undefined = undefined;
+    let kpis: any[] = [];
+    let charts: any[] = [];
+
+    const isNewVisit = localStorage.getItem("current_visit_number") === "new";
+
+    if (!isNewVisit) {
+      try {
+        let storedSession = localStorage.getItem('default_workspace_analysis');
+        if (!storedSession || storedSession === '[]') {
+          storedSession = localStorage.getItem('selected_query_session');
+        }
+      
+      if (storedSession) {
+        const parsed = JSON.parse(storedSession);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (parsed[0].answer) {
+            rawText = parsed[0].answer;
+          }
+          if (parsed[0].visualizations && Array.isArray(parsed[0].visualizations)) {
+            parsed[0].visualizations.forEach((vis: any) => {
+              if (['bar_chart', 'line_chart', 'pie_chart', 'bar', 'line', 'pie'].includes(vis.type)) {
+                let chartType = vis.type.replace('_chart', '');
+                let labels = [];
+                let datasets = [];
+
+                if (vis.data && vis.xKey && vis.yKey) {
+                  labels = vis.data.map((d: any) => String(d[vis.xKey]));
+                  datasets = [{
+                    label: vis.yKey,
+                    data: vis.data.map((d: any) => {
+                      const val = d[vis.yKey];
+                      return typeof val === 'number' ? val : parseFloat(val) || 0;
+                    })
+                  }];
+                } else if (vis.labels && vis.datasets) {
+                  labels = vis.labels;
+                  datasets = vis.datasets;
+                }
+
+                if (labels.length > 0) {
+                  charts.push({
+                    chart_type: chartType,
+                    title: vis.title || '',
+                    description: vis.description || '',
+                    labels,
+                    datasets
+                  });
+                }
+              } else if (vis.type === 'kpi') {
+                kpis.push({
+                  title: vis.title || vis.label || 'Metric',
+                  value: String(vis.value || ''),
+                  description: vis.description || '',
+                  trend: vis.trend || 'neutral'
+                });
+              }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    }
+
+    if (!rawText) {
+      rawText = typeof connectorResults?.report_content === 'string'
+        ? connectorResults.report_content
+        : typeof connectorResults?.description === 'string'
+          ? connectorResults.description
+          : connectorResults?.description
+            ? JSON.stringify(connectorResults.description)
+            : '';
+    }
+
+    if (rawText) {
+      try {
+        let jsonStr = rawText;
+
+        // Handle markdown wrapped json like ```json ... ```
+        const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonStr = jsonMatch[1];
+        } else {
+          // If no markdown blocks, try to aggressively find the JSON object boundaries
+          const firstBrace = rawText.indexOf('{');
+          const lastBrace = rawText.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            jsonStr = rawText.slice(firstBrace, lastBrace + 1);
+          }
+        }
+
+        const parsedJson = JSON.parse(jsonStr);
+
+        if (parsedJson.report || parsedJson.kpis || parsedJson.charts) {
+          extractedContent = parsedJson.report || '';
+          kpis = parsedJson.kpis || [];
+          charts = parsedJson.charts || [];
+
+          // Try to extract title from the report string
+          if (typeof extractedContent === 'string') {
+            const lines = extractedContent.split('\n');
+            const titleLineIndex = lines.findIndex(line => line.toLowerCase().includes('title:'));
+            if (titleLineIndex !== -1) {
+              let titleLine = lines[titleLineIndex];
+              const match = titleLine.match(/title\s*:\s*(.*)/i);
+              if (match) {
+                extractedTitle = match[1].replace(/\*\*/g, '').replace(/#/g, '').trim();
+              }
+              lines.splice(titleLineIndex, 1);
+              extractedContent = lines.join('\n').trim();
+            }
+          }
+        } else {
+          // It's a valid JSON but doesn't have the dashboard schema.
+          // Structure it nicely instead of failing.
+          if (Array.isArray(parsedJson) && parsedJson.length > 0 && typeof parsedJson[0] === 'object') {
+            // Convert array of objects to markdown table
+            const headers = Object.keys(parsedJson[0]);
+            let table = '| ' + headers.join(' | ') + ' |\n';
+            table += '| ' + headers.map(() => '---').join(' | ') + ' |\n';
+            parsedJson.forEach((row: any) => {
+              table += '| ' + headers.map(h => String(row[h] || '')).join(' | ') + ' |\n';
+            });
+            extractedContent = "### Data Table\n\n" + table;
+          } else {
+            // Just format it beautifully as JSON
+            extractedContent = "```json\n" + JSON.stringify(parsedJson, null, 2) + "\n```";
+          }
+        }
+      } catch (e) {
+        // Fallback to plain text logic
+        const lines = rawText.split('\n');
+        const titleLineIndex = lines.findIndex(line => line.toLowerCase().includes('title:'));
+
+        if (titleLineIndex !== -1) {
+          let titleLine = lines[titleLineIndex];
+          const match = titleLine.match(/title\s*:\s*(.*)/i);
+          if (match) {
+            extractedTitle = match[1].replace(/\*\*/g, '').replace(/#/g, '').trim();
+          }
+          lines.splice(titleLineIndex, 1);
+          extractedContent = lines.join('\n').trim();
+        } else {
+          extractedContent = rawText;
+        }
+
+
+      }
+    }
+
+    if (!extractedTitle && !isNewVisit) {
+      try {
+        const sessionName = localStorage.getItem('selected_query_session_name');
+        if (sessionName && sessionName !== 'null') {
+          extractedTitle = sessionName;
+        }
+      } catch (e) { }
+    }
+
+    if (!extractedTitle) {
+      extractedTitle = activeConnector?.name ? `${activeConnector.name} Summary` : undefined;
+    }
+
+    return { title: extractedTitle, content: extractedContent, kpis, charts };
+  }, [connectorResults?.description, connectorResults?.report_content, chatKey, activeConnector?.name, sessionId]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -1554,6 +1727,8 @@ export const AgentWorkflow = ({
       }
     }
   };
+
+
 
   return (
     <div className="w-full flex-col h-full py-1 flex gap-4">
@@ -1650,54 +1825,61 @@ export const AgentWorkflow = ({
                   )}
 
                   {selectedAgent.id === 'query' ? (
-                    (() => {
-                      if (!workspaceType) {
-                        return (
-                          <div className="flex-1 flex flex-col items-center justify-center p-6 text-slate-500 gap-4 h-full">
-                            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-                            <p>Loading workspace...</p>
-                          </div>
-                        );
-                      }
-                      const isGeneric = workspaceType === 'Generic';
+                    <div className="flex-1 flex overflow-hidden flex-col relative">
+                      {/* Dashboard Container: Sized to content, shrinks and scrolls only if too tall */}
+                      <div className="px-6 pt-6 z-10 w-full flex-1 shrink overflow-y-auto pb-4">
+                        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
 
-                      return (
-                        <div key={`layout-${workspaceType}-${sessionId}`} className="flex-1 flex overflow-hidden">
-                          {/* Left Side: Split into Charts (upper) and Chat (lower) */}
-                          <div className="flex-1 min-w-0 flex flex-col min-h-0">
-                            {/* Upper portion: Charts */}
-                            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
-                              {isGeneric ? <GenericDashboardGraphs sessionId={sessionId} /> : <DashboardGraphs />}
-                            </div>
-                            {/* Lower portion: Chat */}
-                            <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
-                              <ChatWindow
-                                initialMode="chat"
-                                initialMessage={initialChatMessage}
-                                onOpenDataSource={onChangeTab ? () => onChangeTab('connectors') : undefined}
-                                onNewSessionCreated={onNewSessionCreated}
-                                sessionId={sessionId}
-                                workspaceName={workspaceName}
-                                onCollapseChange={setChatCollapsed}
-                                chatKey={chatKey}
-                              />
-                            </div>
+                          {/* Left Column: Summary and Charts */}
+                          <div className={`flex flex-col gap-6 ${chatSummaryData.kpis?.length > 0 ? 'xl:col-span-3' : 'xl:col-span-4'}`}>
+                            <ChatSummaryCard
+                              title={chatSummaryData.title}
+                              content={chatSummaryData.content}
+                            />
+
+                            {chatSummaryData.charts?.length > 0 && (
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-4">
+                                {chatSummaryData.charts.map((chart, idx) => (
+                                  <DynamicChart key={idx} config={chart} index={idx} />
+                                ))}
+                              </div>
+                            )}
                           </div>
 
-                          {/* Right side strip - scrollable KPIs + Graph buttons */}
-                          {!activeGraphId && (
-                            <div className="w-52 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] flex flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                              <div className="p-3 flex flex-col h-full">
-                                {/* KPIs */}
-                                {isGeneric ? <GenericDashboardKPIs sessionId={sessionId} /> : <DashboardKPIs />}
+                          {/* Right Column: KPIs Sidebar */}
+                          {chatSummaryData.kpis?.length > 0 && (
+                            <div className="xl:col-span-1 flex flex-col gap-4">
+                              <div className="flex items-center justify-between px-1">
+                                <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Key Metrics</h3>
+                              </div>
+                              <div className="flex flex-col gap-4">
+                                {chatSummaryData.kpis.map((kpi, idx) => (
+                                  <KPICard key={idx} kpi={kpi} index={idx} />
+                                ))}
                               </div>
                             </div>
                           )}
-                          {/* Graph Side Panel overlay */}
-                          <GraphSidePanel activeGraphId={activeGraphId} onClose={() => setActiveGraphId(null)} inline={true} />
+
                         </div>
-                      );
-                    })()
+                      </div>
+
+                      {/* ChatWindow Container: Takes remaining space when open, just intrinsic height when collapsed */}
+                      <div className={`w-full flex flex-col transition-all duration-300 ${chatCollapsed ? 'shrink-0' : 'flex-1 min-h-[350px]'}`}>
+                        <div className="flex-1 flex flex-col h-full">
+                          <ChatWindow
+                            initialMode="chat"
+                            initialMessage={initialChatMessage}
+                            onOpenDataSource={onChangeTab ? () => onChangeTab('connectors') : undefined}
+                            onNewSessionCreated={onNewSessionCreated}
+                            sessionId={sessionId}
+                            workspaceName={workspaceName}
+                            onCollapseChange={setChatCollapsed}
+                            chatKey={chatKey}
+                            onStartNewQueryWithMsg={onStartNewQueryWithMsg}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     (() => {
                       const isIngest = selectedAgent.id === 'ingest';
@@ -1736,7 +1918,9 @@ export const AgentWorkflow = ({
                                 <div className="prose prose-sm max-w-none text-[var(--text-primary)] leading-relaxed prose-a:text-[var(--accent)] hover:prose-a:underline">
                                   {typeof connectorResults.description === 'string'
                                     ? <div dangerouslySetInnerHTML={{ __html: formatInsightsText(connectorResults.description) }} />
-                                    : JSON.stringify(connectorResults.description, null, 2)}
+                                    : connectorResults.description && typeof connectorResults.description === 'object' && connectorResults.description.report
+                                      ? <div dangerouslySetInnerHTML={{ __html: formatInsightsText(connectorResults.description.report) }} />
+                                      : <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(connectorResults.description, null, 2)}</pre>}
                                 </div>
                               </motion.div>
 
@@ -1751,7 +1935,7 @@ export const AgentWorkflow = ({
                                         const summaryText = typeof connectorResults.description === 'string'
                                           ? connectorResults.description
                                           : JSON.stringify(connectorResults.description);
-                                        onCreateWorkspaceFromSummary(summaryText);
+                                        onCreateWorkspaceFromSummary(summaryText, sessionId);
                                       } else {
                                         handleStepperClick('query');
                                       }
@@ -1788,12 +1972,7 @@ export const AgentWorkflow = ({
                                   </motion.div>
                                 )
                               ) : (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -10 }}
-                                  className="space-y-4"
-                                >
+                                <>
                                   {filteredHistory.map((item) => (
                                     <HistoryItemCard
                                       key={item.id}
@@ -1817,7 +1996,7 @@ export const AgentWorkflow = ({
                                       </Button>
                                     </div>
                                   )}
-                                </motion.div>
+                                </>
                               )}
                             </AnimatePresence>
                           )}

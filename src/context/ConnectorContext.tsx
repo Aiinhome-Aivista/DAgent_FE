@@ -39,7 +39,7 @@ export const ConnectorProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const sessionId = localStorage.getItem('DAgent_session_id');
       if (sessionId) {
         const stored = localStorage.getItem(`connector_results_${sessionId}`);
-        return (stored && stored !== 'undefined') ? JSON.parse(stored) : null;
+        return stored ? JSON.parse(stored) : null;
       }
     } catch (e) {
       console.error('Failed to parse stored connector results', e);
@@ -57,9 +57,8 @@ export const ConnectorProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [uploadProgress, setUploadProgressState] = useState<Record<string, number>>(() => {
     try {
       const stored = localStorage.getItem('uploadProgress');
-      return (stored && stored !== 'undefined') ? JSON.parse(stored) : {};
+      return stored ? JSON.parse(stored) : {};
     } catch (e) {
-      console.error('Failed to parse stored upload progress', e);
       return {};
     }
   });

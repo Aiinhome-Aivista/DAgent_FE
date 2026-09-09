@@ -87,23 +87,6 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
     return value.toString();
   };
 
-  const formatXAxisTick = (value: any) => {
-    if (typeof value === 'string') {
-      if (/^\d{4}-\d{2}$/.test(value)) {
-        const [year, month] = value.split('-');
-        const date = new Date(parseInt(year), parseInt(month) - 1);
-        return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-      }
-      if (/^\d{4}-\d{2}-\d{2}(T.*)?$/.test(value)) {
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) {
-           return date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
-        }
-      }
-    }
-    return value;
-  };
-
   const chartRef = React.useRef<HTMLDivElement>(null);
 
   const handleDownloadPng = async () => {
@@ -150,7 +133,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
 
   const renderTable = () => {
     if (!sortedData || sortedData.length === 0) return null;
-    const tableColumns = (columns && columns.length > 0) ? columns : Object.keys(sortedData[0]).map(key => ({ key, label: key }));
+    const tableColumns = columns || Object.keys(sortedData[0]).map(key => ({ key, label: key }));
 
     return (
       <div className="bg-[var(--bg)] rounded-xl border border-[var(--border)] overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-black/5">
@@ -233,7 +216,6 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
               tickLine={false}
               axisLine={false}
               tick={{ fill: 'var(--text-secondary)' }}
-              tickFormatter={formatXAxisTick}
               label={{ value: xLabel, position: 'insideBottom', offset: -25, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
             />
             <YAxis
@@ -252,8 +234,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
               contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               itemStyle={{ color: 'var(--accent)', fontWeight: 'bold' }}
               labelStyle={{ color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 'bold' }}
-              labelFormatter={formatXAxisTick}
-              formatter={(value: any) => [typeof value === 'number' ? value.toLocaleString() : value, yLabel]}
+              formatter={(value: any) => [typeof value === 'number' ? value.toLocaleString() : value, yKey]}
             />
             <Bar dataKey={resolvedYKey} fill="var(--accent)" radius={[4, 4, 0, 0]} barSize={32} />
           </BarChart>
@@ -299,7 +280,6 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             <Tooltip
               wrapperStyle={{ zIndex: 100 }}
               contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-              labelFormatter={formatXAxisTick}
               formatter={(value: any, name: any) => [typeof value === 'number' ? value.toLocaleString() : value, name]}
             />
             <Legend
@@ -394,7 +374,6 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
                 tickLine={false}
                 axisLine={true}
                 tick={{ fill: 'var(--text-secondary)' }}
-                tickFormatter={formatXAxisTick}
                 height={hasLegend ? 45 : 30}
                 label={{ value: xLabel, position: 'insideBottom', offset: hasLegend ? 15 : -25, fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }}
               />
@@ -413,7 +392,6 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
                 contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 itemStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
                 labelStyle={{ color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 'bold' }}
-                labelFormatter={formatXAxisTick}
                 formatter={(value: any, name: any) => [typeof value === 'number' ? value.toLocaleString() : value, name === resolvedYKey ? yLabel : getLabel(name)]}
               />
               {hasLegend && (

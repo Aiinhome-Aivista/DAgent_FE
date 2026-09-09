@@ -253,7 +253,7 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
                                     </button>
                                     <button
                                         onClick={() => handleDeleteSchedule(schedule.id)}
-                                        className="p-1.5 text-rose-500 rounded-lg hover:bg-rose-500/10 transition-colors"
+                                        className="p-1.5 text-[var(--text-secondary)] hover:text-rose-500 rounded-lg hover:bg-rose-500/10 transition-colors"
                                         title="Delete Schedule"
                                     >
                                         <Trash2 className="w-4 h-4" />
