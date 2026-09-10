@@ -930,6 +930,7 @@ interface AgentWorkflowProps {
   workspaceName?: string;
   workspaceType?: string;
   chatKey?: number;
+  isWorkspacesLoading?: boolean;
 }
 
 import { HistoryItemCard } from './HistoryItemCard';
@@ -1019,7 +1020,8 @@ export const AgentWorkflow = ({
   sessionId,
   workspaceName,
   workspaceType,
-  chatKey
+  chatKey,
+  isWorkspacesLoading
 }: AgentWorkflowProps) => {
   const {
     selectedConnector: activeConnector,
@@ -1672,6 +1674,7 @@ export const AgentWorkflow = ({
                             initialChatMessage={initialChatMessage}
                             onChangeTab={onChangeTab}
                             onNewSessionCreated={onNewSessionCreated}
+                            isWorkspacesLoading={isWorkspacesLoading}
                           />
                         );
                       }
@@ -1689,6 +1692,7 @@ export const AgentWorkflow = ({
                           onNewSessionCreated={onNewSessionCreated}
                           activeGraphId={activeGraphId}
                           setActiveGraphId={setActiveGraphId}
+                          isWorkspacesLoading={isWorkspacesLoading}
                         />
                       );
                     })()

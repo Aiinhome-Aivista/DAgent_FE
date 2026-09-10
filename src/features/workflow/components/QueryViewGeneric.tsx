@@ -4,6 +4,7 @@ import { ChatSummaryCard } from '../../../features/chat/components/ChatSummaryCa
 import { KPICard } from '../../../features/chat/components/KPICard';
 import { DynamicChart } from '../../../features/chat/components/DynamicChart';
 import { useConnectorContext } from '../../../context/ConnectorContext';
+import { Loader2 } from 'lucide-react';
 
 interface QueryViewGenericProps {
   sessionId?: string;
@@ -15,6 +16,7 @@ interface QueryViewGenericProps {
   initialChatMessage?: string;
   onChangeTab?: (tabId: string) => void;
   onNewSessionCreated?: () => void;
+  isWorkspacesLoading?: boolean;
 }
 
 export const QueryViewGeneric: React.FC<QueryViewGenericProps> = ({
@@ -26,7 +28,8 @@ export const QueryViewGeneric: React.FC<QueryViewGenericProps> = ({
   chatKey,
   initialChatMessage,
   onChangeTab,
-  onNewSessionCreated
+  onNewSessionCreated,
+  isWorkspacesLoading
 }) => {
   const { connectorResults, selectedConnector: activeConnector, isAnalyzing } = useConnectorContext();
 
@@ -249,14 +252,11 @@ export const QueryViewGeneric: React.FC<QueryViewGenericProps> = ({
           {/* Left Column: Summary and Charts (Scrollable) */}
           <div className="flex-1 min-w-0 overflow-y-auto px-6 pt-6 pb-4">
             <div className="flex flex-col gap-6 h-full">
-              {isAnalyzing ? (
-                <>
-                  <div className="h-32 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)] w-full"></div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="h-64 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
-                    <div className="h-64 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
-                  </div>
-                </>
+              {isAnalyzing || isWorkspacesLoading ? (
+                <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh]">
+                  <Loader2 className="w-10 h-10 animate-spin text-[var(--accent)] mb-4" />
+                  <p className="text-[var(--text-secondary)] font-medium">Loading your dashboard insights...</p>
+                </div>
               ) : hasData ? (
                 <>
                   {/* Summary Card */}
@@ -292,14 +292,12 @@ export const QueryViewGeneric: React.FC<QueryViewGenericProps> = ({
           </div>
 
           {/* Right Column: KPIs Sidebar (Fixed Width, Scrollable) */}
-          {(hasData || isAnalyzing) && (
+          {(hasData || isAnalyzing || isWorkspacesLoading) && (
             <div className="w-64 xl:w-80 shrink-0 border-l border-[var(--border)] bg-[var(--bg)] overflow-y-auto px-4 pt-6 pb-4">
-              {isAnalyzing ? (
-                <div className="flex flex-col gap-4">
-                  <div className="h-24 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
-                  <div className="h-24 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
-                  <div className="h-24 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
-                  <div className="h-24 bg-[var(--surface-light)] animate-pulse rounded-xl border border-[var(--border)]"></div>
+              {isAnalyzing || isWorkspacesLoading ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[300px]">
+                  <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)] mb-3" />
+                  <p className="text-xs text-[var(--text-secondary)] text-center px-4">Fetching KPIs...</p>
                 </div>
               ) : chatSummaryData.kpis?.length > 0 ? (
                 <>

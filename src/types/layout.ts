@@ -67,4 +67,5 @@ export interface MainContentProps {
   sessionId?: string;
   workspaceName?: string;
   workspaceType?: string;
+  isWorkspacesLoading?: boolean;
 }

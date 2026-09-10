@@ -508,6 +508,7 @@ function AppContent() {
           sessionId={selectedWorkspace?.session_id}
           workspaceName={selectedWorkspace?.workspace_name}
           workspaceType={selectedWorkspace?.workspace_type}
+          isWorkspacesLoading={isWorkspacesLoading}
         />
       </main>
     </div>

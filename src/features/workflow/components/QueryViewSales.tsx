@@ -14,6 +14,7 @@ interface QueryViewSalesProps {
   onNewSessionCreated?: () => void;
   activeGraphId: string | null;
   setActiveGraphId: (id: string | null) => void;
+  isWorkspacesLoading?: boolean;
 }
 
 export const QueryViewSales: React.FC<QueryViewSalesProps> = ({
@@ -27,7 +28,8 @@ export const QueryViewSales: React.FC<QueryViewSalesProps> = ({
   onChangeTab,
   onNewSessionCreated,
   activeGraphId,
-  setActiveGraphId
+  setActiveGraphId,
+  isWorkspacesLoading
 }) => {
   return (
     <div key={`layout-${workspaceType}-${sessionId}`} className="flex-1 flex overflow-hidden">
