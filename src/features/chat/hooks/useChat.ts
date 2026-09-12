@@ -75,7 +75,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
         session_id: chatSessionId,
         question: content,
         user_id: userId,
-        ...(currentVisitNumber ? { visit_number: parseInt(currentVisitNumber, 10) } : {})
+        ...(currentVisitNumber ? { visit_number: parseInt(currentVisitNumber, 10) } : { is_new_query: true })
       });
 
       if (response?.visit_number) {
@@ -155,27 +155,44 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
             });
           }
 
+          let assistantContent = item.answer;
+          try {
+            const parsed = JSON.parse(item.answer);
+            if (parsed && typeof parsed === 'object') {
+              const extracted = parsed.report || parsed.description || parsed.report_content;
+              if (extracted) {
+                assistantContent = typeof extracted === 'string' ? extracted : JSON.stringify(extracted);
+              }
+            }
+          } catch (e) {
+            // Not JSON, use as is
+          }
+
           historyMessages.push({
             id: `assistant-${idx}`,
             role: 'assistant',
-            content: item.answer,
+            content: assistantContent,
             timestamp: item.timestamp ? new Date(item.timestamp) : (item.created_at ? new Date(item.created_at) : new Date()),
             visualizations: item.visualizations || []
           });
         });
 
-        if (historyMessages.length > 0) {
-          setMessages(historyMessages);
-
-          let hasFollowUps = false;
+        let hasFollowUps = false;
+        if (querySessionHistory.length > 0) {
           const lastItem = querySessionHistory[querySessionHistory.length - 1];
           if (lastItem && lastItem.follow_up_questions && Array.isArray(lastItem.follow_up_questions) && lastItem.follow_up_questions.length > 0) {
             setFollowUpQuestions(lastItem.follow_up_questions);
             hasFollowUps = true;
           }
+        }
 
+        if (historyMessages.length > 0) {
+          setMessages(historyMessages);
           return { hasHistory: true, hasFollowUps };
         }
+        
+        setMessages([]);
+        return { hasHistory: false, hasFollowUps };
       }
       setMessages([]);
       setFollowUpQuestions([]);
@@ -213,8 +230,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
     if (mode === 'chat') {
       fetchChatHistory().then((result) => {
         // Fetch suggestions if there are no existing follow-ups
-        // or if there's no history
-        if (!result.hasFollowUps || (!result.hasHistory && messages.length <= 1)) {
+        if (!result.hasFollowUps) {
           fetchSuggestedQuestions();
         }
       });

@@ -177,8 +177,17 @@ export const AssignWorkspace: React.FC<AssignWorkspaceProps> = ({
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium">
+                            <span className="text-sm font-medium flex items-center gap-2">
                               {u.name || "No Name"}
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${
+                                  u.role_id === 4
+                                    ? "bg-purple-500/10 text-purple-500"
+                                    : "bg-emerald-500/10 text-emerald-500"
+                                }`}
+                              >
+                                {u.role_id === 4 ? "Support" : "End User"}
+                              </span>
                             </span>
                             <span className="text-xs opacity-70">
                               {u.email}

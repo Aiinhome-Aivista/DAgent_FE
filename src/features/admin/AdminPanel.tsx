@@ -212,20 +212,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   );
 
   const tabDisplayNames: Record<AdminTab, string> = {
+    company: "Company",
     users: "Users",
     workspaces: "Workspaces",
     assignUsers: "Assignments",
     workspaceUsers: "Workspace Users",
-    company: "Company",
-    adminChats: "Chat Views",
-    pendingKnowledge: "KG History",
     customPrompts: "Custom Prompts",
-    scheduledReports: "Scheduled Reports",
     pricing: "Pricing",
     llmConfig: "LLM Configuration",
+    adminChats: "Chat Views",
+    pendingKnowledge: "KG History",
+    scheduledReports: "Scheduled Reports",
   };
 
   const tabDetails: Record<AdminTab, { title: string; desc: string }> = {
+    company: {
+      title: "Company Management",
+      desc: "View and manage company details.",
+    },
     users: {
       title: "Manage Users",
       desc: "Add, view, and manage system users.",
@@ -241,10 +245,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     workspaceUsers: {
       title: "Workspace Members",
       desc: "View users grouped by their assigned workspaces.",
-    },
-    company: {
-      title: "Company Management",
-      desc: "View and manage company accounts, types, contact numbers, and subscription plans.",
     },
     adminChats: {
       title: "Chat Views",
@@ -381,11 +381,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
         {/* Scrollable Content */}
         <div
-          className={`flex-1 py-3 pr-3 flex flex-col min-h-0 ${
-            adminSubTab === "customPrompts"
-              ? ""
-              : "overflow-y-auto custom-scrollbar"
-          }`}
+          className={`flex-1 py-3 pr-3 flex flex-col min-h-0 ${adminSubTab === "customPrompts"
+            ? ""
+            : "overflow-y-auto custom-scrollbar"
+            }`}
         >
           {isLoading ? (
             <div className="h-full flex items-center justify-center">
@@ -399,11 +398,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className={`w-full ${
-                  adminSubTab === "customPrompts"
-                    ? "h-full flex flex-col min-h-0"
-                    : ""
-                }`}
+                className={`w-full ${adminSubTab === "customPrompts"
+                  ? "h-full flex flex-col min-h-0"
+                  : ""
+                  }`}
               >
                 {adminSubTab === "users" && (
                   <MangeUser
@@ -450,18 +448,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   />
                 )}
 
-                {adminSubTab === "workspaceUsers" && (
-                  <WorkspaceUsers
-                    workspaces={filteredWorkspaces}
-                    searchQuery={searchQuery}
-                  />
-                )}
-
                 {adminSubTab === "company" && (
                   <CompanyList
                     searchQuery={searchQuery}
                     isCreatingCompany={isCreatingCompany}
                     setIsCreatingCompany={setIsCreatingCompany}
+                  />
+                )}
+
+                {adminSubTab === "workspaceUsers" && (
+                  <WorkspaceUsers
+                    workspaces={filteredWorkspaces}
+                    searchQuery={searchQuery}
                   />
                 )}
 
@@ -495,7 +493,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 )}
 
                 {adminSubTab === "llmConfig" && (
-                  <ManageLLM 
+                  <ManageLLM
                     searchQuery={searchQuery}
                     isCreatingLLM={isCreatingLLM}
                     setIsCreatingLLM={setIsCreatingLLM}

@@ -45,6 +45,11 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({
       u.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  const displayUsers = filteredUsers.map((u, index) => ({
+    ...u,
+    displayIndex: index + 1
+  }));
+
   return (
     <div className="space-y-6">
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
@@ -88,7 +93,7 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({
         </div>
 
         <DataTable
-          value={filteredUsers}
+          value={displayUsers}
           paginator
           rows={5}
           rowsPerPageOptions={[5, 10, 25, 50]}
@@ -137,11 +142,10 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({
                   "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !inline-flex !items-center !justify-center",
               },
               pageButton: ({ context }: any) => ({
-                className: `!w-9 !h-9 !rounded-lg !transition-colors !inline-flex !items-center !justify-center text-sm ${
-                  context.active
+                className: `!w-9 !h-9 !rounded-lg !transition-colors !inline-flex !items-center !justify-center text-sm ${context.active
                     ? "!bg-[var(--accent)] !text-white !font-semibold"
                     : "hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent"
-                }`,
+                  }`,
               }),
               RPPDropdown: {
                 root: {
@@ -161,19 +165,18 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({
                   className: "!py-1 !m-0 !list-none !flex !flex-col",
                 },
                 item: ({ context }: any) => ({
-                  className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${
-                    context.selected
+                  className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${context.selected
                       ? "!bg-[var(--accent)] !text-white !font-semibold"
                       : "hover:!bg-[var(--surface-hover)] !text-[var(--text-primary)]"
-                  }`,
+                    }`,
                 }),
               },
             },
           }}
         >
           <Column
-            field="id"
-            header="ID"
+            field="displayIndex"
+            header="SL NO"
             headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-bold text-xs uppercase tracking-tight !px-6 !py-4 !border-b !border-[var(--border)] text-left"
             className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
             style={{ width: "10%" }}

@@ -67,12 +67,61 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { userId, roleId, roleName } = useAuthContext();
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
+  const [sidebarWidth, setSidebarWidth] = React.useState(280);
+  const isResizing = React.useRef(false);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem("sidebarWidth");
+    if (saved) {
+      setSidebarWidth(parseInt(saved, 10));
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
+      let newWidth = e.clientX;
+      if (newWidth < 200) newWidth = 200;
+      if (newWidth > 600) newWidth = 600;
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (isResizing.current) {
+        isResizing.current = false;
+        document.body.style.cursor = 'default';
+        let newWidth = e.clientX;
+        if (newWidth < 200) newWidth = 200;
+        if (newWidth > 600) newWidth = 600;
+        localStorage.setItem("sidebarWidth", newWidth.toString());
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
   return (
     <motion.aside
       initial={false}
-      animate={{ width: isSidebarOpen ? 280 : 80 }}
+      animate={{ width: isSidebarOpen ? sidebarWidth : 80 }}
       className="fixed left-0 top-0 h-full bg-[var(--surface)] border-r border-[var(--border)] z-50 flex flex-col"
     >
+      {/* Resize Handle */}
+      {isSidebarOpen && (
+        <div
+          className="absolute right-0 top-0 w-1.5 h-full cursor-col-resize hover:bg-[var(--accent)]/50 active:bg-[var(--accent)] transition-colors z-[60]"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            isResizing.current = true;
+            document.body.style.cursor = 'col-resize';
+          }}
+        />
+      )}
       <div className="p-4 flex items-center justify-between">
         {isSidebarOpen && (
           <motion.div
@@ -101,17 +150,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {roleName === "Admin" && (
             <div className="flex flex-col shrink-0 gap-1 px-3 mt-2 mb-2">
               {[
+                { id: 'company', icon: Building2, label: 'Company' },
                 { id: 'users', icon: Users, label: 'Users' },
                 { id: 'workspaces', icon: Layout, label: 'Workspaces' },
                 { id: 'assignUsers', icon: ShieldAlert, label: 'Assignments' },
                 { id: 'workspaceUsers', icon: Users, label: 'Workspace Users' },
-                { id: 'company', icon: Building2, label: 'Company' },
+                { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' },
+                { id: 'pricing', icon: CreditCard, label: 'Pricing' },
+                { id: 'llmConfig', icon: Cpu, label: 'LLM Settings' },
                 { id: 'adminChats', icon: MessageSquare, label: 'Chat Views' },
                 { id: 'pendingKnowledge', icon: Database, label: 'KG History' },
-                { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' },
-                { id: 'scheduledReports', icon: FileText, label: 'Scheduled Reports' },
-                { id: 'pricing', icon: CreditCard, label: 'Pricing' },
-                { id: 'llmConfig', icon: Cpu, label: 'LLM Settings' }
+                { id: 'scheduledReports', icon: FileText, label: 'Scheduled Reports' }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -122,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }}
                   title={!isSidebarOpen ? tab.label : undefined}
                   className={`w-full flex items-center p-2.5 rounded-xl transition-all duration-300 border cursor-pointer ${activeTab === "admin" && adminSubTab === tab.id
-                    ? "border-[var(--accent)]/20 bg-[var(--accent)]/5 text-[var(--accent)] shadow-sm"
+                    ? "border-[var(--accent)]/10 bg-[var(--accent)]/[0.04] text-[var(--accent)]"
                     : "border-transparent bg-transparent hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     } ${!isSidebarOpen ? "justify-center" : "gap-3"}`}
                 >
@@ -464,6 +513,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                           }
 
                                           setChatKey((prev: number) => prev + 1);
+                                          setActiveTab("chat");
 
                                           window.dispatchEvent(
                                             new CustomEvent(
@@ -549,6 +599,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             localStorage.removeItem(
                                               "selected_query_session_name",
                                             );
+                                            localStorage.removeItem(
+                                              "is_default_chat",
+                                            );
                                             setInitialChatMessage(undefined);
                                             setActiveTab("chat");
                                             setChatKey(
@@ -561,29 +614,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                             }`}
                                         >
                                           New Query
-                                        </button>
-                                      </div>
-                                      {/* Query History Label */}
-                                      <div className="px-2 mb-2 flex items-center justify-between gap-1.5">
-                                        <span className="text-[10px] font-bold tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5 whitespace-nowrap">
-                                          Query History
-                                        </span>
-                                        <div className="flex-1 h-[1px] bg-[var(--border)] opacity-35" />
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            fetchWorkspaceHistory(
-                                              workspace.id,
-                                              workspace.session_id,
-                                              true,
-                                            );
-                                          }}
-                                          className="p-1 rounded-md hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all active:scale-95 cursor-pointer shrink-0"
-                                          title="Refresh query history"
-                                        >
-                                          <RotateCcw
-                                            className={`w-3.5 h-3.5 ${isQueryLoading[workspace.id] ? "animate-spin text-[var(--accent)]" : ""}`}
-                                          />
                                         </button>
                                       </div>
 
@@ -601,7 +631,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                         />
                                       </div>
 
-                                      <div className="space-y-1.5 overflow-y-auto max-h-[126px] custom-scrollbar px-1 mb-4">
+                                      <div className="space-y-1.5 overflow-y-auto max-h-[350px] custom-scrollbar px-1 mb-4">
                                         {isQueryLoading[workspace.id] ? (
                                           <div className="py-4 text-center">
                                             <div className="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -715,31 +745,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                           prev + 1,
                                                       );
                                                     }}
-                                                    className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer group flex items-center gap-3 ${session.querySessionId &&
+                                                    className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer group flex items-center justify-between gap-2 ${workspace.id === selectedWorkspace?.id && session.querySessionId &&
                                                       localStorage.getItem("current_visit_number") ===
                                                       String(session.querySessionId).replace("session_visit_", "").trim()
-                                                      ? "border-[var(--accent)] bg-[var(--accent)]/10 shadow-sm"
+                                                      ? "border-[var(--accent)]/30 bg-[var(--accent)]/10 shadow-sm"
                                                       : "border-[var(--border)] bg-[var(--bg)]/50 hover:bg-[var(--surface-hover)]"
                                                       }`}
                                                   >
-                                                    <MessageSquare
-                                                      className={`w-4 h-4 shrink-0 transition-colors ${session.querySessionId &&
-                                                        localStorage.getItem("current_visit_number") ===
-                                                        String(session.querySessionId).replace("session_visit_", "").trim()
-                                                        ? "text-[var(--accent)]"
-                                                        : "text-[var(--text-secondary)] group-hover:text-[var(--accent)]"
-                                                        }`}
-                                                    />
-                                                    <div
-                                                      className={`text-[11px] font-semibold truncate transition-colors ${session.querySessionId &&
-                                                        localStorage.getItem("current_visit_number") ===
-                                                        String(session.querySessionId).replace("session_visit_", "").trim()
-                                                        ? "text-[var(--text-primary)]"
-                                                        : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
-                                                        }`}
-                                                    >
-                                                      {session.querySessionName}
+                                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                      <MessageSquare
+                                                        className={`w-4 h-4 shrink-0 transition-colors ${workspace.id === selectedWorkspace?.id && session.querySessionId &&
+                                                          localStorage.getItem("current_visit_number") ===
+                                                          String(session.querySessionId).replace("session_visit_", "").trim()
+                                                          ? "text-[var(--accent)]"
+                                                          : "text-[var(--text-secondary)] group-hover:text-[var(--accent)]"
+                                                          }`}
+                                                      />
+                                                      <div
+                                                        className={`text-[11px] font-semibold truncate transition-colors ${workspace.id === selectedWorkspace?.id && session.querySessionId &&
+                                                          localStorage.getItem("current_visit_number") ===
+                                                          String(session.querySessionId).replace("session_visit_", "").trim()
+                                                          ? "text-[var(--text-primary)]"
+                                                          : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
+                                                          }`}
+                                                      >
+                                                        {session.querySessionName}
+                                                      </div>
                                                     </div>
+                                                    {roleId === 4 && session.userId && session.userId !== userId && (
+                                                      <div className="text-[9px] font-medium text-[var(--text-secondary)] bg-[var(--bg)] px-1.5 py-0.5 rounded-sm border border-[var(--border)] shrink-0 max-w-[60px] truncate" title={session.userName || "User"}>
+                                                        {session.userName || "User"}
+                                                      </div>
+                                                    )}
                                                   </div>
                                                 ),
                                               )

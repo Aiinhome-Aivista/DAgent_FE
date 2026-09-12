@@ -1,6 +1,8 @@
 import React from 'react';
 import { ChatWindow } from '../../chat/components/ChatWindow';
 import { DashboardGraphs, DashboardKPIs, GraphSidePanel } from '../../dashboard/components/DashboardCharts';
+import { ChatSummaryCard } from '../../chat/components/ChatSummaryCard';
+import { useConnectorContext } from '../../../context/ConnectorContext';
 
 interface QueryViewSalesProps {
   sessionId?: string;
@@ -31,13 +33,15 @@ export const QueryViewSales: React.FC<QueryViewSalesProps> = ({
   setActiveGraphId,
   isWorkspacesLoading
 }) => {
+  const { isAnalyzing } = useConnectorContext();
+
   return (
     <div key={`layout-${workspaceType}-${sessionId}`} className="flex-1 flex overflow-hidden">
       {/* Left Side: Split into Charts (upper) and Chat (lower) */}
       <div className="flex-1 min-w-0 flex flex-col min-h-0">
         {/* Upper portion: Charts */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-0 bg-[var(--surface)]/30 border-b border-[var(--border)]">
-          <DashboardGraphs />
+          <DashboardGraphs isWorkspacesLoading={isWorkspacesLoading || isAnalyzing} />
         </div>
         {/* Lower portion: Chat */}
         <div className={`shrink-0 flex flex-col transition-all duration-300 ${chatCollapsed ? '' : 'h-[45%] min-h-[350px]'}`}>
@@ -50,6 +54,7 @@ export const QueryViewSales: React.FC<QueryViewSalesProps> = ({
             workspaceName={workspaceName}
             onCollapseChange={setChatCollapsed}
             chatKey={chatKey}
+            isInitializing={isWorkspacesLoading || isAnalyzing}
           />
         </div>
       </div>

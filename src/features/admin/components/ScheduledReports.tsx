@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Mail, Trash2, Send, FileText, X, Plus, Edit2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { scheduleService, ScheduledReport, Recipient, Workspace } from '../../../services/schedule.service';
+import { Captcha } from '../../../ui-kit';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -42,6 +43,9 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
     const [editId, setEditId] = useState<number | null>(null);
     const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false);
     const [submitAttempted, setSubmitAttempted] = useState(false);
+    const [scheduleToDelete, setScheduleToDelete] = useState<number | null>(null);
+    const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+    const [isCaptchaValid, setIsCaptchaValid] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -173,17 +177,22 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
         setSubmitAttempted(false);
     };
 
-    const handleDeleteSchedule = async (id: number) => {
+    const handleDeleteSchedule = async () => {
+        if (!scheduleToDelete) return;
         try {
-            const res = await scheduleService.deleteSchedule(id);
+            const res = await scheduleService.deleteSchedule(scheduleToDelete);
             if (res.status === 'success') {
-                setScheduledReports(prev => prev.filter(s => s.id !== id));
+                setScheduledReports(prev => prev.filter(s => s.id !== scheduleToDelete));
                 toast.success('Schedule removed');
             } else {
                 toast.error(res.message || 'Failed to delete schedule');
             }
         } catch (error) {
             toast.error('Failed to delete schedule');
+        } finally {
+            setScheduleToDelete(null);
+            setDeleteConfirmationText("");
+            setIsCaptchaValid(false);
         }
     };
 
@@ -252,7 +261,11 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
                                         <Edit2 className="w-4 h-4" />
                                     </button>
                                     <button
-                                        onClick={() => handleDeleteSchedule(schedule.id)}
+                                        onClick={() => {
+                                            setScheduleToDelete(schedule.id);
+                                            setDeleteConfirmationText("");
+                                            setIsCaptchaValid(false);
+                                        }}
                                         className="p-1.5 text-rose-500 rounded-lg hover:bg-rose-500/10 transition-colors"
                                         title="Delete Schedule"
                                     >
@@ -438,6 +451,58 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {scheduleToDelete !== null && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-xl max-w-md w-full mx-4">
+                        <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">
+                            Delete Schedule
+                        </h3>
+                        <p className="text-sm text-[var(--text-secondary)] mb-4 leading-relaxed">
+                            Are you sure you want to delete this schedule? This action cannot be undone. Please type{" "}
+                            <span className="font-bold text-[var(--text-primary)] select-all">DELETE</span>{" "}
+                            to confirm.
+                        </p>
+
+                        <input
+                            autoFocus
+                            type="text"
+                            value={deleteConfirmationText}
+                            onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] mb-4"
+                            placeholder={`Type 'DELETE' here...`}
+                        />
+
+                        <div className="mb-6">
+                            <Captcha onValidate={setIsCaptchaValid} expireTimeMs={60000} />
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                            <button
+                                onClick={() => {
+                                    setScheduleToDelete(null);
+                                    setDeleteConfirmationText("");
+                                    setIsCaptchaValid(false);
+                                }}
+                                className="px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteSchedule}
+                                disabled={
+                                    deleteConfirmationText !== "DELETE" ||
+                                    !isCaptchaValid
+                                }
+                                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Confirm
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

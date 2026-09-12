@@ -6,6 +6,12 @@ export const GenericDashboardKPIs = () => {
   const { connectorResults } = useConnectorContext();
   const kpis = connectorResults?.report_content?.kpis || [];
 
+  const safeKpiValue = (val: any): string => {
+    if (val === null || val === undefined) return '—';
+    if (typeof val === 'object') return Object.entries(val).map(([k, v]) => `${k}: ${v}`).join(' | ');
+    return String(val);
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 mb-1">
@@ -32,7 +38,7 @@ export const GenericDashboardKPIs = () => {
               </h4>
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-xl font-bold text-slate-800">
-                  {kpi.value}
+                  {safeKpiValue(kpi.value)}
                 </span>
                 <TrendIcon className={`w-3.5 h-3.5 ${trendColor}`} />
               </div>

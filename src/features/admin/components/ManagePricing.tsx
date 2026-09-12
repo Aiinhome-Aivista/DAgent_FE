@@ -22,6 +22,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { PricingPlan } from "../types";
 import { pricingService } from "../../../services/pricing.service";
+import { Captcha } from "../../../ui-kit";
 
 interface ManagePricingProps {
   searchQuery: string;
@@ -68,6 +69,8 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
   const [editingPlan, setEditingPlan] = useState<PricingPlan | null>(null);
   const [planToDelete, setPlanToDelete] = useState<PricingPlan | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [isCaptchaValid, setIsCaptchaValid] = useState(false);
   const [formData, setFormData] = useState<PricingFormData>(initialFormData);
   const [error, setError] = useState<string | null>(null);
 
@@ -205,6 +208,11 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
     );
   });
 
+  const displayPlans = filteredPlans.map((p, index) => ({
+    ...p,
+    displayIndex: index + 1
+  }));
+
   const renderLimit = (
     val: number | undefined,
     planName: string | undefined,
@@ -258,7 +266,11 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
           <Edit2 className="w-4 h-4" />
         </button>
         <button
-          onClick={() => setPlanToDelete(rowData)}
+          onClick={() => {
+            setPlanToDelete(rowData);
+            setDeleteConfirmationText("");
+            setIsCaptchaValid(false);
+          }}
           title="Delete Plan"
           className="p-1.5 rounded-lg border border-[var(--border)] text-rose-500 hover:border-rose-500/30 hover:bg-rose-500/10 transition-colors cursor-pointer"
         >
@@ -271,7 +283,7 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
   return (
     <div className="space-y-4">
       <DataTable
-        value={filteredPlans}
+        value={displayPlans}
         loading={isLoading}
         paginator
         rows={5}
@@ -340,6 +352,12 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
           },
         }}
       >
+        <Column
+          field="displayIndex"
+          header="SL NO"
+          headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+          className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+        />
         <Column
           field="plan_name"
           header="Plan Name"
@@ -778,18 +796,39 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
               </div>
             </div>
 
-            <p className="text-sm text-[var(--text-secondary)] mb-6">
+            <p className="text-sm text-[var(--text-secondary)] mb-4">
               Are you sure you want to delete the plan{" "}
               <span className="font-semibold text-[var(--text-primary)]">
                 "{planToDelete.plan_name}"
               </span>
-              ?
+              ? Please type{" "}
+              <span className="font-bold text-[var(--text-primary)] select-all">
+                {planToDelete.plan_name}
+              </span>{" "}
+              to confirm.
             </p>
+
+            <input
+              autoFocus
+              type="text"
+              value={deleteConfirmationText}
+              onChange={(e) => setDeleteConfirmationText(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] mb-4"
+              placeholder={`Type '${planToDelete.plan_name}' here...`}
+            />
+
+            <div className="mb-6">
+              <Captcha onValidate={setIsCaptchaValid} expireTimeMs={60000} />
+            </div>
 
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setPlanToDelete(null)}
+                onClick={() => {
+                  setPlanToDelete(null);
+                  setDeleteConfirmationText("");
+                  setIsCaptchaValid(false);
+                }}
                 className="flex-1 py-2.5 text-sm font-medium rounded-xl border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
               >
                 Cancel
@@ -797,8 +836,8 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
               <button
                 type="button"
                 onClick={handleDelete}
-                disabled={isDeleting}
-                className="flex-1 py-2.5 text-sm font-medium rounded-xl bg-rose-500 text-white hover:bg-rose-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                disabled={isDeleting || deleteConfirmationText !== planToDelete.plan_name || !isCaptchaValid}
+                className="flex-1 py-2.5 text-sm font-medium rounded-xl bg-rose-500 text-white hover:bg-rose-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
               >
                 {isDeleting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

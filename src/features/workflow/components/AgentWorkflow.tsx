@@ -1662,6 +1662,8 @@ export const AgentWorkflow = ({
                         return null; // Prevent rendering anything until workspaceType is known
                       }
 
+                      const isDefaultChat = localStorage.getItem('is_default_chat') === 'true';
+
                       if (workspaceType === 'Generic') {
                         return (
                           <QueryViewGeneric

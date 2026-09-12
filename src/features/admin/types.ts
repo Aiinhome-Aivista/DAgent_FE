@@ -4,10 +4,13 @@ export interface AdminUser {
     email: string;
     password?: string;
     role?: string;
+    role_id?: number;
     created_at?: string;
     updated_at?: string;
     workspaces?: string;
     visibility?: number;
+    company_id?: number | null;
+    company_name?: string | null;
 }
 
 export interface PricingPlan {

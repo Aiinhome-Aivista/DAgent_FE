@@ -1,16 +1,18 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Edit2, Trash2, X, Save, Eye, EyeOff, Key,
+  Edit2, Trash2, X, Save, Eye, EyeOff, Key, Play,
   Cpu, Globe, Brain, Check, ChevronDown, ChevronUp,
   Network, MessageSquare, BarChart2, Layers, Zap,
-  Search, Activity, FileSearch
+  Search, Activity, FileSearch, Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { llmService } from '../../../services/llm.service';
+import { Captcha } from '../../../ui-kit';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface LLMProvider {
+export interface LLMProvider {
   id: number;
   name: string;
   provider: string;
@@ -20,7 +22,7 @@ interface LLMProvider {
   is_active: boolean;
 }
 
-interface ScenarioAssignment {
+export interface ScenarioAssignment {
   scenario: string;
   provider_id: number | null;
   temperature: number;
@@ -30,35 +32,14 @@ interface ScenarioAssignment {
 // ─── Scenarios ────────────────────────────────────────────────────────────────
 
 const SCENARIOS = [
-  { key: 'rag_chat',       label: 'RAG Chat',      icon: <MessageSquare className="w-3 h-3" /> },
-  { key: 'analysis',       label: 'Analysis',       icon: <BarChart2     className="w-3 h-3" /> },
-  { key: 'visualization',  label: 'Visualisation',  icon: <Layers        className="w-3 h-3" /> },
-  { key: 'intent_routing', label: 'Intent Routing', icon: <Network       className="w-3 h-3" /> },
-  { key: 'chat',           label: 'Direct Chat',    icon: <Brain         className="w-3 h-3" /> },
-  { key: 'insights',       label: 'Insights',       icon: <Zap           className="w-3 h-3" /> },
-  { key: 'query_branch',   label: 'Query Branch',   icon: <Activity      className="w-3 h-3" /> },
-  { key: 'web_search',     label: 'Web Search',     icon: <Search        className="w-3 h-3" /> },
-  { key: 'agent_planner',  label: 'Agent Planner',  icon: <FileSearch    className="w-3 h-3" /> },
-];
-
-// ─── Seed data ────────────────────────────────────────────────────────────────
-
-const SEED_PROVIDERS: LLMProvider[] = [
-  { id: 1, name: 'Gemini Flash',  provider: 'gemini',        api_key: 'AIzaSy••••••••••', model_name: 'gemini-2.5-flash',     base_url: '',                            is_active: true  },
-  { id: 2, name: 'Mistral Cloud', provider: 'mistral_cloud', api_key: 'jYzxDQ••••••••••', model_name: 'mistral-small-latest', base_url: 'https://api.mistral.ai/v1',   is_active: true  },
-  { id: 3, name: 'Mistral Local', provider: 'mistral_local', api_key: '',                 model_name: 'mistral:latest',       base_url: 'http://122.163.121.176:3041',  is_active: false },
-];
-
-const SEED_ASSIGNMENTS: ScenarioAssignment[] = [
-  { scenario: 'rag_chat',       provider_id: 1, temperature: 0.3, max_tokens: 4096 },
-  { scenario: 'analysis',       provider_id: 2, temperature: 0.2, max_tokens: 4096 },
-  { scenario: 'visualization',  provider_id: 2, temperature: 0.1, max_tokens: 2048 },
-  { scenario: 'intent_routing', provider_id: 2, temperature: 0.0, max_tokens: 256  },
-  { scenario: 'chat',           provider_id: 1, temperature: 0.3, max_tokens: 4096 },
-  { scenario: 'insights',       provider_id: 1, temperature: 0.3, max_tokens: 4096 },
-  { scenario: 'query_branch',   provider_id: 2, temperature: 0.2, max_tokens: 1024 },
-  { scenario: 'web_search',     provider_id: 1, temperature: 0.3, max_tokens: 2048 },
-  { scenario: 'agent_planner',  provider_id: 1, temperature: 0.2, max_tokens: 8192 },
+  { key: 'rag_chat', label: 'RAG Chat', icon: <MessageSquare className="w-3 h-3" /> },
+  { key: 'analysis', label: 'Analysis', icon: <BarChart2 className="w-3 h-3" /> },
+  { key: 'visualization', label: 'Visualisation', icon: <Layers className="w-3 h-3" /> },
+  { key: 'intent_routing', label: 'Intent Routing', icon: <Network className="w-3 h-3" /> },
+  { key: 'insights', label: 'Insights', icon: <Zap className="w-3 h-3" /> },
+  { key: 'query_branch', label: 'Query Branch', icon: <Activity className="w-3 h-3" /> },
+  { key: 'web_search', label: 'Web Search', icon: <Search className="w-3 h-3" /> },
+  { key: 'agent_planner', label: 'Agent Planner', icon: <FileSearch className="w-3 h-3" /> },
 ];
 
 const BLANK: Omit<LLMProvider, 'id'> = {
@@ -76,15 +57,49 @@ interface ManageLLMProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM, setIsCreatingLLM }) => {
-  const [providers, setProviders]     = useState<LLMProvider[]>(SEED_PROVIDERS);
-  const [assignments, setAssignments] = useState<ScenarioAssignment[]>(SEED_ASSIGNMENTS);
+  const [providers, setProviders] = useState<LLMProvider[]>([]);
+  const [assignments, setAssignments] = useState<ScenarioAssignment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testingId, setTestingId] = useState<number | null>(null);
 
   // modal
-  const [form, setForm]     = useState<Omit<LLMProvider, 'id'>>(BLANK);
+  const [form, setForm] = useState<Omit<LLMProvider, 'id'>>(BLANK);
   const [editId, setEditId] = useState<number | null>(null);
   const [showKey, setShowKey] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [providerToDelete, setProviderToDelete] = useState<LLMProvider | null>(null);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [isCaptchaValid, setIsCaptchaValid] = useState(false);
   const [expandedProvider, setExpandedProvider] = useState<number | null>(null);
+
+  const fetchData = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const [provRes, assRes] = await Promise.all([
+        llmService.getProviders(),
+        llmService.getAssignments(),
+      ]);
+      if (provRes.status) {
+        setProviders(provRes.providers.map((p: any) => ({ ...p, provider: p.provider_type })));
+      }
+      if (assRes.status) {
+        // Merge missing scenarios from SCENARIOS with defaults
+        const fetched = assRes.assignments;
+        const merged = SCENARIOS.map(s => {
+          const found = fetched.find((a: any) => a.scenario === s.key);
+          if (found) return found;
+          return { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096 };
+        });
+        setAssignments(merged);
+      }
+    } catch {
+      toast.error('Failed to load LLM config');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => { fetchData(); }, [fetchData]);
 
   // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -95,29 +110,86 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
     setEditId(p.id); setShowKey(false); setIsCreatingLLM(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim() || !form.provider.trim() || !form.model_name.trim()) {
       toast.error('Name, Provider & Model are required.'); return;
     }
-    if (editId !== null) {
-      setProviders(prev => prev.map(p => p.id === editId ? { ...form, id: editId } : p));
-      toast.success('Provider updated!');
-    } else {
-      setProviders(prev => [...prev, { ...form, id: Date.now() }]);
-      toast.success('Provider added!');
+    setSaving(true);
+    try {
+      const payload = {
+        name: form.name,
+        provider_type: form.provider,
+        api_key: form.api_key,
+        model_name: form.model_name,
+        base_url: form.base_url,
+        is_active: form.is_active
+      };
+
+      if (editId !== null) {
+        await llmService.updateProvider(editId, payload);
+        toast.success('Provider updated!');
+      } else {
+        await llmService.createProvider(payload);
+        toast.success('Provider added!');
+      }
+      closeModal();
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.message || 'Save failed');
+    } finally {
+      setSaving(false);
     }
-    closeModal();
   };
 
-  const handleDelete = (id: number) => {
-    setProviders(prev => prev.filter(p => p.id !== id));
-    setAssignments(prev => prev.map(a => a.provider_id === id ? { ...a, provider_id: null } : a));
-    setDeleteId(null);
-    toast.success('Provider removed.');
+  const handleDelete = async (id: number) => {
+    try {
+      await llmService.deleteProvider(id);
+      toast.success('Provider removed.');
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.message || 'Delete failed');
+    }
   };
 
-  const patchAssignment = (scenario: string, patch: Partial<ScenarioAssignment>) =>
-    setAssignments(prev => prev.map(a => a.scenario === scenario ? { ...a, ...patch } : a));
+  const handleTest = async (p: LLMProvider) => {
+    setTestingId(p.id);
+    const toastId = toast.loading(`Testing ${p.name}...`);
+    try {
+      const res = await llmService.testProvider(p.id);
+      if (res.status) {
+        toast.success(`Test Passed!`, { id: toastId, duration: 5000 });
+      } else {
+        toast.error(res.msg, { id: toastId });
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Error', { id: toastId });
+    } finally {
+      setTestingId(null);
+    }
+  };
+
+  const handleToggleActive = async (p: LLMProvider) => {
+    try {
+      await llmService.updateProvider(p.id, { is_active: !p.is_active });
+      setProviders(prev => prev.map(x => x.id === p.id ? { ...x, is_active: !x.is_active } : x));
+    } catch {
+      toast.error('Failed to update status');
+    }
+  };
+
+  const patchAssignment = async (scenario: string, patch: Partial<ScenarioAssignment>) => {
+    const updatedAssignments = assignments.map(a => a.scenario === scenario ? { ...a, ...patch } : a);
+    setAssignments(updatedAssignments);
+    try {
+      const target = updatedAssignments.find(a => a.scenario === scenario);
+      if (target) {
+        await llmService.updateAssignments([target]);
+      }
+    } catch {
+      toast.error('Failed to update assignment');
+      fetchData();
+    }
+  };
 
   const filtered = providers.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -128,6 +200,17 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
   const inp = 'w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] placeholder:text-[var(--text-secondary)]/40 transition-colors';
   const lbl = 'block text-xs font-semibold text-[var(--text-secondary)] mb-1 uppercase tracking-wide';
 
+  // ── Loading ───────────────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-5 h-5 animate-spin text-[var(--accent)]" />
+        <span className="ml-2 text-sm text-[var(--text-secondary)]">Loading LLM configuration...</span>
+      </div>
+    );
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -136,9 +219,11 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
       <div className="rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
 
         {/* Header row */}
-        <div className="grid grid-cols-[2fr_1.2fr_1.5fr_1fr_auto] gap-4 px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)]">
-          {['Provider', 'Type', 'Model', 'Status', 'Actions'].map(h => (
-            <span key={h} className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">{h}</span>
+        <div className="grid grid-cols-[8%_22%_13%_20%_13%_24%] border-b border-[var(--border)] bg-[var(--bg)]/50">
+          {['SL NO', 'Provider', 'Type', 'Model', 'Status', 'Actions'].map(h => (
+            <div key={h} className="px-6 py-4 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider text-left flex items-center">
+              {h}
+            </div>
           ))}
         </div>
 
@@ -157,10 +242,15 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
                 <motion.div key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
 
                   {/* Main row */}
-                  <div className="grid grid-cols-[2fr_1.2fr_1.5fr_1fr_auto] gap-4 px-5 py-3.5 items-center hover:bg-[var(--surface-hover)] transition-colors">
+                  <div className="grid grid-cols-[8%_22%_13%_20%_13%_24%] items-center hover:bg-[var(--surface-hover)] transition-colors border-b border-[var(--border)] last:border-0">
+
+                    {/* SL NO */}
+                    <div className="px-6 py-4 text-sm font-medium text-[var(--text-secondary)] flex items-center">
+                      {idx + 1}
+                    </div>
 
                     {/* Name */}
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="px-6 py-4 flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] shrink-0">
                         <Cpu className="w-4 h-4" />
                       </div>
@@ -171,31 +261,38 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
                     </div>
 
                     {/* Provider type */}
-                    <span className="inline-flex px-2.5 py-1 rounded-md bg-[var(--bg)] border border-[var(--border)] text-xs font-mono text-[var(--text-secondary)] w-fit">
-                      {p.provider}
-                    </span>
+                    <div className="px-6 py-4 flex items-center">
+                      <span className="inline-flex items-center justify-center px-3 rounded-md bg-[var(--bg)] border border-[var(--border)] text-[11px] font-mono text-[var(--text-secondary)] w-fit h-6">
+                        {p.provider}
+                      </span>
+                    </div>
 
                     {/* Model */}
-                    <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="px-6 py-4 flex items-center gap-1.5 min-w-0">
                       <Brain className="w-3.5 h-3.5 shrink-0 text-[var(--text-secondary)]" />
                       <span className="font-mono text-xs text-[var(--text-secondary)] truncate">{p.model_name}</span>
                     </div>
 
                     {/* Status */}
-                    <button
-                      onClick={() => setProviders(prev => prev.map(x => x.id === p.id ? { ...x, is_active: !x.is_active } : x))}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer w-fit ${
-                        p.is_active
+                    <div className="px-6 py-4 flex items-center">
+                      <button
+                        onClick={() => handleToggleActive(p)}
+                        className={`inline-flex items-center justify-center gap-1.5 px-3 rounded-full text-[11px] font-medium transition-colors cursor-pointer h-6 w-fit ${p.is_active
                           ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
                           : 'bg-[var(--border)]/60 text-[var(--text-secondary)] hover:bg-[var(--border)]'
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${p.is_active ? 'bg-emerald-500' : 'bg-[var(--text-secondary)]/40'}`} />
-                      {p.is_active ? 'Active' : 'Inactive'}
-                    </button>
+                          }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${p.is_active ? 'bg-emerald-500' : 'bg-[var(--text-secondary)]/40'}`} />
+                        {p.is_active ? 'Active' : 'Inactive'}
+                      </button>
+                    </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1">
+                    <div className="px-3 py-4 flex items-center gap-1 flex-nowrap shrink-0">
+                      <button title="Test Connection" onClick={() => handleTest(p)} disabled={testingId === p.id}
+                        className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50">
+                        {testingId === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                      </button>
                       <button title="Scenario routing" onClick={() => setExpandedProvider(isExpanded ? null : p.id)}
                         className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors cursor-pointer">
                         {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -204,16 +301,13 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
                         className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors cursor-pointer">
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
-                      {deleteId === p.id ? (
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"><Check className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => setDeleteId(null)} className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"><X className="w-3.5 h-3.5" /></button>
-                        </div>
-                      ) : (
-                        <button onClick={() => setDeleteId(p.id)} className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                      <button onClick={() => {
+                        setProviderToDelete(p);
+                        setDeleteConfirmationText("");
+                        setIsCaptchaValid(false);
+                      }} className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
 
@@ -227,16 +321,15 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
                           </p>
                           <div className="flex flex-wrap gap-2 mb-4">
                             {SCENARIOS.map(s => {
-                              const a    = assignments.find(x => x.scenario === s.key)!;
+                              const a = assignments.find(x => x.scenario === s.key)!;
                               const mine = a.provider_id === p.id;
                               return (
                                 <button key={s.key}
                                   onClick={() => patchAssignment(s.key, { provider_id: mine ? null : p.id })}
-                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
-                                    mine
-                                      ? 'bg-[var(--accent)]/15 border-[var(--accent)]/40 text-[var(--accent)]'
-                                      : 'bg-[var(--bg)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)]'
-                                  }`}>
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${mine
+                                    ? 'bg-[var(--accent)]/15 border-[var(--accent)]/40 text-[var(--accent)]'
+                                    : 'bg-[var(--bg)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)]'
+                                    }`}>
                                   {s.icon} {s.label}
                                   {mine && <Check className="w-3 h-3" />}
                                 </button>
@@ -292,7 +385,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-px bg-[var(--border)]">
           {SCENARIOS.map(s => {
-            const a    = assignments.find(x => x.scenario === s.key)!;
+            const a = assignments.find(x => x.scenario === s.key)!;
             const prov = providers.find(p => p.id === a.provider_id);
             return (
               <div key={s.key} className="bg-[var(--surface)] px-4 py-3">
@@ -414,15 +507,82 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
                     className="px-4 py-2 rounded-xl border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer font-medium">
                     Cancel
                   </button>
-                  <button onClick={handleSave}
-                    className="px-5 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 cursor-pointer">
-                    <Save className="w-3.5 h-3.5" />
+                  <button onClick={handleSave} disabled={saving}
+                    className="px-5 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                    {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                     {editId !== null ? 'Update' : 'Save Provider'}
                   </button>
                 </div>
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Delete Confirmation Modal ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {providerToDelete && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-xl max-w-md w-full mx-4"
+            >
+              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">
+                Delete Provider
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-4 leading-relaxed">
+                Are you sure you want to delete this provider? This action
+                cannot be undone. Please type{" "}
+                <span className="font-bold text-[var(--text-primary)] select-all">
+                  {providerToDelete.name}
+                </span>{" "}
+                to confirm.
+              </p>
+
+              <input
+                autoFocus
+                type="text"
+                value={deleteConfirmationText}
+                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] mb-4"
+                placeholder={`Type '${providerToDelete.name}' here...`}
+              />
+
+              <div className="mb-6">
+                <Captcha onValidate={setIsCaptchaValid} expireTimeMs={60000} />
+              </div>
+
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={() => {
+                    setProviderToDelete(null);
+                    setDeleteConfirmationText("");
+                    setIsCaptchaValid(false);
+                  }}
+                  className="px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleDelete(providerToDelete.id);
+                    setProviderToDelete(null);
+                    setDeleteConfirmationText("");
+                    setIsCaptchaValid(false);
+                  }}
+                  disabled={
+                    deleteConfirmationText !== providerToDelete.name ||
+                    !isCaptchaValid
+                  }
+                  className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </>

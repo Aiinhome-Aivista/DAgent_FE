@@ -159,11 +159,10 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                 "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
             },
             pageButton: ({ context }: any) => ({
-              className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${
-                context.active
+              className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${context.active
                   ? "!bg-[var(--accent)] !text-white !font-semibold"
                   : "hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent"
-              }`,
+                }`,
             }),
             RPPDropdown: {
               root: {
@@ -180,11 +179,10 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                   "!bg-[var(--surface)] !border border-[var(--border)] !rounded-lg !shadow-lg !py-1 !mt-1 !z-50",
               },
               item: ({ context }: any) => ({
-                className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${
-                  context.selected
+                className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${context.selected
                     ? "!bg-[var(--accent)] !text-white !font-semibold"
                     : "hover:!bg-[var(--surface-hover)] !text-[var(--text-primary)]"
-                }`,
+                  }`,
               }),
             },
           },
@@ -192,7 +190,7 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
       >
         <Column
           field="displayIndex"
-          header="ID"
+          header="SL NO"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
           style={{ width: "15%" }}
@@ -211,9 +209,11 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
           className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-primary)] font-medium"
           style={{ width: "15%" }}
           body={(ws: Workspace) => (
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-[var(--surface-hover)] text-[var(--text-primary)]">
-              {ws.workspace_type || 'Generic'}
-            </span>
+            <div className="-ml-3">
+              <span className="inline-flex items-center justify-center px-3 rounded-full text-[11px] font-medium bg-[var(--surface-hover)] text-[var(--text-primary)] h-6 border border-[var(--border)]/50">
+                {ws.workspace_type || 'Generic'}
+              </span>
+            </div>
           )}
         />
         <Column

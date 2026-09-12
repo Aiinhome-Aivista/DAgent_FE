@@ -36,6 +36,7 @@ interface ChatWindowProps {
   workspaceName?: string;
   onCollapseChange?: (collapsed: boolean) => void;
   chatKey?: number;
+  isInitializing?: boolean;
 }
 
 export const ChatWindow = ({
@@ -49,6 +50,7 @@ export const ChatWindow = ({
   workspaceName,
   onCollapseChange,
   chatKey,
+  isInitializing = false,
 }: ChatWindowProps) => {
   const {
     messages,
@@ -217,9 +219,26 @@ export const ChatWindow = ({
                   animate={{ opacity: 1 }}
                   className="space-y-4"
                 >
-                  {messages.map((msg) => (
-                    <ChatMessage key={msg.id} message={msg} />
-                  ))}
+                  {isInitializing ? (
+                    <div className="flex flex-col gap-4 py-4 px-2">
+                      <div className="bg-[var(--surface)] border border-[var(--border)] px-4 py-4 rounded-2xl rounded-tl-none w-3/4 animate-pulse">
+                        <div className="h-4 bg-slate-200 rounded w-full mb-2"></div>
+                        <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+                      </div>
+                      <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-4 py-4 rounded-2xl rounded-tr-none w-2/3 self-end animate-pulse">
+                        <div className="h-4 bg-[var(--accent)]/20 rounded w-full mb-2"></div>
+                        <div className="h-4 bg-[var(--accent)]/20 rounded w-4/6"></div>
+                      </div>
+                      <div className="flex justify-center py-4 text-[var(--text-secondary)] text-sm flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading chat history...
+                      </div>
+                    </div>
+                  ) : (
+                    messages.map((msg) => (
+                      <ChatMessage key={msg.id} message={msg} />
+                    ))
+                  )}
 
                   {isLoading && (
                     <motion.div

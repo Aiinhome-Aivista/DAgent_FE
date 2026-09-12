@@ -207,6 +207,11 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
       ),
   );
 
+  const displayPrompts = filteredPrompts.map((p, index) => ({
+    ...p,
+    displayIndex: index + 1
+  }));
+
   return (
     <div className="w-full h-full flex flex-col space-y-4 min-h-0">
       {/* ── Delete Confirmation Modal ── */}
@@ -299,7 +304,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
               <DataTable
-                value={filteredPrompts}
+                value={displayPrompts}
                 scrollable
                 scrollHeight="flex"
                 paginator
@@ -375,6 +380,13 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                   },
                 }}
               >
+                <Column
+                  field="displayIndex"
+                  header="SL NO"
+                  headerClassName="!bg-[var(--bg)] !text-[var(--text-secondary)] font-bold text-xs uppercase tracking-tight !px-4 !py-4 !border-t !border-b !border-[var(--border)] text-left"
+                  className="!px-4 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
+                  style={{ width: "10%" }}
+                />
                 <Column
                   header="Workspace"
                   headerClassName="!bg-[var(--bg)] !text-[var(--text-secondary)] font-bold text-xs uppercase tracking-tight !px-4 !py-4 !border-t !border-b !border-[var(--border)] text-left"

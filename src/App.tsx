@@ -39,7 +39,7 @@ function AppContent() {
   const [justFinishedWorkflow, setJustFinishedWorkflow] = useState(false);
   const [initialChatMessage, setInitialChatMessage] = useState<string | undefined>(undefined);
   const [chatKey, setChatKey] = useState(0);
-  const [adminSubTab, setAdminSubTab] = useState<AdminTab>('users');
+  const [adminSubTab, setAdminSubTab] = useState<AdminTab>('company');
   const [historySearch, setHistorySearch] = useState('');
 
   // Workspace state
@@ -91,7 +91,26 @@ function AppContent() {
                 const currentVisit = localStorage.getItem('current_visit_number');
                 const hasSelectedSession = localStorage.getItem('selected_query_session');
 
-                if (sessions.length > 0) {
+                if (sessions.length === 0) {
+                  localStorage.setItem('is_default_chat', 'true');
+                  setExpandedWorkspaceId(activeWS.id);
+                } else if (sessions.length > 0) {
+                  // Find the latest default session and save it for the dashboard layout
+                  let defaultSession = sessions[sessions.length - 1];
+                  for (let i = sessions.length - 1; i >= 0; i--) {
+                    if (sessions[i].querySessionName?.trim().toLowerCase().startsWith('default')) {
+                      defaultSession = sessions[i];
+                      break;
+                    }
+                  }
+                  if (defaultSession && defaultSession.querySessionHistory) {
+                    localStorage.setItem('default_workspace_analysis', JSON.stringify(defaultSession.querySessionHistory));
+                    window.dispatchEvent(new Event('default-workspace-updated'));
+                  }
+                  if (activeWS.id === selectedWorkspace?.id) {
+                    window.dispatchEvent(new Event('default-workspace-updated'));
+                  }
+
                   // Restore missing session data if we have a current_visit_number but no actual data
                   if (currentVisit && !hasSelectedSession) {
                     const targetSession = sessions.find((s: any) => s.querySessionId === `session_visit_${currentVisit}`);
@@ -170,6 +189,21 @@ function AppContent() {
 
       if (queryResponse && queryResponse.status === 'success' && queryResponse.querySessions) {
         setQueryHistories(prev => ({ ...prev, [workspaceId]: queryResponse.querySessions }));
+
+        const sessions = queryResponse.querySessions;
+        if (sessions.length > 0) {
+          let defaultSession = sessions[sessions.length - 1];
+          for (let i = sessions.length - 1; i >= 0; i--) {
+            if (sessions[i].querySessionName?.trim().toLowerCase().startsWith('default')) {
+              defaultSession = sessions[i];
+              break;
+            }
+          }
+          if (defaultSession && defaultSession.querySessionHistory) {
+            localStorage.setItem('default_workspace_analysis', JSON.stringify(defaultSession.querySessionHistory));
+          }
+        }
+
         return queryResponse.querySessions;
       }
     } catch (err) {
@@ -195,12 +229,13 @@ function AppContent() {
   const handleLogin = () => setViewMode('login');
   const handleGetStarted = () => setViewMode('login');
   const handleLoginSuccess = () => {
-    window.history.pushState({}, '', '/');
+    const storedRoleName = localStorage.getItem('DAgent_role_name');
+    const isAdmin = storedRoleName === 'Admin';
+    window.history.pushState({}, '', isAdmin ? '/admin' : '/');
     setViewMode('app');
     setIsWorkspaceOpen(false);
     setSidebarOpen(false);
-    const storedRoleName = localStorage.getItem('DAgent_role_name');
-    setActiveTab(storedRoleName === 'Admin' ? 'admin' : 'chat');
+    setActiveTab(isAdmin ? 'admin' : 'chat');
   };
   const handleBackToLanding = () => {
     window.history.pushState({}, '', '/');
@@ -208,11 +243,12 @@ function AppContent() {
   };
 
   const handleLogout = () => {
+    const wasAdmin = roleName === 'Admin' || localStorage.getItem('DAgent_role_name') === 'Admin';
     logout();
     resetConnectorState();
     agentService.reset();
-    window.history.pushState({}, '', '/');
-    setViewMode('landing');
+    window.history.pushState({}, '', wasAdmin ? '/admin/login' : '/');
+    setViewMode(wasAdmin ? 'admin-login' : 'landing');
     setIsWorkspaceOpen(false);
     setActiveTab('chat');
     localStorage.clear();
@@ -395,6 +431,8 @@ function AppContent() {
       localStorage.setItem('selected_query_session', JSON.stringify(newSessionHistory));
       localStorage.setItem('current_visit_number', nextVisitNumber.toString());
       localStorage.setItem('selected_query_session_name', defaultName);
+      localStorage.setItem('default_workspace_analysis', JSON.stringify(newSessionHistory));
+      window.dispatchEvent(new Event('default-workspace-updated'));
 
       // Now switch to chat tab
       changeTab('chat');

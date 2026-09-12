@@ -13,6 +13,8 @@ export interface QuerySession {
   querySessionHistory: QueryHistoryItem[];
   querySessionId: string;
   querySessionName: string;
+  userId?: number;
+  userName?: string;
 }
 
 export interface ChatHistoryResponse {

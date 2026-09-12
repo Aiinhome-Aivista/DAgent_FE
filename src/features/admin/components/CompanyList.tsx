@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Building2, Loader2, Plus, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { Captcha } from "../../../ui-kit";
+import { companyService } from "../../../services/company.service";
+import { pricingService } from "../../../services/pricing.service";
+import { PricingPlan } from "../types";
+import toast from "react-hot-toast";
 
-export const PLAN_OPTIONS = ["Bronze", "Silver", "Gold"] as const;
-export type PlanType = (typeof PLAN_OPTIONS)[number];
+export type PlanType = string;
 
 export interface CompanyItem {
   id: number;
@@ -22,81 +26,47 @@ interface CompanyListProps {
   setIsCreatingCompany?: (val: boolean) => void;
 }
 
-const DEFAULT_COMPANIES: CompanyItem[] = [
-  {
-    id: 1,
-    company_name: "Acme Corporation",
-    company_type: "Technology",
-    address: "Building 10, DLF Cyber City, Phase 2, Gurugram, Haryana 122002",
-    phone_number: "+91 98765 43210",
-    plan_type: "Bronze",
-  },
-  {
-    id: 2,
-    company_name: "Global Tech Logistics",
-    company_type: "Logistics & Supply",
-    address: "C-20, G Block, Bandra Kurla Complex (BKC), Mumbai, Maharashtra 400051",
-    phone_number: "+91 91234 56789",
-    plan_type: "Silver",
-  },
-  {
-    id: 3,
-    company_name: "Apex Financial Solutions",
-    company_type: "Finance & Banking",
-    address: "Prestige Tech Park, Marathahalli-Sarjapur Outer Ring Rd, Bengaluru, Karnataka 560103",
-    phone_number: "+91 98100 12345",
-    plan_type: "Gold",
-  },
-  {
-    id: 4,
-    company_name: "Starlight Healthcare",
-    company_type: "Healthcare",
-    address: "Cyber Towers, HITEC City, Madhapur, Hyderabad, Telangana 500081",
-    phone_number: "+91 97112 33445",
-    plan_type: "Silver",
-  },
-  {
-    id: 5,
-    company_name: "Horizon Media Works",
-    company_type: "Digital Media",
-    address: "Inner Circle, Connaught Place, New Delhi, Delhi 110001",
-    phone_number: "+91 99580 67890",
-    plan_type: "Bronze",
-  },
-  {
-    id: 6,
-    company_name: "OmniRetail Outlets",
-    company_type: "Retail & E-commerce",
-    address: "Godrej Genesis, Sector V, Salt Lake, Kolkata, West Bengal 700091",
-    phone_number: "+91 98991 22334",
-    plan_type: "Gold",
-  },
-  {
-    id: 7,
-    company_name: "Vanguard Infra Projects",
-    company_type: "Infrastructure",
-    address: "Anna Salai, Guindy, Chennai, Tamil Nadu 600032",
-    phone_number: "+91 94440 11223",
-    plan_type: "Silver",
-  },
-  {
-    id: 8,
-    company_name: "Zeneith Pharma Labs",
-    company_type: "Pharmaceuticals",
-    address: "SG Highway, Prahlad Nagar, Ahmedabad, Gujarat 380015",
-    phone_number: "+91 98250 99887",
-    plan_type: "Gold",
-  },
-];
-
 export const CompanyList: React.FC<CompanyListProps> = ({
   searchQuery,
   isCreatingCompany: externalIsCreating,
   setIsCreatingCompany: externalSetIsCreating,
 }) => {
-  const [companies, setCompanies] = useState<CompanyItem[]>(DEFAULT_COMPANIES);
+  const [companies, setCompanies] = useState<CompanyItem[]>([]);
+  const [availablePlans, setAvailablePlans] = useState<PricingPlan[]>([]);
   const [internalIsCreating, setInternalIsCreating] = useState(false);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchCompanies();
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      const response = await pricingService.getPlans();
+      if (response && response.pricing) {
+        setAvailablePlans(response.pricing);
+      }
+    } catch (error) {
+      console.error("Failed to load plans:", error);
+    }
+  };
+
+  const fetchCompanies = async () => {
+    setIsLoading(true);
+    try {
+      const response = await companyService.getCompanies();
+      if (response && response.data && response.data.data) {
+        setCompanies(response.data.data);
+      } else if (response && response.data) {
+        setCompanies(response.data);
+      }
+    } catch (error) {
+      toast.error("Failed to load companies");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const isCreating = externalIsCreating ?? internalIsCreating;
   const setIsCreating = externalSetIsCreating ?? setInternalIsCreating;
@@ -115,6 +85,20 @@ export const CompanyList: React.FC<CompanyListProps> = ({
     plan_type: "Bronze",
   });
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<CompanyItem | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    company_name: "",
+    company_type: "Technology",
+    address: "",
+    phone_number: "+91 ",
+    plan_type: "Bronze" as PlanType,
+  });
+
+  const [companyToDelete, setCompanyToDelete] = useState<CompanyItem | null>(null);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [isCaptchaValid, setIsCaptchaValid] = useState(false);
+
   const resetForm = () => {
     setNewCompany({
       company_name: "",
@@ -125,27 +109,108 @@ export const CompanyList: React.FC<CompanyListProps> = ({
     });
   };
 
-  const handleCreateCompany = () => {
-    if (!newCompany.company_name.trim()) return;
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+    let val = e.target.value;
+    if (!val.startsWith("+91 ")) {
+      val = "+91 " + val.replace(/\+91\s?/g, "");
+    }
+    const digits = val.slice(4).replace(/\D/g, "").slice(0, 10);
+    val = "+91 " + digits;
 
-    const createdItem: CompanyItem = {
-      id: companies.length > 0 ? Math.max(...companies.map((c) => c.id)) + 1 : 1,
-      company_name: newCompany.company_name.trim(),
-      company_type: newCompany.company_type.trim() || "General",
-      address: newCompany.address.trim() || "N/A",
-      phone_number: newCompany.phone_number.trim() || "N/A",
-      plan_type: newCompany.plan_type,
-    };
-
-    setCompanies((prev) => [createdItem, ...prev]);
-    setIsCreating(false);
-    resetForm();
+    if (isEdit) {
+      setEditFormData({ ...editFormData, phone_number: val });
+    } else {
+      setNewCompany({ ...newCompany, phone_number: val });
+    }
   };
 
-  const handlePlanChange = (companyId: number, newPlan: PlanType) => {
-    setCompanies((prev) =>
-      prev.map((c) => (c.id === companyId ? { ...c, plan_type: newPlan } : c))
-    );
+
+  const handleCreateCompany = async () => {
+    if (!newCompany.company_name.trim()) return;
+
+    try {
+      setIsLoading(true);
+      const data = {
+        company_name: newCompany.company_name.trim(),
+        company_type: newCompany.company_type.trim() || "General",
+        address: newCompany.address.trim() || "N/A",
+        phone_number: newCompany.phone_number.trim() || "N/A",
+        plan_type: newCompany.plan_type,
+      };
+      await companyService.createCompany(data);
+      toast.success("Company created successfully");
+      setIsCreating(false);
+      resetForm();
+      fetchCompanies();
+    } catch (error) {
+      toast.error("Failed to create company");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenEditModal = (comp: CompanyItem) => {
+    setEditingCompany(comp);
+    setEditFormData({
+      company_name: comp.company_name,
+      company_type: comp.company_type,
+      address: comp.address,
+      phone_number: comp.phone_number,
+      plan_type: comp.plan_type,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditCompanySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCompany || !editFormData.company_name.trim()) return;
+
+    try {
+      setIsLoading(true);
+      const data = {
+        company_name: editFormData.company_name.trim(),
+        company_type: editFormData.company_type.trim() || "General",
+        address: editFormData.address.trim() || "N/A",
+        phone_number: editFormData.phone_number.trim() || "N/A",
+        plan_type: editFormData.plan_type,
+      };
+      await companyService.updateCompany(editingCompany.id, data);
+      toast.success("Company updated successfully");
+      setIsEditModalOpen(false);
+      fetchCompanies();
+    } catch (error) {
+      toast.error("Failed to update company");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteCompany = async (companyId: number) => {
+    try {
+      setIsLoading(true);
+      await companyService.deleteCompany(companyId);
+      toast.success("Company deleted successfully");
+      fetchCompanies();
+    } catch (error) {
+      toast.error("Failed to delete company");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePlanChange = async (companyId: number, newPlan: PlanType) => {
+    const comp = companies.find(c => c.id === companyId);
+    if (!comp) return;
+    try {
+      setIsLoading(true);
+      await companyService.updateCompany(companyId, { ...comp, plan_type: newPlan });
+      toast.success("Plan updated successfully");
+      fetchCompanies();
+    } catch (error) {
+      toast.error("Failed to update plan");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredCompanies = companies.filter((c) => {
@@ -159,139 +224,7 @@ export const CompanyList: React.FC<CompanyListProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Create Company Form Inline */}
-      <AnimatePresence>
-        {isCreating && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="p-5 border border-[var(--border)] rounded-2xl bg-[var(--surface)] mb-6 space-y-4 shadow-sm">
-              <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-                <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-[var(--accent)]" />
-                  Add New Company
-                </h3>
-                <button
-                  onClick={() => {
-                    setIsCreating(false);
-                    resetForm();
-                  }}
-                  className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
-                    Company Name *
-                  </label>
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Enter company name..."
-                    value={newCompany.company_name}
-                    onChange={(e) =>
-                      setNewCompany({ ...newCompany, company_name: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
-                    Company Type
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Technology, Healthcare"
-                    value={newCompany.company_type}
-                    onChange={(e) =>
-                      setNewCompany({ ...newCompany, company_type: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
-                    Ph. Number
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="+91 98765 43210"
-                    value={newCompany.phone_number}
-                    onChange={(e) =>
-                      setNewCompany({ ...newCompany, phone_number: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
-                    Plan Type
-                  </label>
-                  <select
-                    value={newCompany.plan_type}
-                    onChange={(e) =>
-                      setNewCompany({
-                        ...newCompany,
-                        plan_type: e.target.value as PlanType,
-                      })
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] cursor-pointer"
-                  >
-                    {PLAN_OPTIONS.map((plan) => (
-                      <option key={plan} value={plan}>
-                        {plan}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
-                  Full Address
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter full office address..."
-                  value={newCompany.address}
-                  onChange={(e) =>
-                    setNewCompany({ ...newCompany, address: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    setIsCreating(false);
-                    resetForm();
-                  }}
-                  className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateCompany}
-                  disabled={!newCompany.company_name.trim()}
-                  className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-xs font-medium text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  Create Company
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Main Table Card */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
@@ -378,11 +311,11 @@ export const CompanyList: React.FC<CompanyListProps> = ({
           }}
         >
           <Column
-            field="id"
-            header="ID"
+            header="SL"
             headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-bold text-xs uppercase tracking-tight !px-6 !py-4 !border-b !border-[var(--border)] text-left"
             className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-secondary)] font-medium"
             style={{ width: "6%" }}
+            body={(_: any, options: { rowIndex: number }) => options.rowIndex + 1}
           />
           <Column
             field="company_name"
@@ -431,34 +364,346 @@ export const CompanyList: React.FC<CompanyListProps> = ({
             className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm"
             style={{ width: "20%" }}
             body={(comp: CompanyItem) => (
-              <div className="flex items-center gap-2 flex-wrap">
-                {PLAN_OPTIONS.map((plan) => {
-                  const isSelected = comp.plan_type === plan;
-                  return (
-                    <label
-                      key={plan}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all border ${isSelected
-                        ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)] shadow-xs font-semibold"
-                        : "border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
-                        }`}
-                    >
-                      <input
-                        type="radio"
-                        name={`plan-${comp.id}`}
-                        value={plan}
-                        checked={isSelected}
-                        onChange={() => handlePlanChange(comp.id, plan)}
-                        className="w-3.5 h-3.5 accent-[var(--accent)] cursor-pointer"
-                      />
-                      <span>{plan}</span>
-                    </label>
-                  );
-                })}
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 shadow-xs">
+                {comp.plan_type || "N/A"}
+              </span>
+            )}
+          />
+          <Column
+            header="Actions"
+            headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-bold text-xs uppercase tracking-tight !px-6 !py-4 !border-b !border-[var(--border)] text-center"
+            className="!px-6 !py-4 !border-b !border-[var(--border)] text-center"
+            style={{ width: "10%" }}
+            body={(comp: CompanyItem) => (
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => handleOpenEditModal(comp)}
+                  className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors"
+                  title="Edit Company"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                </button>
+                <button
+                  onClick={() => {
+                    setCompanyToDelete(comp);
+                    setDeleteConfirmationText("");
+                  }}
+                  className="p-1.5 rounded-md text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                  title="Delete Company"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                </button>
               </div>
             )}
           />
         </DataTable>
       </div>
+
+      {/* Edit Company Modal */}
+      {isEditModalOpen && editingCompany && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+            <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-[var(--accent)]" />
+                Edit Company
+              </h3>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 hover:bg-[var(--surface-hover)] rounded-lg transition-colors text-[var(--text-secondary)]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditCompanySubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                    Company Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter company name..."
+                    value={editFormData.company_name}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, company_name: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                    Company Type
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Technology, Healthcare"
+                    value={editFormData.company_type}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, company_type: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                    Ph. Number
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="+91 98765 43210"
+                    value={editFormData.phone_number}
+                    onChange={(e) => handlePhoneChange(e, true)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                    Plan Type
+                  </label>
+                  <select
+                    value={editFormData.plan_type}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        plan_type: e.target.value as PlanType,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] cursor-pointer"
+                  >
+                    {availablePlans.map((plan) => (
+                      <option key={plan.id} value={plan.plan_name}>
+                        {plan.plan_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                  Full Address
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter full office address..."
+                  value={editFormData.address}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, address: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                />
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!editFormData.company_name.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-xs font-medium text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Company Modal */}
+      {isCreating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+            <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-[var(--accent)]" />
+                Create New Company
+              </h3>
+              <button
+                onClick={() => {
+                  setIsCreating(false);
+                  resetForm();
+                }}
+                className="p-2 hover:bg-[var(--surface-hover)] rounded-lg transition-colors text-[var(--text-secondary)]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleCreateCompany(); }} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                    Company Name *
+                  </label>
+                  <input
+                    autoFocus
+                    type="text"
+                    required
+                    placeholder="Enter company name..."
+                    value={newCompany.company_name}
+                    onChange={(e) =>
+                      setNewCompany({ ...newCompany, company_name: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                    Company Type
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Technology, Healthcare"
+                    value={newCompany.company_type}
+                    onChange={(e) =>
+                      setNewCompany({ ...newCompany, company_type: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                    Ph. Number
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="+91 98765 43210"
+                    value={newCompany.phone_number}
+                    onChange={(e) => handlePhoneChange(e, false)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                    Plan Type
+                  </label>
+                  <select
+                    value={newCompany.plan_type}
+                    onChange={(e) =>
+                      setNewCompany({
+                        ...newCompany,
+                        plan_type: e.target.value as PlanType,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] cursor-pointer"
+                  >
+                    {availablePlans.map((plan) => (
+                      <option key={plan.id} value={plan.plan_name}>
+                        {plan.plan_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
+                  Full Address
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter full office address..."
+                  value={newCompany.address}
+                  onChange={(e) =>
+                    setNewCompany({ ...newCompany, address: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                />
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreating(false);
+                    resetForm();
+                  }}
+                  className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!newCompany.company_name.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-xs font-medium text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  Create Company
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {companyToDelete && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-xl max-w-md w-full mx-4"
+            >
+              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">Delete Company</h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-4 leading-relaxed">
+                Are you sure you want to delete this company? This action cannot be undone. Please type <span className="font-bold text-[var(--text-primary)] select-all">{companyToDelete.company_name}</span> to confirm.
+              </p>
+              <input
+                autoFocus
+                type="text"
+                value={deleteConfirmationText}
+                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] mb-4"
+                placeholder={`Type '${companyToDelete.company_name}' here...`}
+              />
+              
+              <div className="mb-6">
+                <Captcha onValidate={setIsCaptchaValid} expireTimeMs={60000} />
+              </div>
+
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={() => {
+                    setCompanyToDelete(null);
+                    setDeleteConfirmationText("");
+                    setIsCaptchaValid(false);
+                  }}
+                  className="px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleDeleteCompany(companyToDelete.id);
+                    setCompanyToDelete(null);
+                    setDeleteConfirmationText("");
+                    setIsCaptchaValid(false);
+                  }}
+                  disabled={deleteConfirmationText !== companyToDelete.company_name || !isCaptchaValid}
+                  className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

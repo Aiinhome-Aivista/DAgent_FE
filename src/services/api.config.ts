@@ -7,8 +7,8 @@ export interface ApiConfig {
 }
 
 export const defaultConfig: ApiConfig = {
-  // baseUrl: 'http://122.163.121.176:3019',
-  baseUrl: 'http://localhost:3019',
+  baseUrl: 'http://122.163.121.176:3019',
+  // baseUrl: 'http://localhost:3019',
   // baseUrl: 'http://157.173.221.226:3004',
   // baseUrl: 'http://187.127.163.17:3019',
   // baseUrl: 'http://localhost:3019/',
@@ -81,6 +81,12 @@ export const API_ENDPOINTS = {
     EDIT_USER: '/edit_user',
     DELETE_USER: '/delete_user',
   },
+  COMPANY: {
+    GET_COMPANIES: '/companies',
+    CREATE_COMPANY: '/companies',
+    EDIT_COMPANY: '/companies',
+    DELETE_COMPANY: '/companies',
+  },
   // ─── FTP Connector ──────────────────────────────────────────────────────────
   FTP: {
     CONNECT: '/ftp/connect',
@@ -95,7 +101,9 @@ export const API_ENDPOINTS = {
     GET_CHATS: '/api/admin/chats',
     PUSH_TO_KG: '/api/admin/push_to_kg',
     GET_STAGED_KNOWLEDGE: '/api/admin/staged_knowledge',
-    TRIGGER_INDEXING: '/api/admin/trigger_indexing'
+    TRIGGER_INDEXING: '/api/admin/trigger_indexing',
+    TOGGLE_CHAT_PUBLIC: '/api/admin/chats/toggle-public',
+    SHARE_CHAT: '/api/admin/chats/share'
   },
   PROMPTS: {
     GET_TYPES: '/api/prompt-types',
@@ -111,6 +119,10 @@ export const API_ENDPOINTS = {
   },
   PRICING: {
     BASE: '/api/pricing',
+  },
+  LLM: {
+    PROVIDERS: '/api/llm/providers',
+    ASSIGNMENTS: '/api/llm/assignments',
   },
 }
 

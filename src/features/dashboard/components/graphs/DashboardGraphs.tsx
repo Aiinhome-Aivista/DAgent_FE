@@ -81,7 +81,29 @@ const parseSessionData = (session: any) => {
       return null;
     }
 
-    const rawAnswer = firstTurn.answer;
+    let rawAnswer = firstTurn.answer;
+
+    // Remove markdown json blocks
+    rawAnswer = rawAnswer.replace(/```json[\s\S]*?```/gi, "").trim();
+
+    // If it's raw JSON (not in code blocks)
+    if (rawAnswer.startsWith("{") && rawAnswer.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(rawAnswer);
+        if (parsed.charts && parsed.charts[0]?.description) {
+          rawAnswer = "Executive Summary:\n" + parsed.charts[0].description;
+        } else if (parsed.description) {
+          rawAnswer = "Executive Summary:\n" + parsed.description;
+        } else {
+          return null; // Skip rendering raw JSON
+        }
+      } catch (e) {
+        // Not valid JSON, continue
+      }
+    }
+
+    if (!rawAnswer) return null;
+
     const lines = rawAnswer.split("\n").map((l: string) => l.trim());
 
     let title = "";
@@ -148,6 +170,11 @@ const parseSessionData = (session: any) => {
       const recsMatch = line.match(
         /^(?:\*\*|#+\s*)?((?:Actionable\s+Recommendations|Actionable\s+Recommendation|Recommendations))(?:\*\*)?:?\s*(.*)/i,
       );
+
+      // Stop parsing if we hit a follow-up questions section
+      if (/^(follow[- ]?up questions?|suggested questions?|questions to ask|key questions):?/i.test(line)) {
+        break;
+      }
 
       if (summaryMatch) {
         currentSection = "Executive Summary";
@@ -290,39 +317,30 @@ const renderSectionItems = (items: string[]) => {
   );
 };
 
-const SummaryCard = () => {
+const SummaryCard = ({ isWorkspacesLoading }: { isWorkspacesLoading?: boolean }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [parsedData, setParsedData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    const fetchDefaultSession = async () => {
+    const fetchDefaultSession = () => {
       setLoading(true);
       try {
-        const sessionId = localStorage.getItem("DAgent_session_id");
-        const userIdStr = localStorage.getItem("DAgent_user_id");
-        if (!sessionId || !userIdStr) {
-          if (active) {
-            setParsedData(null);
-            setLoading(false);
-          }
-          return;
+        let storedSession = localStorage.getItem("default_workspace_analysis");
+        if (!storedSession || storedSession === "[]") {
+          storedSession = localStorage.getItem("selected_query_session");
         }
-        const userId = parseInt(userIdStr, 10);
 
-        const response = await chatHistoryService.getSessionChatHistory(sessionId, userId);
-        if (response && response.status === "success" && response.querySessions) {
-          // Find the default session (name starts with "default_")
-          const defaultSession = response.querySessions.find(
-            (s: any) => s.querySessionName && s.querySessionName.toLowerCase().startsWith("default_")
-          );
-
-          if (defaultSession) {
+        if (storedSession) {
+          const parsedSession = JSON.parse(storedSession);
+          if (Array.isArray(parsedSession) && parsedSession.length > 0) {
+            const defaultSession = {
+              querySessionName: "default_summary",
+              querySessionHistory: parsedSession
+            };
             const data = parseSessionData(defaultSession);
-            if (active) {
-              setParsedData(data);
-            }
+            if (active) setParsedData(data);
           } else {
             if (active) setParsedData(null);
           }
@@ -330,7 +348,7 @@ const SummaryCard = () => {
           if (active) setParsedData(null);
         }
       } catch (err) {
-        console.error("Failed to load default query session:", err);
+        console.error("Failed to load selected query session from local storage:", err);
         if (active) setParsedData(null);
       } finally {
         if (active) setLoading(false);
@@ -345,18 +363,34 @@ const SummaryCard = () => {
 
     window.addEventListener("session-id-updated", handleSessionUpdate);
     window.addEventListener("storage", handleSessionUpdate);
+    window.addEventListener("default-workspace-updated", handleSessionUpdate);
 
     return () => {
       active = false;
       window.removeEventListener("session-id-updated", handleSessionUpdate);
       window.removeEventListener("storage", handleSessionUpdate);
+      window.removeEventListener("default-workspace-updated", handleSessionUpdate);
     };
   }, []);
 
-  if (loading && !parsedData) {
+  if ((loading || isWorkspacesLoading) && !parsedData) {
     return (
-      <div className="bg-white px-5 py-2 rounded-2xl border border-slate-200 border-l-4 border-l-indigo-500 shadow-sm flex flex-col items-center justify-center min-h-[150px] gap-3">
-        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+      <div className="bg-white px-5 py-4 rounded-2xl border border-slate-200 border-l-4 border-l-indigo-500/50 shadow-sm flex flex-col gap-3 relative overflow-hidden transition-all duration-300 animate-pulse">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full">
+            <div className="w-9 h-9 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="h-5 bg-slate-200 rounded w-1/3"></div>
+          </div>
+        </div>
+        <div className="pl-12">
+          <div className="flex flex-col gap-2">
+            <div className="h-4 bg-slate-200 rounded w-full"></div>
+            <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+            <div className="h-4 bg-slate-200 rounded w-4/6"></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -390,7 +424,7 @@ const SummaryCard = () => {
                 dangerouslySetInnerHTML={{
                   __html: formatChatMessage(
                     execSummary
-                      .map((para) => cleanParagraphText(para))
+                      .map((para: string) => cleanParagraphText(para))
                       .join("\n\n"),
                     true
                   ),
@@ -416,7 +450,7 @@ const SummaryCard = () => {
                 dangerouslySetInnerHTML={{
                   __html: formatChatMessage(
                     execSummary
-                      .map((para) => cleanParagraphText(para))
+                      .map((para: string) => cleanParagraphText(para))
                       .join("\n\n"),
                     true
                   )
@@ -692,7 +726,7 @@ const SummaryRevisedDownloadCard = () => {
 
 
 
-export const DashboardGraphs = () => {
+export const DashboardGraphs = ({ isWorkspacesLoading }: { isWorkspacesLoading?: boolean }) => {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
 
   const getZoneFullName = (zone: string) => {
@@ -729,7 +763,7 @@ export const DashboardGraphs = () => {
 
       <div className="flex flex-col gap-3">
         {/* Executive Summary Card */}
-        <SummaryCard />
+        <SummaryCard isWorkspacesLoading={isWorkspacesLoading} />
 
         {/* Summary Revised Download Card */}
         <SummaryRevisedDownloadCard />
