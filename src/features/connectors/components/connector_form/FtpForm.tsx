@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Input, Button } from '@/src/ui-kit';
 import {
   Loader2, FolderOpen, Play, Calendar, Trash2,
-  CheckCircle2, XCircle, AlertCircle, Clock
+  CheckCircle2, XCircle, AlertCircle, Clock, Eye, EyeOff
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -61,6 +61,8 @@ export const FtpForm = ({
 }: FtpFormProps) => {
 
   const [phase, setPhase] = useState<'form' | 'connected'>('form');
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isConnecting,   setIsConnecting]   = useState(false);
   const [isFetching,     setIsFetching]     = useState(false);
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
@@ -112,6 +114,17 @@ export const FtpForm = ({
   // ── Connect ────────────────────────────────────────────────────
 
   const handleConnect = async () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.host?.trim()) newErrors.host = "FTP Host is required";
+    if (!formData.username?.trim()) newErrors.username = "Username is required";
+    if (!formData.password?.trim()) newErrors.password = "Password is required";
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
+    
     setErrorMsg('');
     setIsConnecting(true);
     try {
@@ -274,8 +287,12 @@ export const FtpForm = ({
               label="FTP Host"
               placeholder="ftp.example.com"
               value={formData.host}
-              onChange={e => setFormData({ ...formData, host: e.target.value })}
+              onChange={e => {
+                setFormData({ ...formData, host: e.target.value });
+                if (errors.host) setErrors(prev => ({ ...prev, host: '' }));
+              }}
               onFocus={() => handleFocus('ftp_host')}
+              error={errors.host}
               required
             />
           </div>
@@ -297,8 +314,13 @@ export const FtpForm = ({
               label="Username"
               placeholder="ftp_user"
               value={formData.username}
-              onChange={e => setFormData({ ...formData, username: e.target.value })}
+              onChange={e => {
+                setFormData({ ...formData, username: e.target.value });
+                if (errors.username) setErrors(prev => ({ ...prev, username: '' }));
+              }}
               onFocus={() => handleFocus('ftp_username')}
+              error={errors.username}
+              required
             />
           </div>
 
@@ -306,11 +328,25 @@ export const FtpForm = ({
           <div onMouseEnter={() => handleMouseEnter('ftp_password')}>
             <Input
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={formData.password}
-              onChange={e => setFormData({ ...formData, password: e.target.value })}
+              onChange={e => {
+                setFormData({ ...formData, password: e.target.value });
+                if (errors.password) setErrors(prev => ({ ...prev, password: '' }));
+              }}
               onFocus={() => handleFocus('ftp_password')}
+              error={errors.password}
+              required
+              endIcon={
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              }
             />
           </div>
 

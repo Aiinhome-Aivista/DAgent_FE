@@ -472,8 +472,8 @@
 import { useState, useEffect } from 'react';
 import { AgentData, AgentHistoryItem } from '../types';
 import { Button } from '@/src/ui-kit';
-import { motion } from 'motion/react';
-import { CheckCircle2, Loader2, RotateCcw, Sparkles, ArrowRight, XCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { CheckCircle2, Loader2, RotateCcw, Sparkles, ArrowRight, XCircle, Trash2 } from 'lucide-react';
 import { useConnectorContext } from '../../../context/ConnectorContext';
 
 export const HistoryItemCard = ({
@@ -481,13 +481,19 @@ export const HistoryItemCard = ({
   agent,
   onAction,
   onForward,
-  onScenarioConfirm
+  onScenarioConfirm,
+  onDelete,
+  isSelected,
+  onSelect
 }: {
   item: AgentHistoryItem,
   agent: AgentData,
   onAction: (item: AgentHistoryItem, option?: string) => void,
   onForward: (agentId: string, context: string, connectionName?: string) => void,
-  onScenarioConfirm?: (scenario: string) => void
+  onScenarioConfirm?: (scenario: string) => void,
+  onDelete?: (item: AgentHistoryItem) => void,
+  isSelected?: boolean,
+  onSelect?: (id: string, selected: boolean) => void
 }) => {
   const [activityIndex, setActivityIndex] = useState(() => {
     return (item.status === 'pending_input' || item.status === 'completed' || item.status === 'failed')
@@ -496,6 +502,9 @@ export const HistoryItemCard = ({
   });
 
   const [isForwarding, setIsForwarding] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showScenarioModal, setShowScenarioModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (item.status === 'processing' && item.activities && activityIndex < item.activities.length - 1) {
@@ -541,6 +550,33 @@ export const HistoryItemCard = ({
     onAction(item, actionText);
   };
 
+  const handleScenarioConfirm = async () => {
+    setShowScenarioModal(false);
+    if (onScenarioConfirm) {
+      onScenarioConfirm('Custom Scenario');
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      if (onDelete) {
+        await onDelete(item);
+      }
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  const handleProcessAction = () => {
+    const payload = JSON.stringify({
+      topics: selectedSessionTopics,
+      databases: selectedSessionDatabases
+    });
+    onAction(item, `SESSION_ANALYSIS:${payload}`);
+  };
+
   const handleSessionAnalysisSubmit = () => {
     const payload = JSON.stringify({
       topics: selectedSessionTopics,
@@ -563,40 +599,63 @@ export const HistoryItemCard = ({
       animate={{ opacity: 1, y: 0 }}
       className={`
         p-3 rounded-xl border transition-all
-        ${item.status === 'processing' ? 'border-[var(--accent)] bg-[var(--accent)]/5 shadow-lg shadow-[var(--accent)]/10' :
-          item.status === 'failed' ? 'border-red-500/10 bg-red-500/[0.02]' :
-            item.status === 'pending_input' ? 'border-[var(--warning)]/20 bg-[var(--warning)]/[0.02]' :
+        ${item.status?.toLowerCase() === 'processing' ? 'border-[var(--accent)] bg-[var(--accent)]/5 shadow-lg shadow-[var(--accent)]/10' :
+          item.status?.toLowerCase() === 'failed' || item.status?.toLowerCase() === 'error' ? 'border-red-500/10 bg-red-500/[0.02]' :
+            item.status?.toLowerCase() === 'pending_input' ? 'border-[var(--warning)]/20 bg-[var(--warning)]/[0.02]' :
               'border-[var(--border)] bg-[var(--bg)]/50'}
       `}
     >
       <div className="flex items-start justify-between gap-4 mb-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            {item.status === 'completed' && <CheckCircle2 className="w-4 h-4 text-[var(--success)] shrink-0" />}
-            {item.status === 'failed' && <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
-            {item.status === 'processing' && <Loader2 className="w-4 h-4 text-[var(--accent)] animate-spin shrink-0" />}
-            {item.status === 'pending_input' && <RotateCcw className="w-4 h-4 text-[var(--warning)] shrink-0" />}
-            <h4 className="font-bold text-[var(--text-primary)] truncate">
-              {item.action}
-            </h4>
-            {item.connectionName && (
-              <span className="text-[var(--accent)] font-medium text-xs bg-[var(--accent)]/10 px-2 py-0.5 rounded-full shrink-0">
-                {item.connectionName}
-              </span>
-            )}
+        <div className="min-w-0 flex items-start gap-3">
+          {onSelect && (
+            <div className="pt-0.5">
+              <input 
+                type="checkbox" 
+                className="w-4 h-4 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] bg-[var(--bg)] cursor-pointer"
+                checked={!!isSelected}
+                onChange={(e) => onSelect(item.id, e.target.checked)}
+              />
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              {['completed', 'success'].includes(item.status?.toLowerCase() || '') && <CheckCircle2 className="w-4 h-4 text-[var(--success)] shrink-0" />}
+              {['failed', 'error'].includes(item.status?.toLowerCase() || '') && <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
+              {item.status?.toLowerCase() === 'processing' && <Loader2 className="w-4 h-4 text-[var(--accent)] animate-spin shrink-0" />}
+              {item.status?.toLowerCase() === 'pending_input' && <RotateCcw className="w-4 h-4 text-[var(--warning)] shrink-0" />}
+              <h4 className="font-bold text-[var(--text-primary)] truncate">
+                {item.action}
+              </h4>
+              {item.connectionName && (
+                <span className="text-[var(--accent)] font-medium text-xs bg-[var(--accent)]/10 px-2 py-0.5 rounded-full shrink-0">
+                  {item.connectionName}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-[var(--text-secondary)] break-words whitespace-pre-wrap">{item.details}</p>
           </div>
-          <p className="text-sm text-[var(--text-secondary)] break-words whitespace-pre-wrap">{item.details}</p>
         </div>
-        <div className="text-[11px] shrink-0 whitespace-nowrap font-mono text-[var(--text-secondary)] bg-[var(--bg)]/50 px-2 py-1 rounded-md border border-[var(--border)]/50 h-fit">
-          {(() => {
-            const d = new Date(item.date);
-            const day = String(d.getUTCDate()).padStart(2, '0');
-            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-            const year = d.getUTCFullYear();
-            const hours = String(d.getUTCHours()).padStart(2, '0');
-            const minutes = String(d.getUTCMinutes()).padStart(2, '0');
-            return `${day}/${month}/${year} ${hours}:${minutes}`;
-          })()}
+        <div className="flex items-center gap-2">
+          <div className="text-[11px] shrink-0 whitespace-nowrap font-mono text-[var(--text-secondary)] bg-[var(--bg)]/50 px-2 py-1 rounded-md border border-[var(--border)]/50 h-fit">
+            {(() => {
+              const d = new Date(item.date);
+              const day = String(d.getUTCDate()).padStart(2, '0');
+              const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+              const year = d.getUTCFullYear();
+              const hours = String(d.getUTCHours()).padStart(2, '0');
+              const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+              return `${day}/${month}/${year} ${hours}:${minutes}`;
+            })()}
+          </div>
+          {onDelete && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+              title="Delete this data"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -995,6 +1054,44 @@ export const HistoryItemCard = ({
           )}
         </div>
       )}
+
+      <AnimatePresence>
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-xl max-w-md w-full mx-4"
+            >
+              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2 whitespace-normal">
+                Delete Data
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-6 leading-relaxed whitespace-normal">
+                Are you sure you want to delete <span className="font-bold text-[var(--text-primary)]">'{item.connectionName || item.topic || item.action || 'this data'}'</span>? This will remove all associated logs and external database tables. This action cannot be undone.
+              </p>
+
+              <div className="flex justify-between items-center mt-2">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (onDelete) onDelete(item);
+                    setShowDeleteModal(false);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                >
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

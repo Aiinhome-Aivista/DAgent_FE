@@ -1,6 +1,6 @@
 import { Connector } from '../../connectors/types';
 import { Button, Badge } from '@/src/ui-kit';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 interface IngestDataViewProps {
   activeConnector: Connector | null;
@@ -102,12 +102,17 @@ export const IngestDataView = ({
             return (
               <div className="flex flex-col items-center justify-center py-12 gap-4">
                 <Loader2 className="w-10 h-10 animate-spin text-[var(--accent)]" />
-                <div className="text-center">
+                <div className="text-center max-w-lg mx-auto">
                   <p className="text-sm font-bold text-[var(--text-primary)]">Importing your data...</p>
-                  <p className="text-xs text-[var(--text-secondary)]">
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">
                     {(() => {
                       const name = activeConnector?.name || 'data';
-                      return `Reading ${name} data and extracting ${name} data structures`;
+                      const isMultiple = name.includes(',');
+                      if (isMultiple) {
+                        return `Reading multiple files and extracting data structures`;
+                      }
+                      const displayName = name.length > 40 ? name.substring(0, 40) + '...' : name;
+                      return `Reading ${displayName} data and extracting data structures`;
                     })()}
                   </p>
                 </div>
@@ -117,12 +122,15 @@ export const IngestDataView = ({
 
           if (importError) {
             return (
-              <div className="flex flex-col items-center justify-center py-12 gap-4">
-                <div className="text-center">
-                  <p className="text-sm font-bold text-[var(--text-primary)]">Failed to import data</p>
-                  <p className="text-sm text-[var(--text-secondary)] mt-1">{importError}</p>
+              <div className="flex flex-col items-center justify-center py-12 gap-5">
+                <div className="text-center max-w-lg mx-auto bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-6 shadow-sm">
+                  <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
+                  <p className="text-base font-bold text-red-700 dark:text-red-400 mb-2">Import Failed</p>
+                  <p className="text-sm text-red-600 dark:text-red-400/90 break-words font-mono bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+                    {importError}
+                  </p>
                 </div>
-                <Button variant="outline" size="sm" className="mt-2" onClick={onGoToDataSource}>
+                <Button variant="primary" size="sm" onClick={onGoToDataSource}>
                   Try Different Source
                 </Button>
               </div>

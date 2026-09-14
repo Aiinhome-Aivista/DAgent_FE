@@ -2,7 +2,7 @@
 // import { AgentData, AgentHistoryItem } from '../types';
 // import { Card, CardContent, CardHeader, Badge, Button } from '@/src/ui-kit';
 // import { motion, AnimatePresence } from 'motion/react';
-// import { Database, Server, BarChart3, MessageSquare, Sparkles, CheckCircle2, Loader2, Clock, Play, RotateCcw, ArrowRight, ChevronRight, Globe, Search } from 'lucide-react';
+// import { Database, Server, BarChart3, MessageSquare, Sparkles, CheckCircle2, Loader2, Clock, Play, RotateCcw, ArrowRight, ChevronRight, Globe, Search, Trash2 } from 'lucide-react';
 // import { agentService } from '@/src/services/agent.service';
 
 // import { ConnectorList } from '../../connectors/components/ConnectorList';
@@ -906,7 +906,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AgentData, AgentHistoryItem } from '../types';
 import { Card, CardContent, CardHeader, Badge, Button } from '@/src/ui-kit';
 import { motion, AnimatePresence } from 'motion/react';
-import { Database, Server, BarChart3, MessageSquare, Sparkles, CheckCircle2, Loader2, Clock, Play, RotateCcw, ArrowRight, ChevronRight, Globe, Search } from 'lucide-react';
+import { Database, Server, BarChart3, MessageSquare, Sparkles, CheckCircle2, Loader2, Clock, Play, RotateCcw, ArrowRight, ChevronRight, Globe, Search, Trash2 } from 'lucide-react';
 import { agentService } from '@/src/services/agent.service';
 
 import { ConnectorList } from '../../connectors/components/ConnectorList';
@@ -1046,6 +1046,10 @@ export const AgentWorkflow = ({
   const [activeGraphId, setActiveGraphId] = useState<string | null>(null);
   const [chatCollapsed, setChatCollapsed] = useState(true);
   const [selectedHistoryIds, setSelectedHistoryIds] = useState<Set<string>>(new Set());
+  const [showErrorDetails, setShowErrorDetails] = useState(false);
+  const [selectedHistoryItems, setSelectedHistoryItems] = useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [isForwardingToQuery, setIsForwardingToQuery] = useState(false);
 
   useEffect(() => {
@@ -1438,10 +1442,16 @@ export const AgentWorkflow = ({
           }
 
           // The polling mechanism will eventually update the agent history
-        } catch (error) {
+        } catch (error: any) {
           console.error("Import failed:", error);
           setConnectorResults(null); // Clear previous data on failure
-          setImportError('Failed to import data from your database. Please check your connection.');
+
+          const errorMsg = error.response?.data?.message
+            || error.response?.data?.error
+            || error.message
+            || 'Failed to import data from your database. Please check your connection.';
+
+          setImportError(errorMsg);
           // The polling mechanism will eventually update the agent history
         } finally {
           setIsImporting(false);
@@ -1532,6 +1542,58 @@ export const AgentWorkflow = ({
 
     // Forward to next agent
     await forwardToNextAgent('ingest', scenario, activeConnector?.name);
+  };
+
+  const handleDeleteHistoryItem = async (item: AgentHistoryItem) => {
+    try {
+      const activeSessionId = localStorage.getItem('DAgent_session_id') || (activeConnector as any)?.session_id || item.session_id;
+      if (!activeSessionId) {
+        console.error('Session ID is missing, cannot delete.');
+        return;
+      }
+      const res = await connectorService.deleteConnectionHistory(item.id, activeSessionId);
+      if (res && res.status === 'success') {
+        if (userId) {
+          const freshAgents = await agentService.getAgents(userId, selectedAgentId === 'connect');
+          setAgents(freshAgents);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to delete history item:', err);
+    }
+  };
+
+  const handleToggleSelectHistory = (id: string, selected: boolean) => {
+    setSelectedHistoryItems(prev => {
+      const newSet = new Set(prev);
+      if (selected) newSet.add(id);
+      else newSet.delete(id);
+      return newSet;
+    });
+  };
+
+  const handleBulkDeleteHistory = async () => {
+    if (selectedHistoryItems.size === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      const activeSessionId = localStorage.getItem('DAgent_session_id') || (activeConnector as any)?.session_id;
+      if (!activeSessionId) return;
+
+      const promises = Array.from(selectedHistoryItems).map(id =>
+        connectorService.deleteConnectionHistory(id, activeSessionId)
+      );
+      await Promise.all(promises);
+
+      setSelectedHistoryItems(new Set());
+      if (userId) {
+        const freshAgents = await agentService.getAgents(userId, selectedAgentId === 'connect');
+        setAgents(freshAgents);
+      }
+    } catch (err) {
+      console.error('Failed to bulk delete history items:', err);
+    } finally {
+      setIsBulkDeleting(false);
+    }
   };
 
   if (isLoading) {
@@ -1680,7 +1742,7 @@ export const AgentWorkflow = ({
                           />
                         );
                       }
-                      
+
                       return (
                         <QueryViewSales
                           sessionId={sessionId}
@@ -1711,9 +1773,45 @@ export const AgentWorkflow = ({
                       return (
                         <>
                           {shouldShowHistoryHeader && (
-                            <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-4">
-                              {selectedAgent.name} History
-                            </h3>
+                            <div className="flex justify-between items-center mb-4">
+                              <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">
+                                {selectedAgent.name} History
+                              </h3>
+
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs h-8 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                                  onClick={() => {
+                                    if (selectedHistoryItems.size === filteredHistory.length) {
+                                      setSelectedHistoryItems(new Set());
+                                    } else {
+                                      setSelectedHistoryItems(new Set(filteredHistory.map(h => h.id)));
+                                    }
+                                  }}
+                                >
+                                  {selectedHistoryItems.size === filteredHistory.length ? 'Deselect All' : 'Select All'}
+                                </Button>
+
+                                {selectedHistoryItems.size > 0 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-600 hover:bg-red-500/10 text-xs h-8"
+                                    onClick={() => setShowBulkDeleteModal(true)}
+                                    disabled={isBulkDeleting}
+                                  >
+                                    {isBulkDeleting ? (
+                                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                                    )}
+                                    Delete Selected ({selectedHistoryItems.size})
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
                           )}
                           {isAnalyze && !isAnalyzing && !selectedAgent.history.some(h => h.status === 'processing') && !connectorResults?.description && (
                             <motion.div
@@ -1751,14 +1849,14 @@ export const AgentWorkflow = ({
                                         let summaryText = typeof connectorResults.description === 'string'
                                           ? connectorResults.description
                                           : JSON.stringify(connectorResults.description);
-                                          
+
                                         // VERY IMPORTANT: If we have full report_content (with charts/kpis), save THAT to history!
                                         if (connectorResults.report_content) {
                                           summaryText = typeof connectorResults.report_content === 'object'
                                             ? JSON.stringify(connectorResults.report_content)
                                             : connectorResults.report_content;
                                         }
-                                        
+
                                         onCreateWorkspaceFromSummary(summaryText);
                                       } else {
                                         handleStepperClick('query');
@@ -1810,6 +1908,9 @@ export const AgentWorkflow = ({
                                       onAction={handleAction}
                                       onForward={forwardToNextAgent}
                                       onScenarioConfirm={handleScenarioConfirm}
+                                      onDelete={handleDeleteHistoryItem}
+                                      isSelected={selectedHistoryItems.has(item.id)}
+                                      onSelect={handleToggleSelectHistory}
                                     />
                                   ))}
                                   {selectedAgent.id === 'connect' && (
@@ -1839,6 +1940,52 @@ export const AgentWorkflow = ({
           </Card>
         )}
       </div>
+
+      <AnimatePresence>
+        {showBulkDeleteModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-xl max-w-md w-full mx-4"
+            >
+              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2 whitespace-normal">
+                Delete {selectedHistoryItems.size} Selected Items
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-6 leading-relaxed whitespace-normal">
+                Are you sure you want to delete the selected items? This will remove all associated logs and external database tables. This action cannot be undone.
+              </p>
+
+              <div className="flex justify-between items-center mt-2">
+                <button
+                  onClick={() => setShowBulkDeleteModal(false)}
+                  className="px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    await handleBulkDeleteHistory();
+                    setShowBulkDeleteModal(false);
+                  }}
+                  disabled={isBulkDeleting}
+                  className="px-4 py-2 rounded-xl bg-rose-500 text-white hover:bg-rose-600 transition-colors flex items-center"
+                >
+                  {isBulkDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Confirm Delete'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -1,14 +1,14 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { 
-  ArrowRight, 
-  Database, 
-  MessageSquare, 
-  Zap, 
-  Shield, 
-  BarChart3, 
-  Globe, 
-  Cpu, 
+import {
+  ArrowRight,
+  Database,
+  MessageSquare,
+  Zap,
+  Shield,
+  BarChart3,
+  Globe,
+  Cpu,
   CheckCircle2,
   Menu,
   X,
@@ -19,8 +19,10 @@ import {
   TwitterIcon
 } from 'lucide-react';
 import { Button, Badge } from '@/src/ui-kit';
-import image1 from '@/src/assets/images/landing1.jpg';
-import image2 from '@/src/assets/images/landing2.jpg';
+// import image1 from '@/src/assets/images/landing1.jpg';
+// import image2 from '@/src/assets/images/landing2.jpg';
+import image1 from '../../../assets/images/landing1.jpg';
+import image2 from '../../../assets/images/landing2.jpg';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -44,7 +46,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900">DAgent</span>
             </div>
-            
+
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
               <a href="#features" className="hover:text-accent transition-colors">Features</a>
               <a href="#use-cases" className="hover:text-accent transition-colors">Use Cases</a>
@@ -53,13 +55,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             </div>
 
             <div className="hidden md:flex items-center gap-4">
-              <button 
+              <button
                 onClick={onLogin}
                 className="text-sm font-medium text-slate-600 hover:text-accent transition-colors"
               >
                 Log in
               </button>
-              <Button 
+              <Button
                 onClick={onGetStarted}
                 className="bg-accent hover:bg-accent-hover text-white rounded-full px-6"
               >
@@ -68,7 +70,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             </div>
 
             <div className="md:hidden">
-              <button 
+              <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="p-2 text-slate-600"
               >
@@ -80,7 +82,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="md:hidden bg-white border-b border-slate-100 px-4 py-6 space-y-4"
@@ -109,26 +111,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               New: DAgent Business Plan →
             </Badge> */}
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1]">
-             Ask your data anything. Get insights instantly.
+              Ask your data anything. Get insights instantly.
             </h1>
             <p className="mt-6 text-xl text-slate-600 max-w-2xl mx-auto">
               No coding required. DAgent connects to your databases, spreadsheets, and apps to help you find answers faster.
             </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Button 
+            <Button
               onClick={onGetStarted}
               className="w-full sm:w-auto h-14 px-10 text-lg bg-accent hover:bg-accent-hover text-white rounded-xl shadow-xl shadow-accent/20"
             >
               Try DAgent free <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
-            <Button 
+            <Button
               variant="outline"
               className="w-full sm:w-auto h-14 px-10 text-lg rounded-xl border-slate-200 text-slate-900"
             >
@@ -142,9 +144,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             transition={{ duration: 0.8, delay: 0.4 }}
             className="relative mt-16 rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-slate-50 p-2"
           >
-            <img 
+            <img
               src={image1}
-              alt="DAgent Dashboard" 
+              alt="DAgent Dashboard"
               className="rounded-xl w-full h-auto shadow-inner"
               referrerPolicy="no-referrer"
             />
@@ -240,9 +242,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             </div>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200">
-            <img 
+            <img
               src={image2}
-              alt="Chat with data" 
+              alt="Chat with data"
               className="w-full h-auto"
               referrerPolicy="no-referrer"
             />
@@ -339,7 +341,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <h2 className="text-5xl font-bold tracking-tight text-slate-900">Get started for free</h2>
           <p className="text-xl text-slate-600">With DAgent, you can get the most out of your data.</p>
-          <Button 
+          <Button
             onClick={onGetStarted}
             className="h-14 px-10 text-lg bg-accent hover:bg-accent-hover text-white rounded-xl shadow-xl shadow-accent/20"
           >
@@ -365,7 +367,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               <Twitter className="w-5 h-5 cursor-pointer hover:text-accent" />
               <Github className="w-5 h-5 cursor-pointer hover:text-accent" />
               <Linkedin className="w-5 h-5 cursor-pointer hover:text-accent" />
-              <TwitterIcon/>
+              <TwitterIcon />
             </div>
           </div>
           <div>

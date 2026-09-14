@@ -6,6 +6,7 @@ export const SUPPORTED_CONNECTORS = [
     type: 'Data Warehouse',
     icon: 'database',
     status: 'disconnected',
+    disabled: true,
   },
   {
     id: '2',
@@ -30,6 +31,7 @@ export const SUPPORTED_CONNECTORS = [
     type: 'Database',
     icon: 'database',
     status: 'disconnected',
+    disabled: true,
   },
   {
     id: '5',
@@ -38,6 +40,7 @@ export const SUPPORTED_CONNECTORS = [
     type: 'Integration',
     icon: 'table',
     status: 'disconnected',
+    disabled: true,
   },
   {
     id: '6',
@@ -62,6 +65,7 @@ export const SUPPORTED_CONNECTORS = [
     type: 'File Upload',
     icon: 'sql',
     status: 'disconnected',
+    disabled: true,
   },
   // ─── NEW ───────────────────────────────────────────────────────────────────
   {
@@ -71,6 +75,7 @@ export const SUPPORTED_CONNECTORS = [
     type: 'Integration',
     icon: 'ftp',
     status: 'disconnected',
+    disabled: true,
   },
   {
     id: '10',
@@ -79,6 +84,7 @@ export const SUPPORTED_CONNECTORS = [
     type: 'File Upload',
     icon: 'file-text',
     status: 'disconnected',
+    disabled: true,
   },
   // ─── Tally ERP ─────────────────────────────────────────────────────────────
   {
@@ -88,5 +94,6 @@ export const SUPPORTED_CONNECTORS = [
     type: 'Integration',
     icon: 'tally',
     status: 'disconnected',
+    disabled: true,
   },
 ];

@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Input, Button } from '@/src/ui-kit';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { ConnectorFormData } from '@/src/types/connector';
 
 interface DatabaseFormProps {
@@ -23,6 +24,26 @@ export const DatabaseForm = ({
   onBack,
   isPostgreSQL
 }: DatabaseFormProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateAndSubmit = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.host?.trim()) newErrors.host = "Host is required";
+    if (!formData.port?.toString().trim()) newErrors.port = "Port is required";
+    if (!formData.database?.trim()) newErrors.database = "Database name is required";
+    if (!formData.username?.trim()) newErrors.username = "Username is required";
+    if (!formData.password?.trim()) newErrors.password = "Password is required";
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    setErrors({});
+    handleTestConnection();
+  };
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -31,8 +52,12 @@ export const DatabaseForm = ({
             label="Host / IP Address"
             placeholder="db.example.com"
             value={formData.host}
-            onChange={(e) => setFormData({ ...formData, host: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, host: e.target.value });
+              if (errors.host) setErrors(prev => ({ ...prev, host: '' }));
+            }}
             onFocus={() => handleFocus('host')}
+            error={errors.host}
             required
           />
         </div>
@@ -42,8 +67,12 @@ export const DatabaseForm = ({
             label="Port"
             placeholder="5432"
             value={formData.port}
-            onChange={(e) => setFormData({ ...formData, port: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, port: e.target.value });
+              if (errors.port) setErrors(prev => ({ ...prev, port: '' }));
+            }}
             onFocus={() => handleFocus('port')}
+            error={errors.port}
             required
           />
         </div>
@@ -53,8 +82,12 @@ export const DatabaseForm = ({
             label="Database Name"
             placeholder="main_db"
             value={formData.database}
-            onChange={(e) => setFormData({ ...formData, database: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, database: e.target.value });
+              if (errors.database) setErrors(prev => ({ ...prev, database: '' }));
+            }}
             onFocus={() => handleFocus('database')}
+            error={errors.database}
             required
           />
         </div>
@@ -77,8 +110,12 @@ export const DatabaseForm = ({
             label="Username"
             placeholder="readonly_user"
             value={formData.username}
-            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, username: e.target.value });
+              if (errors.username) setErrors(prev => ({ ...prev, username: '' }));
+            }}
             onFocus={() => handleFocus('username')}
+            error={errors.username}
             required
           />
         </div>
@@ -89,12 +126,25 @@ export const DatabaseForm = ({
         >
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="••••••••"
             value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, password: e.target.value });
+              if (errors.password) setErrors(prev => ({ ...prev, password: '' }));
+            }}
             onFocus={() => handleFocus('password')}
+            error={errors.password}
             required
+            endIcon={
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                className="focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            }
           />
         </div>
       </div>
@@ -103,7 +153,7 @@ export const DatabaseForm = ({
         <Button variant="outline" onClick={onBack} disabled={isTesting}>Cancel</Button>
         <Button
           className="px-8"
-          onClick={handleTestConnection}
+          onClick={validateAndSubmit}
           disabled={isTesting}
         >
           {isTesting ? (

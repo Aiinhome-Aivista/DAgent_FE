@@ -19,6 +19,7 @@ export interface IConnectorService {
   uploadCsv(payload: { user_id: string; session_id: string; files: File[] }): Promise<any>;
   importCsvData(payload: { user_id: number; connection_id?: number; connection_ids?: number[]; session_id: string }): Promise<any>;
   importSqlData(payload: { user_id: number; connection_id: number; session_id: string }): Promise<any>;
+  deleteConnectionHistory(id: string, sessionId: string): Promise<any>;
 }
 
 class ConnectorService implements IConnectorService {
@@ -64,6 +65,10 @@ class ConnectorService implements IConnectorService {
   async getConnectionHistory(sessionId: string | null): Promise<any> {
     if (!sessionId) return Promise.resolve({ status: 'success', agents: [] });
     return this.api.get(`${API_ENDPOINTS.DATA_SOURCE.CONNECTION_HISTORY}?session_id=${sessionId}`);
+  }
+
+  async deleteConnectionHistory(id: string, sessionId: string): Promise<any> {
+    return this.api.delete(`${API_ENDPOINTS.DATA_SOURCE.CONNECTION_HISTORY}?id=${id}&session_id=${sessionId}`);
   }
 
   async continueToImport(payload: { user_id: string; connection_id: string; session_id?: string }): Promise<any> {

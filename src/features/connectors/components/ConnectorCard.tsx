@@ -25,9 +25,9 @@ export const ConnectorCard = ({ connector, onClick }: ConnectorCardProps) => {
 
   return (
     <Card
-      hoverable
-      className="group cursor-pointer"
-      onClick={() => onClick?.(connector)}
+      hoverable={!connector.disabled}
+      className={`group ${connector.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      onClick={() => !connector.disabled && onClick?.(connector)}
     >
       <CardContent className="flex flex-col h-full p-4">
         <div className="flex-1 flex items-start gap-3">
@@ -78,8 +78,9 @@ export const ConnectorCard = ({ connector, onClick }: ConnectorCardProps) => {
           <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]/60">
             {connector.type}
           </span>
-          <Button variant="ghost" size="sm" className="group/btn h-8 text-xs">
-            Connect <ArrowUpRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+          <Button variant="ghost" size="sm" className="group/btn h-8 text-xs" disabled={connector.disabled}>
+            {connector.disabled ? 'Coming Soon' : 'Connect'} 
+            {!connector.disabled && <ArrowUpRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />}
           </Button>
         </div>
       </CardContent>
