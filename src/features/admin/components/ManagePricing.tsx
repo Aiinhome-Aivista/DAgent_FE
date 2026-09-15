@@ -42,6 +42,7 @@ interface PricingFormData {
   scheduled_email: string;
   audit_memory: string;
   connectors: string;
+  price_text: string;
 }
 
 const initialFormData: PricingFormData = {
@@ -56,6 +57,7 @@ const initialFormData: PricingFormData = {
   scheduled_email: "Available",
   audit_memory: "",
   connectors: "",
+  price_text: "",
 };
 
 export const ManagePricing: React.FC<ManagePricingProps> = ({
@@ -125,6 +127,7 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
       scheduled_email: normalizeAvailability(plan.scheduled_email),
       audit_memory: plan.audit_memory || "",
       connectors: plan.connectors || "",
+      price_text: plan.price_text || "",
     });
     setError(null);
     setIsModalOpen(true);
@@ -160,6 +163,7 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
       scheduled_email: formData.scheduled_email,
       audit_memory: formData.audit_memory.trim(),
       connectors: formData.connectors.trim(),
+      price_text: formData.price_text.trim(),
     };
 
     try {
@@ -370,6 +374,17 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
           )}
         />
         <Column
+          field="price_text"
+          header="Price"
+          headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
+          className="!px-6 !py-4 !border-b !border-[var(--border)] text-sm !text-[var(--text-primary)]"
+          body={(row: PricingPlan) => (
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+              {row.price_text || "—"}
+            </span>
+          )}
+        />
+        <Column
           field="data_storage"
           header="Storage"
           headerClassName="!bg-[var(--bg)]/50 !text-[var(--text-secondary)] font-semibold text-xs uppercase tracking-wider !px-6 !py-4 !border-b !border-[var(--border)] text-left"
@@ -514,6 +529,22 @@ export const ManagePricing: React.FC<ManagePricingProps> = ({
                     value={formData.plan_name}
                     onChange={(e) =>
                       setFormData({ ...formData, plan_name: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  />
+                </div>
+
+                {/* Price Text */}
+                <div>
+                  <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
+                    Price Text <span className="text-[var(--text-secondary)] font-normal text-xs">(e.g. 60,000/Y)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 60,000/Y, Custom"
+                    value={formData.price_text}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price_text: e.target.value })
                     }
                     className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                   />

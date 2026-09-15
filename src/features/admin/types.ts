@@ -26,6 +26,7 @@ export interface PricingPlan {
     scheduled_email: string;
     audit_memory?: string;
     connectors?: string;
+    price_text?: string;
     created_at?: string;
     updated_at?: string;
 }

@@ -414,62 +414,89 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
               return (
                 <div
                   key={plan.id}
-                  className={`${isPopular ? 'border-2 border-accent shadow-md relative' : 'border border-slate-200 shadow-sm'} rounded-3xl p-8 bg-white flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-300`}
+                  className={`${isPopular ? 'border-2 border-accent shadow-md relative hover:border-blue-600' : 'border border-slate-200 shadow-sm hover:border-blue-600'} rounded-3xl p-8 bg-white flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-300`}
                 >
                   {isPopular && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-white px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase">
                       Most Popular
                     </div>
                   )}
-                  <h3 className="text-xl font-bold mb-2 text-slate-900">{plan.plan_name} Plan</h3>
-                  <div className="text-4xl font-extrabold mb-4 text-slate-900">
-                    {plan.price_text || (plan.plan_name.toLowerCase() === 'free' ? 'Free' : plan.plan_name.toLowerCase() === 'gold' ? 'Contact Us' : '\u00A0')}
-                  </div>
-                  <ul className="space-y-3 flex-1">
-                    {plan.data_storage > 0 ? (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Up to {plan.data_storage} GB Data Storage</span></li>
+                  <h3 className="text-xl font-bold mb-2 text-blue-600">{plan.plan_name} Plan</h3>
+                  <div className="mb-6">
+                    {plan.price_text ? (
+                      (() => {
+                        const isCustom = plan.price_text.toLowerCase().trim() === 'custom';
+                        if (isCustom) {
+                          return <span className="text-3xl font-bold text-slate-800">Custom</span>;
+                        }
+                        
+                        // Try to split amount and period (e.g. "per year", "/Y")
+                        const match = plan.price_text.match(/^(.*?)(per year|\/Y|\/y|\/Year|per month|\/mo)(.*)$/i);
+                        if (match) {
+                          return (
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-3xl font-bold text-slate-800">{match[1].trim()}</span>
+                              <span className="text-sm font-medium text-slate-500">{match[2].trim()}{match[3].trim()}</span>
+                            </div>
+                          );
+                        }
+                        
+                        return <span className="text-3xl font-bold text-slate-800">{plan.price_text}</span>;
+                      })()
                     ) : (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Data Storage</span></li>
+                      <span className="text-3xl font-bold text-slate-800">
+                        {plan.plan_name.toLowerCase() === 'free' ? 'Free' : plan.plan_name.toLowerCase() === 'gold' ? 'Contact Us' : '\u00A0'}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <hr className="border-slate-100 mb-6" />
+                  
+                  <ul className="space-y-4 flex-1 mb-8">
+                    {plan.data_storage > 0 ? (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm">Up to <strong>{plan.data_storage} GB</strong> Data Storage</span></li>
+                    ) : (
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm"><strong>Unlimited</strong> Data Storage</span></li>
                     )}
 
                     {plan.uploads > 0 ? (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.uploads} uploads per day</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm"><strong>{plan.uploads}</strong> uploads per day</span></li>
                     ) : plan.uploads === 0 ? (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Multiple uploads</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm">Multiple uploads</span></li>
                     ) : (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited uploads</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm"><strong>Unlimited</strong> uploads</span></li>
                     )}
 
                     {plan.insights_queries > 0 ? (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.insights_queries} Insights / Queries {plan.price_text?.toLowerCase() === 'free' ? 'per day' : ''}</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm"><strong>{plan.insights_queries}</strong> Insights / Queries {plan.price_text?.toLowerCase() === 'free' ? 'per day' : ''}</span></li>
                     ) : (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Insights / Queries</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm"><strong>Unlimited</strong> Insights / Queries</span></li>
                     )}
 
                     {plan.number_of_users > 0 ? (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.number_of_users === 1 ? '1 User' : `Up to ${plan.number_of_users} Users`}</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm">{plan.number_of_users === 1 ? '1 User' : `Up to ${plan.number_of_users} Users`}</span></li>
                     ) : (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Unlimited Users</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm"><strong>Unlimited</strong> Users</span></li>
                     )}
 
                     {plan.download_allowed === 'Allowed' && (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Download Allowed</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm">Download Allowed</span></li>
                     )}
 
                     {plan.custom_kpi === 'Available' && (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Custom KPI</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm">Custom KPI</span></li>
                     )}
 
                     {plan.scheduled_email === 'Available' && (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">Scheduled Email</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm">Scheduled Email</span></li>
                     )}
 
                     {plan.audit_memory && (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.audit_memory} audit memory</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm"><strong>{plan.audit_memory}</strong> audit memory</span></li>
                     )}
 
                     {plan.connectors && (
-                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-accent shrink-0" /> <span className="text-slate-600 text-sm">{plan.connectors}</span></li>
+                      <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm">{plan.connectors}</span></li>
                     )}
                   </ul>
                 </div>

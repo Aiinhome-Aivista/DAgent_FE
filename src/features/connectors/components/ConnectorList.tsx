@@ -36,6 +36,10 @@ export const ConnectorList = ({ onSelect }: ConnectorListProps = {}) => {
     const allowed = allowedStr.toLowerCase();
     const name = connectorName.toLowerCase();
     if (!allowedStr) return true; // fallback if no plan string
+    
+    // Allow all connectors for Gold/Custom plans
+    if (allowed.includes('all') || allowed.includes('custom') || allowed.includes('unlimited')) return true;
+
     if (name.includes('upload') || name.includes('document')) return allowed.includes('file upload');
     if (name.includes('mysql')) return allowed.includes('mysql');
     if (name.includes('postgres')) return allowed.includes('postgres');
