@@ -79,7 +79,7 @@ export const ConnectorCard = ({ connector, onClick }: ConnectorCardProps) => {
             {connector.type}
           </span>
           <Button variant="ghost" size="sm" className="group/btn h-8 text-xs" disabled={connector.disabled}>
-            {connector.disabled ? 'Coming Soon' : 'Connect'} 
+            {(connector as any).isPlanRestricted ? 'Upgrade Plan' : connector.disabled ? 'Coming Soon' : 'Connect'} 
             {!connector.disabled && <ArrowUpRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />}
           </Button>
         </div>

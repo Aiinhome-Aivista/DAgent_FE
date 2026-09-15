@@ -2,9 +2,11 @@ import { Connector } from '../types';
 import { ConnectorCard } from './ConnectorCard';
 import { Input } from '@/src/ui-kit';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useConnectorContext } from '../../../context/ConnectorContext';
 import { SUPPORTED_CONNECTORS } from '../constants';
+import { apiService } from '@/src/services/api.service';
+import { API_ENDPOINTS } from '@/src/services/api.config';
 
 interface ConnectorListProps {
   onSelect?: (connector: any) => void;
@@ -12,9 +14,44 @@ interface ConnectorListProps {
 
 export const ConnectorList = ({ onSelect }: ConnectorListProps = {}) => {
   const [search, setSearch] = useState('');
+  const [allowedConnectors, setAllowedConnectors] = useState<string>('');
   const { setSelectedConnector } = useConnectorContext();
 
-  const filtered = SUPPORTED_CONNECTORS.filter(c => 
+  useEffect(() => {
+    const fetchUsageStats = async () => {
+      try {
+        const userId = localStorage.getItem('DAgent_user_id') || '1';
+        const response = await apiService.get(`${API_ENDPOINTS.USER.USAGE_STATS}?user_id=${userId}`) as any;
+        if (response && response.usage_stats) {
+          setAllowedConnectors(response.usage_stats.allowed_connectors || '');
+        }
+      } catch (err) {
+        console.error('Failed to load usage stats for connectors', err);
+      }
+    };
+    fetchUsageStats();
+  }, []);
+
+  const checkConnectorAllowed = (connectorName: string, allowedStr: string) => {
+    const allowed = allowedStr.toLowerCase();
+    const name = connectorName.toLowerCase();
+    if (!allowedStr) return true; // fallback if no plan string
+    if (name.includes('upload') || name.includes('document')) return allowed.includes('file upload');
+    if (name.includes('mysql')) return allowed.includes('mysql');
+    if (name.includes('postgres')) return allowed.includes('postgres');
+    if (name.includes('web search')) return allowed.includes('llm search') || allowed.includes('web search');
+    if (name.includes('snowflake')) return allowed.includes('snowflake');
+    return allowed.includes(name);
+  };
+
+  const filtered = SUPPORTED_CONNECTORS.map(c => {
+    const isAllowed = checkConnectorAllowed(c.name, allowedConnectors);
+    return {
+      ...c,
+      disabled: c.disabled || !isAllowed,
+      isPlanRestricted: !c.disabled && !isAllowed // flag to show "Upgrade Plan" instead of "Coming Soon"
+    };
+  }).filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.type.toLowerCase().includes(search.toLowerCase())
   );

@@ -1,3 +1,4 @@
+
 import { FILE } from "dns";
 import { connect } from "http2";
 
@@ -14,7 +15,8 @@ export const defaultConfig: ApiConfig = {
   // baseUrl: 'http://localhost:3019/',
   // baseUrl: 'http://157.173.221.226:3004',
   // baseUrl: 'http://187.127.163.17:3019',
-  // baseUrl: 'http://72.61.226.68:3019/',
+  // baseUrl: 'http://72.61.226.68:3020/',
+  // baseUrl: 'https://aivista.co.in/dagentme',
   timeout: 10000,
 };
 
@@ -22,6 +24,9 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/login',
     ADMIN_LOGIN: '/admin_login',
+  },
+  USER: {
+    USAGE_STATS: '/api/user/usage-stats',
   },
   DATA_SOURCE: {
     CONNECTION_HISTORY: '/connection_history',
@@ -125,4 +130,3 @@ export const API_ENDPOINTS = {
     ASSIGNMENTS: '/api/llm/assignments',
   },
 }
-
