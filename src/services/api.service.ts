@@ -1,4 +1,5 @@
 import { ApiConfig, defaultConfig } from './api.config';
+import toast from 'react-hot-toast';
 
 export interface IApiService {
   get<T>(endpoint: string): Promise<T>;
@@ -30,6 +31,9 @@ class ApiService implements IApiService {
     // Global error handling logic
     console.error('[Global API Error]', error);
     // You could integrate a toast library here (e.g., toast.error(error.message))
+    if (error?.message && error.message.toLowerCase().includes('limit exceeded')) {
+      toast.error(error.message, { duration: 5000 });
+    }
   }
 
   private getHeaders(): Record<string, string> {
