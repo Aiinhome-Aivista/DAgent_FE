@@ -102,6 +102,27 @@ const GUIDES: Record<string, FieldGuide> = {
     description: "The exact name of the Tally company (database) you want to connect to.",
     tip: "This must match the company name as it appears in Tally's Company Selection screen."
   },
+  // ─── SSH guides ───────────────────────────────────────────────────────────
+  ssh_host: {
+    title: "SSH Host",
+    description: "The hostname or IP address of the SSH server.",
+    tip: "Example: 'ssh.example.com' or '192.168.1.100'"
+  },
+  ssh_port: {
+    title: "SSH Port",
+    description: "The port your SSH server listens on. Default is 22.",
+    tip: "Usually 22, but check with your server admin if customized."
+  },
+  ssh_username: {
+    title: "SSH Username",
+    description: "The account used to authenticate with the SSH server.",
+    tip: "Example: 'ubuntu' or 'ec2-user'"
+  },
+  ssh_password: {
+    title: "SSH Password / Key",
+    description: "Password for the SSH account or path to private key.",
+    tip: "Will not be saved permanently for security."
+  },
 };
 
 interface ConnectorFormProps {
@@ -170,7 +191,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     setIsTesting(true);
     setErrorMsg('');
     try {
-      const payload = {
+      const payload: any = {
         user_id: userId,
         session_id: localStorage.getItem('DAgent_session_id'),
         name: formData.name,
@@ -182,6 +203,13 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
         database: formData.database,
         schema: formData.schema || undefined
       };
+
+      if (formData.use_ssh) {
+        payload.ssh_host = formData.ssh_host;
+        if (formData.ssh_port) payload.ssh_port = Number(formData.ssh_port);
+        payload.ssh_username = formData.ssh_username;
+        payload.ssh_password = formData.ssh_password;
+      }
 
       const response: any = await connectorService.createConnector(payload);
 

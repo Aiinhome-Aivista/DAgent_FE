@@ -53,6 +53,15 @@ function AppContent() {
       return null;
     }
   });
+
+  // Force chat component to unmount/remount and clear its internal state
+  // whenever the user switches to a different workspace
+  useEffect(() => {
+    if (selectedWorkspace?.id) {
+      setChatKey(prev => prev + 1);
+      setWorkflowKey(prev => typeof prev === 'number' ? prev + 1 : prev); // also resetting workflowKey
+    }
+  }, [selectedWorkspace?.id]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
@@ -93,10 +102,12 @@ function AppContent() {
 
                 if (sessions.length === 0) {
                   localStorage.setItem('is_default_chat', 'true');
+                  localStorage.removeItem('default_workspace_analysis');
+                  window.dispatchEvent(new Event('default-workspace-updated'));
                   setExpandedWorkspaceId(activeWS.id);
                 } else if (sessions.length > 0) {
                   // Find the latest default session and save it for the dashboard layout
-                  let defaultSession = sessions[sessions.length - 1];
+                  let defaultSession = null;
                   for (let i = sessions.length - 1; i >= 0; i--) {
                     if (sessions[i].querySessionName?.trim().toLowerCase().startsWith('default')) {
                       defaultSession = sessions[i];
@@ -105,6 +116,9 @@ function AppContent() {
                   }
                   if (defaultSession && defaultSession.querySessionHistory) {
                     localStorage.setItem('default_workspace_analysis', JSON.stringify(defaultSession.querySessionHistory));
+                    window.dispatchEvent(new Event('default-workspace-updated'));
+                  } else {
+                    localStorage.removeItem('default_workspace_analysis');
                     window.dispatchEvent(new Event('default-workspace-updated'));
                   }
                   if (activeWS.id === selectedWorkspace?.id) {
@@ -192,7 +206,7 @@ function AppContent() {
 
         const sessions = queryResponse.querySessions;
         if (sessions.length > 0) {
-          let defaultSession = sessions[sessions.length - 1];
+          let defaultSession = null;
           for (let i = sessions.length - 1; i >= 0; i--) {
             if (sessions[i].querySessionName?.trim().toLowerCase().startsWith('default')) {
               defaultSession = sessions[i];
@@ -201,7 +215,14 @@ function AppContent() {
           }
           if (defaultSession && defaultSession.querySessionHistory) {
             localStorage.setItem('default_workspace_analysis', JSON.stringify(defaultSession.querySessionHistory));
+            window.dispatchEvent(new Event('default-workspace-updated'));
+          } else {
+            localStorage.removeItem('default_workspace_analysis');
+            window.dispatchEvent(new Event('default-workspace-updated'));
           }
+        } else {
+          localStorage.removeItem('default_workspace_analysis');
+          window.dispatchEvent(new Event('default-workspace-updated'));
         }
 
         return queryResponse.querySessions;

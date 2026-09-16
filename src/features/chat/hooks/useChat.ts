@@ -84,13 +84,43 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
 
       const answerText = response?.answer || '';
       const followUps: string[] = response?.follow_up_questions || response?.suggested_questions || [];
+      
+      let visData = response?.visualizations || [];
+      if (visData.length === 0 && response?.chart_data) {
+        visData = [response.chart_data];
+      }
+      
+      visData = visData.map((viz: any) => {
+        if (viz.chart_type && viz.labels && viz.datasets) {
+          const rechartsData = viz.labels.map((label: string, index: number) => {
+            const dataPoint: any = { label };
+            viz.datasets.forEach((dataset: any) => {
+              dataPoint[dataset.label] = dataset.data[index];
+            });
+            return dataPoint;
+          });
+          
+          let rechartsType = 'bar_chart';
+          if (viz.chart_type === 'pie') rechartsType = 'pie_chart';
+          if (viz.chart_type === 'line') rechartsType = 'line_chart';
+          
+          return {
+            type: rechartsType,
+            title: viz.title || '',
+            data: rechartsData,
+            xKey: 'label',
+            yKey: viz.datasets[0]?.label || 'value'
+          };
+        }
+        return viz;
+      });
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: answerText,
         timestamp: new Date(),
-        visualizations: response?.visualizations || []
+        visualizations: visData
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -108,7 +138,7 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
         const newSessionHistory = [{
           question: content,
           answer: answerText,
-          visualizations: response?.visualizations || [],
+          visualizations: visData,
           follow_up_questions: followUps
         }];
         localStorage.setItem('selected_query_session', JSON.stringify(newSessionHistory));
@@ -121,12 +151,15 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
           }, 500); // short delay to ensure DB transaction completes
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Session Chat Error:', error);
+      
+      const errorMsg = error?.response?.data?.message || 'Sorry, something went wrong while processing your request.';
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, something went wrong while processing your request.',
+        content: errorMsg,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -168,12 +201,38 @@ export const useChat = (initialMode: ChatMode = 'landing', initialMessage?: stri
             // Not JSON, use as is
           }
 
+          let visData = item.visualizations || [];
+          visData = visData.map((viz: any) => {
+            if (viz.chart_type && viz.labels && viz.datasets) {
+              const rechartsData = viz.labels.map((label: string, index: number) => {
+                const dataPoint: any = { label };
+                viz.datasets.forEach((dataset: any) => {
+                  dataPoint[dataset.label] = dataset.data[index];
+                });
+                return dataPoint;
+              });
+              
+              let rechartsType = 'bar_chart';
+              if (viz.chart_type === 'pie') rechartsType = 'pie_chart';
+              if (viz.chart_type === 'line') rechartsType = 'line_chart';
+              
+              return {
+                type: rechartsType,
+                title: viz.title || '',
+                data: rechartsData,
+                xKey: 'label',
+                yKey: viz.datasets[0]?.label || 'value'
+              };
+            }
+            return viz;
+          });
+
           historyMessages.push({
             id: `assistant-${idx}`,
             role: 'assistant',
             content: assistantContent,
             timestamp: item.timestamp ? new Date(item.timestamp) : (item.created_at ? new Date(item.created_at) : new Date()),
-            visualizations: item.visualizations || []
+            visualizations: visData
           });
         });
 

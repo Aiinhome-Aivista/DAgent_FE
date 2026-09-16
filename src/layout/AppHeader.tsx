@@ -44,10 +44,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   const displayUserName = userName || "aiinhome";
-  const truncatedUserName =
-    displayUserName.length > 6
-      ? `${displayUserName.slice(0, 6)}...`
-      : displayUserName;
 
   return (
     <header className="h-14 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md sticky top-0 z-40 px-6 flex items-center justify-between">
@@ -61,13 +57,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <Button
           variant="outline"
           size="sm"
-          className="flex items-center gap-2.5 rounded-full pr-4 pl-1.5 h-9 border-[var(--border)] hover:bg-[var(--surface-hover)] transition-all cursor-pointer"
+          className="flex items-center gap-2.5 rounded-full pr-4 pl-1.5 h-9 border-[var(--border)] hover:bg-[var(--surface-hover)] transition-all cursor-pointer whitespace-nowrap"
         >
-          <div className="w-6 h-6 rounded-full bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
+          <div className="w-6 h-6 rounded-full bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] min-w-[24px]">
             <User className="w-4 h-4" />
           </div>
-          <span className="text-sm font-medium" title={displayUserName}>
-            Welcome {truncatedUserName}
+          <span className="text-sm font-medium">
+            Welcome {displayUserName}
           </span>
         </Button>
       </div>
