@@ -48,12 +48,20 @@ export const ConnectorList = ({ onSelect }: ConnectorListProps = {}) => {
     return allowed.includes(name);
   };
 
+  const isPlanUnlimited = (() => {
+    const allowed = allowedConnectors.toLowerCase();
+    return allowed.includes('all') || allowed.includes('custom') || allowed.includes('unlimited');
+  })();
+
   const filtered = SUPPORTED_CONNECTORS.map(c => {
     const isAllowed = checkConnectorAllowed(c.name, allowedConnectors);
+    // If the plan grants all connectors (Gold/Custom/Unlimited),
+    // override the hardcoded `disabled: true` from constants
+    const isDisabled = isPlanUnlimited ? false : (c.disabled || !isAllowed);
     return {
       ...c,
-      disabled: c.disabled || !isAllowed,
-      isPlanRestricted: !c.disabled && !isAllowed // flag to show "Upgrade Plan" instead of "Coming Soon"
+      disabled: isDisabled,
+      isPlanRestricted: !isPlanUnlimited && !c.disabled && !isAllowed // show "Upgrade Plan" badge
     };
   }).filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) ||
