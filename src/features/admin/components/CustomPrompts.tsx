@@ -58,19 +58,30 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
   const [promptTypes, setPromptTypes] = useState<
     { value: string; label: string }[]
   >([]);
-
+  const [dataCategories, setDataCategories] = useState<
+    { value: string; label: string }[]
+  >([]);
   useEffect(() => {
-    const loadPromptTypes = async () => {
+    const loadData = async () => {
       try {
-        const response = await promptService.getPromptTypes();
-        if (response?.success && response?.prompt_types) {
-          setPromptTypes(response.prompt_types);
+        const [ptRes, dcRes] = await Promise.all([
+          promptService.getPromptTypes(),
+          promptService.getDataCategories()
+        ]);
+        if (ptRes?.success && ptRes?.prompt_types) {
+          setPromptTypes(ptRes.prompt_types);
+        }
+        if (dcRes?.success && dcRes?.categories) {
+          setDataCategories(dcRes.categories.map((c: any) => ({
+            value: c.category_code,
+            label: c.category_name
+          })));
         }
       } catch (error) {
-        console.error("Failed to fetch prompt types", error);
+        console.error("Failed to fetch custom prompts master data", error);
       }
     };
-    loadPromptTypes();
+    loadData();
   }, []);
 
   const fetchAllPrompts = async () => {
@@ -194,18 +205,15 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
     }
   };
 
-  const filteredPrompts = allPrompts.filter(
-    (p) =>
-      (p.workspace_name?.toLowerCase() || "").includes(
-        searchQuery.toLowerCase(),
-      ) ||
-      (p.prompt_type_label?.toLowerCase() || "").includes(
-        searchQuery.toLowerCase(),
-      ) ||
-      (p.custom_prompt?.toLowerCase() || "").includes(
-        searchQuery.toLowerCase(),
-      ),
-  );
+  const filteredPrompts = allPrompts.filter((p) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      (p.workspace_name || "").toLowerCase().includes(q) ||
+      (p.prompt_type_label || "").toLowerCase().includes(q) ||
+      (p.custom_prompt || "").toLowerCase().includes(q) ||
+      (p.data_category || "").toLowerCase().includes(q)
+    );
+  });
 
   const displayPrompts = filteredPrompts.map((p, index) => ({
     ...p,
@@ -334,22 +342,18 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                     pages: {
                       className: "!flex !items-center !gap-1",
                     },
-                    firstPageButton: {
-                      className:
-                        "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
-                    },
-                    prevPageButton: {
-                      className:
-                        "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
-                    },
-                    nextPageButton: {
-                      className:
-                        "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
-                    },
-                    lastPageButton: {
-                      className:
-                        "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
-                    },
+                    firstPageButton: ({ context }: any) => ({
+                      className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+                    }),
+                    prevPageButton: ({ context }: any) => ({
+                      className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+                    }),
+                    nextPageButton: ({ context }: any) => ({
+                      className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+                    }),
+                    lastPageButton: ({ context }: any) => ({
+                      className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+                    }),
                     pageButton: ({ context }: any) => ({
                       className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${context.active
                         ? "!bg-[var(--accent)] !text-white !font-semibold"
@@ -520,8 +524,11 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                 disabled={isEditMode}
                 className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer disabled:cursor-auto"
               >
-                <option value="global">Global / Generic</option>
-                <option value="sales">Sales / Tyre Sales</option>
+                {dataCategories.map((dc) => (
+                  <option key={dc.value} value={dc.value}>
+                    {dc.label}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex-1">

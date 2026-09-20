@@ -39,11 +39,15 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({
     }
   };
 
-  const filteredUsers = workspaceUsers.filter(
-    (u) =>
-      u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredUsers = workspaceUsers.filter((u) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      (u.name || "").toLowerCase().includes(q) ||
+      (u.email || "").toLowerCase().includes(q) ||
+      ((u as any).company_name || "").toLowerCase().includes(q) ||
+      ((u as any).role || "").toLowerCase().includes(q)
+    );
+  });
 
   const displayUsers = filteredUsers.map((u, index) => ({
     ...u,
@@ -125,22 +129,18 @@ export const WorkspaceUsers: React.FC<WorkspaceUsersProps> = ({
               pages: {
                 className: "!flex !flex-row !items-center !gap-1",
               },
-              firstPageButton: {
-                className:
-                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !inline-flex !items-center !justify-center",
-              },
-              prevPageButton: {
-                className:
-                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !inline-flex !items-center !justify-center",
-              },
-              nextPageButton: {
-                className:
-                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !inline-flex !items-center !justify-center",
-              },
-              lastPageButton: {
-                className:
-                  "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !inline-flex !items-center !justify-center",
-              },
+              firstPageButton: ({ context }: any) => ({
+                className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !inline-flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+              }),
+              prevPageButton: ({ context }: any) => ({
+                className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !inline-flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+              }),
+              nextPageButton: ({ context }: any) => ({
+                className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !inline-flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+              }),
+              lastPageButton: ({ context }: any) => ({
+                className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !inline-flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+              }),
               pageButton: ({ context }: any) => ({
                 className: `!w-9 !h-9 !rounded-lg !transition-colors !inline-flex !items-center !justify-center text-sm ${context.active
                     ? "!bg-[var(--accent)] !text-white !font-semibold"

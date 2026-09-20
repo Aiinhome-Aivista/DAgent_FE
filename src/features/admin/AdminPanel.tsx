@@ -30,6 +30,7 @@ import { CustomPrompts } from "./components/CustomPrompts";
 import { ScheduledReports } from "./components/ScheduledReports";
 import { ManagePricing } from "./components/ManagePricing";
 import { ManageLLM } from "./components/ManageLLM";
+import { ManageMasterData } from "./components/ManageMasterData";
 
 interface AdminPanelProps {
   adminSubTab: AdminTab;
@@ -201,15 +202,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
-  const filteredUsers = users.filter(
-    (u) =>
-      u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredUsers = users.filter((u) => {
+    const q = searchQuery.toLowerCase();
+    const roleLabel = u.role_id === 4 ? "support user" : "end user";
+    const visibilityLabel = u.visibility === 2 ? "private" : "public";
+    return (
+      (u.name || "").toLowerCase().includes(q) ||
+      (u.email || "").toLowerCase().includes(q) ||
+      (u.company_name || "").toLowerCase().includes(q) ||
+      roleLabel.includes(q) ||
+      visibilityLabel.includes(q) ||
+      (u.workspaces || "").toLowerCase().includes(q)
+    );
+  });
 
-  const filteredWorkspaces = workspaces.filter((w) =>
-    w.workspace_name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredWorkspaces = workspaces.filter((w) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      w.workspace_name?.toLowerCase().includes(q) ||
+      w.workspace_type?.toLowerCase().includes(q) ||
+      w.name?.toLowerCase().includes(q)
+    );
+  });
 
   const tabDisplayNames: Record<AdminTab, string> = {
     company: "Company",
@@ -223,6 +237,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     adminChats: "Chat Views",
     pendingKnowledge: "KG History",
     scheduledReports: "Scheduled Reports",
+    masterData: "Master Data",
   };
 
   const tabDetails: Record<AdminTab, { title: string; desc: string }> = {
@@ -264,11 +279,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     },
     pricing: {
       title: "Pricing Plans",
-      desc: "Manage subscription plans and feature allocations.",
+      desc: "Manage subscription plans and features.",
     },
     llmConfig: {
       title: "LLM Configuration",
-      desc: "Configure active LLM provider, models, and endpoints.",
+      desc: "Configure AI providers and model assignments.",
+    },
+    masterData: {
+      title: "Master Data Management",
+      desc: "Manage Data Categories and Prompt Types.",
     },
   };
 
@@ -295,7 +314,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
             <input
               type="text"
-              placeholder={`Search ${tabDisplayNames[adminSubTab] || "items"}...`}
+              placeholder="Search here"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
@@ -498,6 +517,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     isCreatingLLM={isCreatingLLM}
                     setIsCreatingLLM={setIsCreatingLLM}
                   />
+                )}
+
+                {adminSubTab === "masterData" && (
+                  <ManageMasterData searchQuery={searchQuery} />
                 )}
               </motion.div>
             </AnimatePresence>

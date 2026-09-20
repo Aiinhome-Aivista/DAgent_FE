@@ -1066,9 +1066,9 @@ export const AgentWorkflow = ({
     fetchAgents();
   }, [userId, defaultAgentId]);
 
-  // Re-fetch agents and session sources when switching to ingest tab
+  // Re-fetch agents and session sources when switching to ingest, analyze, or query tabs
   useEffect(() => {
-    if (selectedAgentId === 'ingest' && userId) {
+    if (['ingest', 'analyze', 'query'].includes(selectedAgentId) && userId) {
       const fetchData = async () => {
         const agentsData = await agentService.getAgents(userId);
         setAgents(agentsData);
@@ -1113,11 +1113,11 @@ export const AgentWorkflow = ({
 
     if (hasProcessing) {
       const interval = setInterval(async () => {
-        // We set fetchFromApi to false here so that we don't spam the connection_history
-        // API every 1 second while waiting for simulated local processing to finish.
-        const updatedAgents = await agentService.getAgents(userId, false);
+        // We set fetchFromApi to true here because the processing is done in the backend
+        // and we need to get the updated status from connection_history
+        const updatedAgents = await agentService.getAgents(userId, true);
         setAgents(updatedAgents);
-      }, 1000);
+      }, 3000);
       return () => clearInterval(interval);
     }
   }, [agents, selectedAgentId, userId]);
@@ -1365,9 +1365,13 @@ export const AgentWorkflow = ({
         historyItem.connectionName === 'Web Search' ||
         historyItem.action?.startsWith('Saved Research:');
 
+      // Calculate unique names first for dynamic display
+      const allSessionConnectors = selectedAgent.history.filter(h => h.session_id === historyItem.session_id && h.db_type !== 'saved_web_result' && h.db_type !== 'web_search');
+      const uniqueConnectionNames = Array.from(new Set(allSessionConnectors.map(h => h.connectionName || 'data source'))).filter(Boolean).join(', ') || 'Data source';
+
       setSelectedConnector({
         id: historyItem.connectorId || '',
-        name: isWebSearch ? 'Web Search using LLM' : (historyItem.connectionName || 'Data source'),
+        name: isWebSearch ? 'Web Search using LLM' : uniqueConnectionNames,
         description: historyItem.details || '',
         type: isWebSearch ? 'Integration' : 'Database',
         icon: isWebSearch ? 'globe' : 'database',
@@ -1380,13 +1384,14 @@ export const AgentWorkflow = ({
       setImportError(null);
 
       // 3. Update history to show processing (this will be picked up by polling)
+
       const newActivities = historyItem.activities
-        ? [...historyItem.activities, 'Initiating import process...']
-        : ['Initiating import process...'];
+        ? [...historyItem.activities, `Initiating import process for ${uniqueConnectionNames}...`]
+        : [`Initiating import process for ${uniqueConnectionNames}...`];
 
       await agentService.updateHistoryItem(selectedAgent.id, historyItem.id, {
         status: 'processing',
-        details: 'Triggering data import from data source...',
+        details: `Triggering data import from ${uniqueConnectionNames}...`,
         activities: newActivities
       });
 
@@ -1415,9 +1420,13 @@ export const AgentWorkflow = ({
               session_id: historyItem.session_id || ''
             });
           } else {
+            const connectionIds = allSessionConnectors.length > 0 
+                ? allSessionConnectors.map(h => h.connectorId || h.id).filter(Boolean).map(String) 
+                : [historyItem.connectorId || ''];
+
             response = await connectorService.continueToImport({
               user_id: userId.toString(),
-              connection_id: historyItem.connectorId || '',
+              connection_ids: connectionIds,
               session_id: historyItem.session_id
             });
           }
@@ -1425,7 +1434,7 @@ export const AgentWorkflow = ({
           if (response) {
             if (response.status === "error") {
               // ✅ Show API error message in UI
-              setImportError(response.message || "Something went wrong");
+              setImportError(response.message || response.error || response.details || "Import failed due to an unknown error");
               setConnectorResults(null);
             } else {
               // ✅ Success case
@@ -1551,15 +1560,54 @@ export const AgentWorkflow = ({
         console.error('Session ID is missing, cannot delete.');
         return;
       }
+
+      // Show loader while deleting
+      setIsImporting(true);
+      setConnectorResults(null);
+      setImportError(null);
+
       const res = await connectorService.deleteConnectionHistory(item.id, activeSessionId);
       if (res && res.status === 'success') {
+        // Refresh agents to get updated history
+        let freshAgents = agents;
         if (userId) {
-          const freshAgents = await agentService.getAgents(userId, selectedAgentId === 'connect');
+          freshAgents = await agentService.getAgents(userId, selectedAgentId === 'connect');
           setAgents(freshAgents);
+        }
+
+        // Find remaining connections for this session and re-import
+        const connectAgent = freshAgents.find((a: any) => a.id === 'connect');
+        const remainingConnections = connectAgent?.history?.filter(
+          (h: any) => h.session_id === activeSessionId && h.id !== item.id
+        ) || [];
+
+        if (remainingConnections.length > 0) {
+          // Re-trigger import for remaining connections
+          const remainingIds = remainingConnections.map((h: any) => h.connectorId || h.id).filter(Boolean).map(String);
+          try {
+            const response = await connectorService.continueToImport({
+              user_id: userId!.toString(),
+              connection_ids: remainingIds,
+              session_id: activeSessionId
+            });
+            if (response && response.status !== 'error') {
+              setConnectorResults(response);
+            }
+          } catch (reimportErr) {
+            console.error('Re-import after delete failed:', reimportErr);
+          }
+        }
+
+        // Refresh session sources
+        if (activeSessionId) {
+          const sources = await connectorService.getSessionSources(activeSessionId);
+          setSessionSources(sources);
         }
       }
     } catch (err) {
       console.error('Failed to delete history item:', err);
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -1575,6 +1623,9 @@ export const AgentWorkflow = ({
   const handleBulkDeleteHistory = async () => {
     if (selectedHistoryItems.size === 0) return;
     setIsBulkDeleting(true);
+    setIsImporting(true);
+    setConnectorResults(null);
+    setImportError(null);
     try {
       const activeSessionId = localStorage.getItem('DAgent_session_id') || (activeConnector as any)?.session_id;
       if (!activeSessionId) return;
@@ -1585,14 +1636,45 @@ export const AgentWorkflow = ({
       await Promise.all(promises);
 
       setSelectedHistoryItems(new Set());
+      
+      let freshAgents = agents;
       if (userId) {
-        const freshAgents = await agentService.getAgents(userId, selectedAgentId === 'connect');
+        freshAgents = await agentService.getAgents(userId, selectedAgentId === 'connect');
         setAgents(freshAgents);
+      }
+
+      // Find remaining connections for this session and re-import
+      const connectAgent = freshAgents.find((a: any) => a.id === 'connect');
+      const remainingConnections = connectAgent?.history?.filter(
+        (h: any) => h.session_id === activeSessionId && !selectedHistoryItems.has(h.id)
+      ) || [];
+
+      if (remainingConnections.length > 0) {
+        const remainingIds = remainingConnections.map((h: any) => h.connectorId || h.id).filter(Boolean).map(String);
+        try {
+          const response = await connectorService.continueToImport({
+            user_id: userId!.toString(),
+            connection_ids: remainingIds,
+            session_id: activeSessionId
+          });
+          if (response && response.status !== 'error') {
+            setConnectorResults(response);
+          }
+        } catch (reimportErr) {
+          console.error('Re-import after bulk delete failed:', reimportErr);
+        }
+      }
+
+      // Refresh session sources
+      if (activeSessionId) {
+        const sources = await connectorService.getSessionSources(activeSessionId);
+        setSessionSources(sources);
       }
     } catch (err) {
       console.error('Failed to bulk delete history items:', err);
     } finally {
       setIsBulkDeleting(false);
+      setIsImporting(false);
     }
   };
 
@@ -1919,6 +2001,7 @@ export const AgentWorkflow = ({
                                         variant="primary"
                                         size="sm"
                                         onClick={() => handleAction(filteredHistory[filteredHistory.length - 1], 'Continue')}
+                                        disabled={filteredHistory.some(h => h.status?.toLowerCase() === 'processing')}
                                         className="shadow-lg shadow-[var(--accent)]/20"
                                       >
                                         Continue to Import

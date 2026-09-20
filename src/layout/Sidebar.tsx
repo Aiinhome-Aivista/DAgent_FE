@@ -21,6 +21,10 @@ import {
   Cpu,
   FileText,
   CreditCard,
+  UserCheck,
+  Link,
+  Archive,
+  HardDrive
 } from "lucide-react";
 import { Workspace, workspaceService } from "../services/workspace.service";
 import { SidebarProps } from "../types/layout";
@@ -153,14 +157,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 { id: 'company', icon: Building2, label: 'Company' },
                 { id: 'users', icon: Users, label: 'Users' },
                 { id: 'workspaces', icon: Layout, label: 'Workspaces' },
-                { id: 'assignUsers', icon: ShieldAlert, label: 'Assignments' },
-                { id: 'workspaceUsers', icon: Users, label: 'Workspace Users' },
+                { id: 'assignUsers', icon: Link, label: 'Assignments' },
+                { id: 'workspaceUsers', icon: UserCheck, label: 'Workspace Users' },
                 { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' },
                 { id: 'pricing', icon: CreditCard, label: 'Pricing' },
                 { id: 'llmConfig', icon: Cpu, label: 'LLM Settings' },
                 { id: 'adminChats', icon: MessageSquare, label: 'Chat Views' },
-                { id: 'pendingKnowledge', icon: Database, label: 'KG History' },
-                { id: 'scheduledReports', icon: FileText, label: 'Scheduled Reports' }
+                { id: 'pendingKnowledge', icon: Archive, label: 'KG History' },
+                { id: 'scheduledReports', icon: FileText, label: 'Scheduled Reports' },
+                { id: 'masterData', icon: HardDrive, label: 'Master Data' }
               ].map((tab) => (
                 <button
                   key={tab.id}

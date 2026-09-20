@@ -50,10 +50,17 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
     const [deleteConfirmationText, setDeleteConfirmationText] = React.useState("");
     const [isCaptchaValid, setIsCaptchaValid] = React.useState(false);
 
-    const filteredUsers = users.filter(u =>
-        u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredUsers = users.filter(u => {
+        const q = searchQuery.toLowerCase();
+        const roleLabel = u.role_id === 4 ? "support user" : "end user";
+        const visibilityLabel = u.visibility === 2 ? "private" : "public";
+        return (u.name || "").toLowerCase().includes(q) ||
+               (u.email || "").toLowerCase().includes(q) ||
+               (u.company_name || "").toLowerCase().includes(q) ||
+               roleLabel.includes(q) ||
+               visibilityLabel.includes(q) ||
+               (u.workspaces || "").toLowerCase().includes(q);
+    });
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -144,10 +151,10 @@ export const MangeUser: React.FC<MangeUsersProps> = ({
                     paginator: {
                         root: { className: '!bg-[var(--surface)] !border-t !border-[var(--border)] !py-3 !px-4 !flex !items-center !justify-center !gap-1' },
                         pages: { className: '!flex !items-center !gap-1' },
-                        firstPageButton: { className: '!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center' },
-                        prevPageButton: { className: '!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center' },
-                        nextPageButton: { className: '!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center' },
-                        lastPageButton: { className: '!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center' },
+                        firstPageButton: ({ context }: any) => ({ className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}` }),
+                        prevPageButton: ({ context }: any) => ({ className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}` }),
+                        nextPageButton: ({ context }: any) => ({ className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}` }),
+                        lastPageButton: ({ context }: any) => ({ className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}` }),
                         pageButton: ({ context }: any) => ({
                             className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${context.active
                                 ? '!bg-[var(--accent)] !text-white !font-semibold'

@@ -3,6 +3,8 @@ import { Calendar, Clock, Mail, Trash2, Send, FileText, X, Plus, Edit2, Loader2 
 import toast from 'react-hot-toast';
 import { scheduleService, ScheduledReport, Recipient, Workspace } from '../../../services/schedule.service';
 import { Captcha } from '../../../ui-kit';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -213,69 +215,134 @@ export const ScheduledReports: React.FC<ScheduledReportsProps> = ({ searchQuery,
     return (
         <div className="space-y-4">
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
-                <div className="grid grid-cols-12 gap-4 p-4 border-b border-[var(--border)] bg-[var(--bg)]/50 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                    <div className="col-span-2">SL No</div>
-                    <div className="col-span-3">Report</div>
-                    <div className="col-span-3">Recipient</div>
-                    <div className="col-span-2">Schedule</div>
-                    <div className="col-span-2 text-right">Actions</div>
-                </div>
-                <div className="divide-y divide-[var(--border)]">
-                    {isLoading ? (
-                        <div className="p-8 text-center text-[var(--text-secondary)]">Loading...</div>
-                    ) : filteredSchedules.length === 0 ? (
-                        <div className="p-8 text-center text-[var(--text-secondary)]">No data found.</div>
-                    ) : (
-                        filteredSchedules.map((schedule, index) => (
-                            <div key={schedule.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-[var(--surface-hover)] transition-colors text-sm">
-                                <div className="col-span-2 text-[var(--text-secondary)] font-medium">{index + 1}</div>
-                                <div className="col-span-3 font-medium text-[var(--text-primary)]">
-                                    {(schedule.report_ids || []).length > 0
-                                        ? schedule.report_ids.map(id => mockReports.find(r => r.id === id)?.name || id).join(', ')
-                                        : <span className="text-gray-400 italic">No reports selected</span>}
-                                </div>
-                                <div className="col-span-3 text-[var(--text-secondary)] flex flex-col justify-center">
-                                    <span className="font-medium text-[var(--text-primary)] truncate">{getRecipientName(schedule.recipient_id, schedule.recipient_name)}</span>
-                                    <div className="text-xs">
-                                        <span className="truncate">{getRecipientEmail(schedule.recipient_id, schedule.recipient_email)}</span>
-                                    </div>
-                                </div>
-                                <div className="col-span-2 text-[var(--text-secondary)] text-xs space-y-1">
-                                    <div className="font-medium text-[var(--text-primary)]">
-                                        {formatTimeToAMPM(schedule.time)}
-                                    </div>
-                                    <div className="flex flex-wrap gap-1">
-                                        {schedule.days.map(day => (
-                                            <span key={day} className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--bg)] border border-[var(--border)]">
-                                                {day.substring(0, 3)}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="col-span-2 flex gap-1 justify-end">
-                                    <button
-                                        onClick={() => handleEditClick(schedule)}
-                                        className="p-1.5 text-[var(--text-secondary)] hover:text-blue-500 rounded-lg hover:bg-blue-500/10 transition-colors"
-                                        title="Edit Schedule"
-                                    >
-                                        <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setScheduleToDelete(schedule.id);
-                                            setDeleteConfirmationText("");
-                                            setIsCaptchaValid(false);
-                                        }}
-                                        className="p-1.5 text-rose-500 rounded-lg hover:bg-rose-500/10 transition-colors"
-                                        title="Delete Schedule"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                <DataTable
+                    value={filteredSchedules}
+                    paginator
+                    rows={5}
+                    rowsPerPageOptions={[5, 10, 25, 50]}
+                    emptyMessage={<div className="p-8 text-center text-[var(--text-secondary)]">{isLoading ? 'Loading...' : 'No data found.'}</div>}
+                    className="w-full text-left"
+                    pt={{
+                        thead: { className: 'bg-[var(--bg)] border-b border-[var(--border)]' },
+                        tbody: { className: 'bg-[var(--surface)]' },
+                        bodyRow: { className: 'hover:bg-[var(--surface-hover)] transition-colors border-b border-[var(--border)]' },
+                        paginator: {
+                            root: { className: '!bg-[var(--surface)] !border-t !border-[var(--border)] !py-3 !px-4 !flex !items-center !justify-center !gap-1' },
+                            pages: { className: '!flex !items-center !gap-1' },
+                            firstPageButton: ({ context }: any) => ({
+                                className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+                            }),
+                            prevPageButton: ({ context }: any) => ({
+                                className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+                            }),
+                            nextPageButton: ({ context }: any) => ({
+                                className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+                            }),
+                            lastPageButton: ({ context }: any) => ({
+                                className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+                            }),
+                            pageButton: ({ context }: any) => ({
+                                className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${context.active
+                                    ? '!bg-[var(--accent)] !text-white !font-semibold'
+                                    : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)] !border !border-transparent'
+                                    }`
+                            }),
+                            RPPDropdown: {
+                                root: { className: '!bg-[var(--surface)] !border !border-[var(--border)] hover:!border-[var(--accent)] !rounded-lg !px-2 !py-1 text-sm !text-[var(--text-primary)] !flex !items-center !gap-1.5 !cursor-pointer !outline-none !transition-colors' },
+                                input: { className: '!px-1 !font-medium' },
+                                trigger: { className: '!w-5 !text-[var(--text-secondary)] !flex !items-center !justify-center' },
+                                panel: { className: '!bg-[var(--surface)] !border border-[var(--border)] !rounded-lg !shadow-lg !py-1 !mt-1 !z-50' },
+                                item: ({ context }: any) => ({
+                                    className: `!px-4 !py-2 text-sm !cursor-pointer !transition-colors ${context.selected
+                                        ? '!bg-[var(--accent)] !text-white !font-semibold'
+                                        : 'hover:!bg-[var(--surface-hover)] !text-[var(--text-primary)]'
+                                        }`
+                                })
+                            }
+                        }
+                    }}
+                >
+                    <Column
+                        header="SL No"
+                        headerClassName="p-4 font-semibold text-xs text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg)]/50"
+                        className="p-4 text-sm text-[var(--text-secondary)] font-medium"
+                        body={(rowData: any, options: any) => options.rowIndex + 1}
+                        style={{ width: '10%' }}
+                    />
+                    <Column
+                        header="Report"
+                        headerClassName="p-4 font-semibold text-xs text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg)]/50"
+                        className="p-4 text-sm font-medium text-[var(--text-primary)]"
+                        style={{ width: '25%' }}
+                        body={(schedule: ScheduledReport) => (
+                            (schedule.report_ids || []).length > 0
+                                ? schedule.report_ids.map(id => mockReports.find(r => r.id === id)?.name || id).join(', ')
+                                : <span className="text-gray-400 italic">No reports selected</span>
+                        )}
+                    />
+                    <Column
+                        header="Recipient"
+                        headerClassName="p-4 font-semibold text-xs text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg)]/50"
+                        className="p-4 text-sm text-[var(--text-secondary)]"
+                        style={{ width: '25%' }}
+                        body={(schedule: ScheduledReport) => (
+                            <div className="flex flex-col justify-center">
+                                <span className="font-medium text-[var(--text-primary)] truncate">{getRecipientName(schedule.recipient_id, schedule.recipient_name)}</span>
+                                <div className="text-xs">
+                                    <span className="truncate">{getRecipientEmail(schedule.recipient_id, schedule.recipient_email)}</span>
                                 </div>
                             </div>
-                        ))
-                    )}
-                </div>
+                        )}
+                    />
+                    <Column
+                        header="Schedule"
+                        headerClassName="p-4 font-semibold text-xs text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg)]/50"
+                        className="p-4 text-sm text-[var(--text-secondary)] text-xs space-y-1"
+                        style={{ width: '25%' }}
+                        body={(schedule: ScheduledReport) => (
+                            <>
+                                <div className="font-medium text-[var(--text-primary)] mb-1">
+                                    {formatTimeToAMPM(schedule.time)}
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                    {schedule.days.map(day => (
+                                        <span key={day} className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--bg)] border border-[var(--border)]">
+                                            {day.substring(0, 3)}
+                                        </span>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    />
+                    <Column
+                        header="Actions"
+                        headerClassName="p-4 font-semibold text-xs text-[var(--text-secondary)] uppercase tracking-wider bg-[var(--bg)]/50 text-right"
+                        className="p-4 text-sm text-right"
+                        style={{ width: '15%' }}
+                        body={(schedule: ScheduledReport) => (
+                            <div className="flex gap-1 justify-end">
+                                <button
+                                    onClick={() => handleEditClick(schedule)}
+                                    className="p-1.5 text-[var(--text-secondary)] hover:text-blue-500 rounded-lg hover:bg-blue-500/10 transition-colors"
+                                    title="Edit Schedule"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setScheduleToDelete(schedule.id);
+                                        setDeleteConfirmationText("");
+                                        setIsCaptchaValid(false);
+                                    }}
+                                    className="p-1.5 text-rose-500 rounded-lg hover:bg-rose-500/10 transition-colors"
+                                    title="Delete Schedule"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                    />
+                </DataTable>
             </div>
 
             {/* Create Schedule Modal */}

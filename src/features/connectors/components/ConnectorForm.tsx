@@ -533,6 +533,8 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                 isTesting={isTesting}
                 onBack={onBack}
                 isPostgreSQL={connector?.name === 'PostgreSQL'}
+                isSnowflake={connector?.name === 'Snowflake'}
+                connectorName={connector?.name}
               />
             )}
           </CardContent>

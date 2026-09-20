@@ -7,7 +7,7 @@ export interface IConnectorService {
   addConnector(connector: Omit<Connector, 'id' | 'status'>): Promise<Connector>;
   createConnector(payload: any, userId?: number | null): Promise<any>;
   getConnectionHistory(sessionId: string | null): Promise<any>;
-  continueToImport(payload: { user_id: string; connection_id: string; session_id?: string }): Promise<any>;
+  continueToImport(payload: { user_id: string; connection_ids: string[]; session_id?: string }): Promise<any>;
   searchWeb(query: string, sessionId: string | null): Promise<any>;
   saveResult(payload: any): Promise<any>;
   getSavedResults(userId: string, topic?: string): Promise<any>;
@@ -71,7 +71,7 @@ class ConnectorService implements IConnectorService {
     return this.api.delete(`${API_ENDPOINTS.DATA_SOURCE.CONNECTION_HISTORY}?id=${id}&session_id=${sessionId}`);
   }
 
-  async continueToImport(payload: { user_id: string; connection_id: string; session_id?: string }): Promise<any> {
+  async continueToImport(payload: { user_id: string; connection_ids: string[]; session_id?: string }): Promise<any> {
     return this.api.post(API_ENDPOINTS.IMPORT.CONTINUE_TO_IMPORT, payload);
   }
 

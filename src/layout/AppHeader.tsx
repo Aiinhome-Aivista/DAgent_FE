@@ -37,7 +37,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       case "analysis":
         return "Review statistical models and generated insights";
       case "admin":
-        return "Manage user accounts and workspaces";
+        return "Global system settings and management";
       default:
         return "Connect your data directly to run instant analysis";
     }

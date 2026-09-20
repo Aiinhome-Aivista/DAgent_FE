@@ -41,9 +41,14 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [isCaptchaValid, setIsCaptchaValid] = useState(false);
 
-  const filteredWorkspaces = workspaces.filter((w) =>
-    w.workspace_name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredWorkspaces = workspaces.filter((w) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      (w.workspace_name || "").toLowerCase().includes(q) ||
+      (w.workspace_type || "").toLowerCase().includes(q) ||
+      (w.name || "").toLowerCase().includes(q)
+    );
+  });
 
   const displayWorkspaces = filteredWorkspaces.map((w, index) => ({
     ...w,
@@ -142,22 +147,18 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
             pages: {
               className: "!flex !items-center !gap-1",
             },
-            firstPageButton: {
-              className:
-                "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
-            },
-            prevPageButton: {
-              className:
-                "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
-            },
-            nextPageButton: {
-              className:
-                "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
-            },
-            lastPageButton: {
-              className:
-                "!w-9 !h-9 !rounded-lg hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] !border !border-transparent hover:!border-[var(--border)] !transition-colors !flex !items-center !justify-center",
-            },
+            firstPageButton: ({ context }: any) => ({
+              className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+            }),
+            prevPageButton: ({ context }: any) => ({
+              className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+            }),
+            nextPageButton: ({ context }: any) => ({
+              className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+            }),
+            lastPageButton: ({ context }: any) => ({
+              className: `!w-9 !h-9 !rounded-lg !border !border-transparent !transition-colors !flex !items-center !justify-center ${context.disabled ? '!opacity-50 !cursor-not-allowed !text-[var(--text-secondary)]' : 'hover:!bg-[var(--surface-hover)] hover:!text-[var(--text-primary)] !text-[var(--text-secondary)] hover:!border-[var(--border)]'}`,
+            }),
             pageButton: ({ context }: any) => ({
               className: `!w-9 !h-9 !rounded-lg !transition-colors !flex !items-center !justify-center text-sm ${context.active
                   ? "!bg-[var(--accent)] !text-white !font-semibold"

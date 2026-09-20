@@ -8,7 +8,7 @@ export class HistoryMapper {
       if (localAgent.id === 'connect') {
         // "connect" history is for connector-level actions
         mappedHistory = fullHistory
-          .filter(h => h.action !== 'Session Data Imported' && h.status !== 'processing')
+          .filter(h => h.action !== 'Session Data Imported')
           .map((h: any) => ({
             ...h,
             session_id: h.session_id || h.sessionId || h.sessionID || sessionId,
@@ -18,7 +18,10 @@ export class HistoryMapper {
       } else if (localAgent.id === 'ingest') {
         // "ingest" history focuses on the imported state
         mappedHistory = fullHistory
-          .filter(h => h.action === 'Session Data Imported' || h.status === 'completed')
+          .filter(h => {
+            const status = h.status?.toLowerCase();
+            return h.action === 'Session Data Imported' || status === 'completed' || status === 'success' || status === 'processing';
+          })
           .map((h: any) => ({
             ...h,
             session_id: h.session_id || h.sessionId || h.sessionID || sessionId,

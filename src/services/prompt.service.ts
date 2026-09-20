@@ -33,5 +33,33 @@ export const promptService = {
             prompt_type: promptType,
             data_category: dataCategory
         });
+    },
+
+    // --- Master Data Categories ---
+    getDataCategories: async (): Promise<any> => {
+        return apiService.get('/api/data-categories');
+    },
+    createDataCategory: async (category_code: string, category_name: string): Promise<any> => {
+        return apiService.post('/api/data-categories', { category_code, category_name });
+    },
+    updateDataCategory: async (id: number, category_code: string, category_name: string): Promise<any> => {
+        return apiService.put(`/api/data-categories/${id}`, { category_code, category_name });
+    },
+    deleteDataCategory: async (id: number): Promise<any> => {
+        return apiService.delete(`/api/data-categories/${id}`);
+    },
+
+    // --- Prompt Types Master ---
+    getPromptTypesCrud: async (): Promise<any> => {
+        return apiService.get('/api/prompt-types-crud');
+    },
+    createPromptType: async (type_code: string, display_name: string, description: string): Promise<any> => {
+        return apiService.post('/api/prompt-types-crud', { type_code, display_name, description });
+    },
+    updatePromptType: async (id: number, type_code: string, display_name: string, description: string): Promise<any> => {
+        return apiService.put(`/api/prompt-types-crud/${id}`, { type_code, display_name, description });
+    },
+    deletePromptType: async (id: number): Promise<any> => {
+        return apiService.delete(`/api/prompt-types-crud/${id}`);
     }
 };

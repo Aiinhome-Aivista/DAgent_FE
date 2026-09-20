@@ -30,9 +30,7 @@ export const IngestDataView = ({
   const data = connectorResults?.data || connectorResults || {};
   let summary = data?.summary;
   let rawTables = data?.tables || [];
-  // Deduplicate tables by name (keeping the latest occurrence)
-  const tables = Array.from(new Map(rawTables.map((t: any) => [t.table, t])).values()) as any[];
-  const dataSize = summary?.data_size_mb || summary?.['data size mb'] || 0;
+  // We will compute tables and dataSize after fallback
 
   const databases = sessionSources?.external_databases?.databases ||
     sessionSources?.databases ||
@@ -41,32 +39,51 @@ export const IngestDataView = ({
     sessionSources?.topics ||
     (Array.isArray(sessionSources?.web_topics) ? sessionSources?.web_topics : []);
 
-  // Fallback to history summary if live summary is missing
-  if (!summary && databases.length > 0) {
+  const isSummaryEmpty = !summary || Object.keys(summary).length === 0;
+  const isTablesEmpty = rawTables.length === 0;
+
+  // Fallback to history summary if live summary is missing/empty or tables are empty
+  if ((isSummaryEmpty || isTablesEmpty) && databases.length > 0) {
     let t_rows = 0;
     let t_cols = 0;
     let t_size = 0;
     let allTables: string[] = [];
     databases.forEach((db: any) => {
-       if (db.summary) {
-          t_rows += db.summary.total_rows || 0;
-          t_cols += db.summary.total_columns || 0;
-          t_size += db.summary.data_size_mb || 0;
-       }
-       if (db.tables) {
-          allTables = [...allTables, ...db.tables];
-       }
+      if (db.summary) {
+        t_rows += db.summary.total_rows || 0;
+        t_cols += db.summary.total_columns || 0;
+        t_size += db.summary.data_size_mb || 0;
+      }
+      if (db.tables) {
+        allTables = [...allTables, ...db.tables];
+      }
     });
-    
-    if (t_rows > 0 || t_cols > 0) {
-       summary = {
-          total_rows: t_rows,
-          total_columns: t_cols,
-          data_size_mb: Number(t_size.toFixed(2))
-       };
-       rawTables = Array.from(new Set(allTables)).map(t => ({ table: t, rows: 'N/A', columns: 'N/A' }));
+    if (t_rows > 0 || t_cols > 0 || allTables.length > 0) {
+      summary = {
+        total_rows: t_rows,
+        total_columns: t_cols,
+        data_size_mb: Number(t_size.toFixed(2))
+      };
+
+      // Deduplicate properly whether they are strings or objects
+      const uniqueTables = new Map();
+      allTables.forEach((t: any) => {
+        const tableName = typeof t === 'string' ? t : t.table;
+        if (!uniqueTables.has(tableName)) {
+          uniqueTables.set(tableName, {
+            table: tableName,
+            rows: (typeof t === 'object' && t.rows !== undefined) ? t.rows : 'N/A',
+            columns: (typeof t === 'object' && t.columns !== undefined) ? t.columns : 'N/A'
+          });
+        }
+      });
+      rawTables = Array.from(uniqueTables.values());
     }
   }
+
+  // Deduplicate tables by name (keeping the latest occurrence)
+  const tables = Array.from(new Map(rawTables.map((t: any) => [t.table, t])).values()) as any[];
+  const dataSize = summary?.data_size_mb || summary?.['data size mb'] || 0;
 
   return (
     <div className="space-y-8">
@@ -266,7 +283,9 @@ export const IngestDataView = ({
                   <div key={idx} className="p-4 rounded-xl bg-[var(--surface)]/30 border border-[var(--border)] space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-bold truncate">{db.external_database}</span>
-                      <Badge variant="outline" className="text-[9px]">{db.table_count} tables</Badge>
+                      {db.table_count > 0 && (
+                        <span className="text-[10px] text-[var(--text-secondary)] bg-[var(--bg)] px-2 py-1 rounded-full border border-[var(--border)]">{db.table_count} tables</span>
+                      )}
                     </div>
                     <div className="flex justify-between text-[10px] text-[var(--text-secondary)]">
                       <span>{db.new_user_db}</span>

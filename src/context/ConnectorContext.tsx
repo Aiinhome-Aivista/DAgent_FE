@@ -33,7 +33,18 @@ interface ConnectorContextType {
 const ConnectorContext = createContext<ConnectorContextType | undefined>(undefined);
 
 export const ConnectorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [selectedConnector, setSelectedConnector] = useState<Connector | null>(null);
+  const [selectedConnector, setSelectedConnectorState] = useState<Connector | null>(() => {
+    try {
+      const sessionId = localStorage.getItem('DAgent_session_id');
+      if (sessionId) {
+        const stored = localStorage.getItem(`selected_connector_${sessionId}`);
+        return (stored && stored !== 'undefined') ? JSON.parse(stored) : null;
+      }
+    } catch (e) {
+      console.error('Failed to parse stored selected connector', e);
+    }
+    return null;
+  });
   const [connectorResults, setConnectorResultsState] = useState<any | null>(() => {
     try {
       const sessionId = localStorage.getItem('DAgent_session_id');
@@ -90,6 +101,21 @@ export const ConnectorProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     return null;
   });
+  const setSelectedConnector = (connector: Connector | null) => {
+    setSelectedConnectorState(connector);
+    try {
+      const sessionId = localStorage.getItem('DAgent_session_id');
+      if (sessionId) {
+        if (connector) {
+          localStorage.setItem(`selected_connector_${sessionId}`, JSON.stringify(connector));
+        } else {
+          localStorage.removeItem(`selected_connector_${sessionId}`);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to store selected connector', e);
+    }
+  };
 
   const setConnectorResults = (results: any | null) => {
     setConnectorResultsState(results);

@@ -12,6 +12,8 @@ interface DatabaseFormProps {
   isTesting: boolean;
   onBack: () => void;
   isPostgreSQL?: boolean;
+  isSnowflake?: boolean;
+  connectorName?: string;
 }
 
 export const DatabaseForm = ({
@@ -22,7 +24,9 @@ export const DatabaseForm = ({
   handleTestConnection,
   isTesting,
   onBack,
-  isPostgreSQL
+  isPostgreSQL,
+  isSnowflake,
+  connectorName
 }: DatabaseFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -30,8 +34,14 @@ export const DatabaseForm = ({
   const validateAndSubmit = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.host?.trim()) newErrors.host = "Host is required";
-    if (!formData.port?.toString().trim()) newErrors.port = "Port is required";
+    if (!isSnowflake && !formData.port?.toString().trim()) newErrors.port = "Port is required";
     if (!formData.database?.trim()) newErrors.database = "Database name is required";
+    
+    if (isSnowflake) {
+      if (!formData.warehouse?.trim()) newErrors.warehouse = "Warehouse is required";
+      if (!formData.schema?.trim()) newErrors.schema = "Schema is required";
+      if (!formData.role?.trim()) newErrors.role = "Role is required";
+    }
     // Username and password made optional to support local databases without credentials
     
     if (Object.keys(newErrors).length > 0) {
@@ -43,6 +53,16 @@ export const DatabaseForm = ({
     handleTestConnection();
   };
   
+  let portPlaceholder = "5432";
+  if (connectorName) {
+    const nameLower = connectorName.toLowerCase();
+    if (nameLower.includes('mysql') || nameLower.includes('mariadb')) portPlaceholder = "3306";
+    else if (nameLower.includes('sql server') || nameLower.includes('mssql')) portPlaceholder = "1433";
+    else if (nameLower.includes('oracle')) portPlaceholder = "1521";
+    else if (nameLower.includes('mongo')) portPlaceholder = "27017";
+    else if (nameLower.includes('snowflake')) portPlaceholder = "443";
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -64,7 +84,7 @@ export const DatabaseForm = ({
         <div onMouseEnter={() => handleMouseEnter('port')}>
           <Input
             label="Port"
-            placeholder="5432"
+            placeholder={portPlaceholder}
             value={formData.port}
             onChange={(e) => {
               setFormData({ ...formData, port: e.target.value });
@@ -91,16 +111,55 @@ export const DatabaseForm = ({
           />
         </div>
 
-        {isPostgreSQL && (
+        {(isPostgreSQL || isSnowflake) && (
           <div onMouseEnter={() => handleMouseEnter('schema')}>
             <Input
-              label="Schema (Optional)"
-              placeholder="public"
+              label={isSnowflake ? "Schema" : "Schema (Optional)"}
+              placeholder={isSnowflake ? "PUBLIC" : "public"}
               value={formData.schema || ''}
-              onChange={(e) => setFormData({ ...formData, schema: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, schema: e.target.value });
+                if (errors.schema) setErrors(prev => ({ ...prev, schema: '' }));
+              }}
               onFocus={() => handleFocus('schema')}
+              error={errors.schema}
+              required={isSnowflake}
             />
           </div>
+        )}
+
+        {isSnowflake && (
+          <>
+            <div onMouseEnter={() => handleMouseEnter('warehouse')}>
+              <Input
+                label="Warehouse"
+                placeholder="COMPUTE_WH"
+                value={formData.warehouse || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, warehouse: e.target.value });
+                  if (errors.warehouse) setErrors(prev => ({ ...prev, warehouse: '' }));
+                }}
+                onFocus={() => handleFocus('warehouse')}
+                error={errors.warehouse}
+                required
+              />
+            </div>
+            
+            <div onMouseEnter={() => handleMouseEnter('role')}>
+              <Input
+                label="Role"
+                placeholder="ACCOUNTADMIN"
+                value={formData.role || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, role: e.target.value });
+                  if (errors.role) setErrors(prev => ({ ...prev, role: '' }));
+                }}
+                onFocus={() => handleFocus('role')}
+                error={errors.role}
+                required
+              />
+            </div>
+          </>
         )}
 
 

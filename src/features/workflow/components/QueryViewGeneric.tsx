@@ -31,7 +31,7 @@ export const QueryViewGeneric: React.FC<QueryViewGenericProps> = ({
   onNewSessionCreated,
   isWorkspacesLoading
 }) => {
-  const { connectorResults, selectedConnector: activeConnector, isAnalyzing } = useConnectorContext();
+  const { connectorResults, selectedConnector: activeConnector, isAnalyzing, sessionSources } = useConnectorContext();
 
   const chatSummaryData = useMemo(() => {
     let rawText = '';
@@ -319,10 +319,22 @@ export const QueryViewGeneric: React.FC<QueryViewGenericProps> = ({
               ) : (
                 <div className="flex-1 flex items-center justify-center min-h-[50vh]">
                   <div className="text-center text-[var(--text-secondary)]">
-                    <p className="text-lg font-medium">You have not processed any data.</p>
-                    <p className="text-sm mt-3 opacity-80 max-w-md mx-auto leading-relaxed">
-                      To start, expand the <b>"Speak to your data"</b> section below and click the three dots (...) menu to navigate to Data Sources and connect your data.
-                    </p>
+                    {(sessionSources && ((sessionSources.databases && sessionSources.databases.length > 0) || (sessionSources.topics && sessionSources.topics.length > 0))) ? (
+                      <>
+                        <p className="text-lg font-medium">Your data has been connected! 🚀</p>
+                        <p className="text-sm mt-3 opacity-80 max-w-md mx-auto leading-relaxed">
+                          To uncover insights and generate charts, please make sure to <b>Process</b> your data first. 
+                          You can do this by navigating to the <b>Import</b> tab and clicking <b>Continue to Process</b> at the bottom. Once processed, you can ask your questions below!
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-lg font-medium">You have not processed any data.</p>
+                        <p className="text-sm mt-3 opacity-80 max-w-md mx-auto leading-relaxed">
+                          To start, expand the <b>"Speak to your data"</b> section below and click the three dots (...) menu to navigate to Data Sources and connect your data.
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
