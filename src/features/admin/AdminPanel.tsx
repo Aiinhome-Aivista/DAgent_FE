@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, Layout, ShieldAlert, Check, X, Search, Loader2, FileText } from 'lucide-react';
+import { Users, Layout, ShieldAlert, Check, X, Search, Loader2, FileText, Bot } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
 import { AdminUser, AdminTab } from './types';
 import { workspaceService, Workspace } from '../../services/workspace.service';
@@ -13,6 +13,7 @@ import { WorkspaceUsers } from './components/WorkspaceUsers';
 import { AdminChats } from './components/AdminChats'; // forces TS refresh
 import { AdminPendingKnowledge } from './components/AdminPendingKnowledge';
 import { ScheduledReports } from './components/ScheduledReports';
+import { LlmConfig } from './components/LlmConfig';
 import { Calendar, UserPlus, Plus } from 'lucide-react';
 
 
@@ -162,7 +163,8 @@ export const AdminPanel: React.FC = () => {
         workspaceUsers: 'Workspace Users',
         adminChats: 'Chat Views',
         pendingKnowledge: 'KG History',
-        scheduledReports: 'Scheduled Reports'
+        scheduledReports: 'Scheduled Reports',
+        llmConfig: 'LLM Config',
     };
 
     return (
@@ -182,7 +184,7 @@ export const AdminPanel: React.FC = () => {
 
             {/* Tabs */}
             <div className="flex border-b border-[var(--border)] px-6 shrink-0 bg-[var(--bg)]/30 overflow-x-auto custom-scrollbar">
-                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge', 'scheduledReports'] as AdminTab[]).map((tab) => (
+                {(['users', 'workspaces', 'assignUsers', 'workspaceUsers', 'adminChats', 'pendingKnowledge', 'scheduledReports', 'llmConfig'] as AdminTab[]).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => {
@@ -205,6 +207,7 @@ export const AdminPanel: React.FC = () => {
                         {tab === 'adminChats' && <Users className="w-4 h-4" />}
                         {tab === 'pendingKnowledge' && <Layout className="w-4 h-4" />}
                         {tab === 'scheduledReports' && <FileText className="w-4 h-4" />}
+                        {tab === 'llmConfig' && <Bot className="w-4 h-4" />}
                         {tabDisplayNames[tab]}
                     </button>
                 ))}
@@ -339,6 +342,10 @@ export const AdminPanel: React.FC = () => {
                                         isModalOpen={isCreatingSchedule}
                                         setIsModalOpen={setIsCreatingSchedule}
                                     />
+                                )}
+
+                                {activeTab === 'llmConfig' && (
+                                    <LlmConfig />
                                 )}
                             </motion.div>
                         </AnimatePresence>
