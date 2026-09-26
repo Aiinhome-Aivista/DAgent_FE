@@ -373,28 +373,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
           <div>
             <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Company</h4>
             <ul className="space-y-4 text-sm text-slate-600">
-              <li>Careers</li>
-              <li>Affiliate Program</li>
-              <li>Privacy Policy</li>
-              <li>Terms & Conditions</li>
+              <li><a href="#" className="hover:text-accent transition-colors">Careers</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Affiliate Program</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Terms & Conditions</a></li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Product</h4>
             <ul className="space-y-4 text-sm text-slate-600">
-              <li>Pricing</li>
-              <li>Connectors</li>
-              <li>Slack Agent</li>
-              <li>DAgent for Labs</li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); onPricingClick?.(); }} className="hover:text-accent transition-colors cursor-pointer">Pricing</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Connectors</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Slack Agent</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">DAgent for Labs</a></li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Resources</h4>
             <ul className="space-y-4 text-sm text-slate-600">
-              <li>Blog</li>
-              <li>Help Center</li>
-              <li>Community</li>
-              <li>Capabilities</li>
+              <li><a href="#" className="hover:text-accent transition-colors">Blog</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Help Center</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Community</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Capabilities</a></li>
             </ul>
           </div>
         </div>

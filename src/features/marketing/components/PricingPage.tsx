@@ -429,7 +429,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
                         if (isCustom) {
                           return <span className="text-3xl font-bold text-slate-800">Custom</span>;
                         }
-                        
+
                         // Try to split amount and period (e.g. "per year", "/Y")
                         const match = plan.price_text.match(/^(.*?)(per year|\/Y|\/y|\/Year|per month|\/mo)(.*)$/i);
                         if (match) {
@@ -440,7 +440,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
                             </div>
                           );
                         }
-                        
+
                         return <span className="text-3xl font-bold text-slate-800">{plan.price_text}</span>;
                       })()
                     ) : (
@@ -449,9 +449,9 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
                       </span>
                     )}
                   </div>
-                  
+
                   <hr className="border-slate-100 mb-6" />
-                  
+
                   <ul className="space-y-4 flex-1 mb-8">
                     {plan.data_storage > 0 ? (
                       <li className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-slate-600 text-sm">Up to <strong>{plan.data_storage} GB</strong> Data Storage</span></li>
@@ -508,7 +508,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
         {/* Simple Contact Link under Pricing Grid */}
         {!loading && !error && (
           <div className="mt-12 text-center text-slate-600 text-lg">
-            For any queries, please contact us at <a href="mailto:support@dagent.ai" className="text-accent font-semibold hover:underline">support@dagent.ai</a>
+            For any queries, please contact us at <a href="mailto:support@dagent.aivistatech.com " className="text-accent font-semibold hover:underline">support@dagent.aivistatech.com </a>
           </div>
         )}
       </section>
