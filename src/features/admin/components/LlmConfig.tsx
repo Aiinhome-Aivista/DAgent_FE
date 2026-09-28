@@ -27,6 +27,7 @@ interface ScenarioAssignment {
   provider_type: string | null;
   temperature: number;
   max_tokens: number;
+  timeout: number;
 }
 
 interface ProviderFormData {
@@ -41,23 +42,23 @@ interface ProviderFormData {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PROVIDER_TYPE_META: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  gemini:        { label: 'Gemini',        color: '#4285F4', icon: <Zap className="w-3.5 h-3.5" /> },
+  gemini: { label: 'Gemini', color: '#4285F4', icon: <Zap className="w-3.5 h-3.5" /> },
   mistral_cloud: { label: 'Mistral Cloud', color: '#FF7000', icon: <Globe className="w-3.5 h-3.5" /> },
   mistral_local: { label: 'Mistral Local', color: '#22c55e', icon: <Server className="w-3.5 h-3.5" /> },
-  openai:        { label: 'OpenAI',        color: '#10a37f', icon: <Cpu className="w-3.5 h-3.5" /> },
+  openai: { label: 'OpenAI', color: '#10a37f', icon: <Cpu className="w-3.5 h-3.5" /> },
 };
 
 const SCENARIO_META: Record<string, { label: string; icon: string }> = {
-  rag_chat:        { label: 'RAG Chat',        icon: '💬' },
-  analysis:        { label: 'Analysis',        icon: '📊' },
-  visualization:   { label: 'Visualisation',   icon: '📈' },
-  intent_routing:  { label: 'Intent Routing',  icon: '🔀' },
-  insights:        { label: 'Insights',        icon: '⚡' },
-  query_branch:    { label: 'Query Branch',    icon: '🌿' },
-  web_search:      { label: 'Web Search',      icon: '🔍' },
-  agent_planner:   { label: 'Agent Planner',   icon: '🤖' },
-  knowledge:       { label: 'Knowledge',       icon: '📚' },
-  sheet_processing:{ label: 'Sheet Processing',icon: '📋' },
+  rag_chat: { label: 'RAG Chat', icon: '💬' },
+  analysis: { label: 'Analysis', icon: '📊' },
+  visualization: { label: 'Visualisation', icon: '📈' },
+  intent_routing: { label: 'Intent Routing', icon: '🔀' },
+  insights: { label: 'Insights', icon: '⚡' },
+  query_branch: { label: 'Query Branch', icon: '🌿' },
+  web_search: { label: 'Web Search', icon: '🔍' },
+  agent_planner: { label: 'Agent Planner', icon: '🤖' },
+  knowledge: { label: 'Knowledge', icon: '📚' },
+  sheet_processing: { label: 'Sheet Processing', icon: '📋' },
 };
 
 const EMPTY_FORM: ProviderFormData = {
@@ -199,11 +200,10 @@ const ProviderModal: React.FC<ProviderModalProps> = ({ isOpen, editTarget, onClo
                   key={key}
                   type="button"
                   onClick={() => set('provider_type', key)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                    form.provider_type === key
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${form.provider_type === key
                       ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
                       : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50'
-                  }`}
+                    }`}
                 >
                   <span style={{ color: meta.color }}>{meta.icon}</span>
                   {meta.label}
@@ -229,9 +229,9 @@ const ProviderModal: React.FC<ProviderModalProps> = ({ isOpen, editTarget, onClo
               required value={form.model_name} onChange={e => set('model_name', e.target.value)}
               placeholder={
                 form.provider_type === 'gemini' ? 'gemini-1.5-pro' :
-                form.provider_type === 'openai' ? 'gpt-4o' :
-                form.provider_type === 'mistral_cloud' ? 'mistral-small-latest' :
-                'mistral:latest'
+                  form.provider_type === 'openai' ? 'gpt-4o' :
+                    form.provider_type === 'mistral_cloud' ? 'mistral-small-latest' :
+                      'mistral:latest'
               }
               className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
             />
@@ -297,149 +297,136 @@ const ProviderModal: React.FC<ProviderModalProps> = ({ isOpen, editTarget, onClo
   );
 };
 
-// ─── Assignment Editor Modal ──────────────────────────────────────────────────
+// ─── Inline Provider Assignments Editor ───────────────────────────────────────
 
-interface AssignModalProps {
-  isOpen: boolean;
-  providers: LlmProvider[];
+const ProviderAssignmentsEditor: React.FC<{
+  provider: LlmProvider;
   assignments: ScenarioAssignment[];
-  onClose: () => void;
-  onSaved: () => void;
-}
-
-const AssignModal: React.FC<AssignModalProps> = ({ isOpen, providers, assignments, onClose, onSaved }) => {
+  onSave: (newAssignments: ScenarioAssignment[], silent?: boolean) => Promise<void>;
+}> = ({ provider, assignments, onSave }) => {
   const [local, setLocal] = useState<ScenarioAssignment[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setLocal(assignments.map(a => ({ ...a })));
-  }, [assignments, isOpen]);
+  }, [assignments, provider.id]);
 
-  const update = (scenario: string, key: keyof ScenarioAssignment, val: any) =>
-    setLocal(prev => prev.map(a => a.scenario === scenario ? { ...a, [key]: val } : a));
+  // Auto-save debounce for sliders and inputs
+  useEffect(() => {
+    if (JSON.stringify(local) === JSON.stringify(assignments)) return;
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await api.updateAssignments(local.map(a => ({
-        scenario: a.scenario,
-        provider_id: a.provider_id || null,
-        temperature: a.temperature,
-        max_tokens: a.max_tokens,
-      })));
-      if (res.status) {
-        toast.success('Assignments saved!');
-        onSaved();
-        onClose();
-      } else {
-        toast.error(res.msg || 'Failed to save');
-      }
-    } catch {
-      toast.error('Request failed');
-    } finally {
-      setSaving(false);
-    }
+    const handler = setTimeout(() => {
+      setSaving(true);
+      onSave(local, true).finally(() => setSaving(false));
+    }, 800);
+
+    return () => clearTimeout(handler);
+  }, [local, assignments, onSave]);
+
+  const toggleScenario = (scenario: string) => {
+    setLocal(prev => prev.map(a =>
+      a.scenario === scenario
+        ? { ...a, provider_id: a.provider_id === provider.id ? null : provider.id }
+        : a
+    ));
+    // The useEffect will pick up this change and auto-save after 800ms,
+    // but we can also let the debounce handle it perfectly.
   };
 
-  if (!isOpen) return null;
+  const updateScenario = (scenario: string, key: keyof ScenarioAssignment, val: any) => {
+    setLocal(prev => prev.map(a => a.scenario === scenario ? { ...a, [key]: val } : a));
+  };
+
+  const activeScenarios = local.filter(a => a.provider_id === provider.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-2xl rounded-2xl shadow-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden flex flex-col max-h-[85vh]"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]/60 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
-              <Settings2 className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-[var(--text-primary)]">Scenario Routing</h2>
-              <p className="text-xs text-[var(--text-secondary)]">Assign providers to each use-case</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[var(--border)] text-[var(--text-secondary)] transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Table */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-[var(--bg)]/90 backdrop-blur-sm">
-              <tr className="text-xs text-[var(--text-secondary)] border-b border-[var(--border)]">
-                <th className="text-left px-4 py-3 font-medium">Scenario</th>
-                <th className="text-left px-4 py-3 font-medium">Provider</th>
-                <th className="text-left px-4 py-3 font-medium w-24">Temp</th>
-                <th className="text-left px-4 py-3 font-medium w-28">Max Tokens</th>
-              </tr>
-            </thead>
-            <tbody>
-              {local.map((a, i) => {
-                const meta = SCENARIO_META[a.scenario];
-                return (
-                  <tr key={a.scenario} className={`border-b border-[var(--border)]/50 hover:bg-[var(--accent)]/3 transition-colors ${i % 2 === 0 ? '' : 'bg-[var(--bg)]/20'}`}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span>{meta?.icon || '⚙️'}</span>
-                        <span className="font-medium text-[var(--text-primary)]">{meta?.label || a.scenario}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={a.provider_id ?? ''}
-                        onChange={e => update(a.scenario, 'provider_id', e.target.value ? Number(e.target.value) : null)}
-                        className="w-full px-2 py-1.5 text-xs rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                      >
-                        <option value="">— .env default —</option>
-                        {providers.filter(p => p.is_active).map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number" min={0} max={2} step={0.05}
-                        value={a.temperature}
-                        onChange={e => update(a.scenario, 'temperature', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 text-xs rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number" min={256} max={32768} step={256}
-                        value={a.max_tokens}
-                        onChange={e => update(a.scenario, 'max_tokens', parseInt(e.target.value) || 256)}
-                        className="w-full px-2 py-1.5 text-xs rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer */}
-        <div className="shrink-0 flex gap-2 px-6 py-4 border-t border-[var(--border)] bg-[var(--bg)]/60">
-          <button onClick={onClose} className="flex-1 px-4 py-2 text-sm rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors">
-            Cancel
-          </button>
-          <button
-            onClick={handleSave} disabled={saving}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            {saving ? 'Saving…' : 'Save All'}
-          </button>
-        </div>
+    <div className="p-5 bg-[var(--bg)]/40 border-b border-[var(--border)]/50 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+          Scenarios Using <span style={{ color: PROVIDER_TYPE_META[provider.provider_type]?.color }}>{provider.name}</span> — Click to Toggle
+        </h3>
+        {saving && (
+          <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+          </span>
+        )}
       </div>
+
+      {/* Toggles */}
+      <div className="flex flex-wrap gap-2">
+        {local.map(a => {
+          const meta = SCENARIO_META[a.scenario];
+          const isActive = a.provider_id === provider.id;
+          return (
+            <button
+              key={a.scenario}
+              onClick={() => toggleScenario(a.scenario)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${isActive
+                  ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
+                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--text-secondary)]'
+                }`}
+            >
+              <span className="text-sm">{meta?.icon}</span>
+              {meta?.label || a.scenario}
+              {isActive && <Check className="w-3.5 h-3.5 ml-1" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Cards for active scenarios */}
+      {activeScenarios.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-[var(--border)]">
+          {activeScenarios.map(a => {
+            const meta = SCENARIO_META[a.scenario];
+            return (
+              <div key={a.scenario} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-4">
+                <div className="flex items-center gap-2 font-medium text-sm text-[var(--text-primary)]">
+                  <span className="text-base">{meta?.icon}</span>
+                  {meta?.label || a.scenario}
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold text-[var(--accent)] mb-2 uppercase">
+                    <span>Temp {a.temperature}</span>
+                  </div>
+                  <input
+                    type="range" min="0" max="2" step="0.1"
+                    value={a.temperature}
+                    onChange={e => updateScenario(a.scenario, 'temperature', parseFloat(e.target.value))}
+                    className="w-full accent-[var(--accent)] cursor-pointer"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider">Max Tokens</label>
+                    <input
+                      type="number" min={256} max={32768} step={256}
+                      value={a.max_tokens}
+                      onChange={e => updateScenario(a.scenario, 'max_tokens', parseInt(e.target.value) || 256)}
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider">Timeout</label>
+                    <input
+                      type="number" min={5} max={3600} step={1}
+                      value={a.timeout || 90}
+                      onChange={e => updateScenario(a.scenario, 'timeout', parseInt(e.target.value) || 90)}
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
+
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -455,7 +442,6 @@ export const LlmConfig: React.FC = () => {
   // Modals
   const [providerModal, setProviderModal] = useState(false);
   const [editTarget, setEditTarget] = useState<LlmProvider | null>(null);
-  const [assignModal, setAssignModal] = useState(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -514,6 +500,26 @@ export const LlmConfig: React.FC = () => {
     p.model_name.toLowerCase().includes(search.toLowerCase()) ||
     p.provider_type.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleSaveAssignments = async (newAssignments: ScenarioAssignment[], silent = false) => {
+    try {
+      const res = await api.updateAssignments(newAssignments.map(a => ({
+        scenario: a.scenario,
+        provider_id: a.provider_id || null,
+        temperature: a.temperature,
+        max_tokens: a.max_tokens,
+        timeout: a.timeout || 90,
+      })));
+      if (res.status) {
+        if (!silent) toast.success('Assignments saved!');
+        await loadAll();
+      } else {
+        toast.error(res.msg || 'Failed to save');
+      }
+    } catch {
+      toast.error('Request failed');
+    }
+  };
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -650,22 +656,11 @@ export const LlmConfig: React.FC = () => {
 
               {/* Expanded row detail */}
               {expandedId === p.id && (
-                <div className="px-5 py-4 bg-[var(--bg)]/40 border-b border-[var(--border)]/50">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
-                    <div>
-                      <p className="text-[var(--text-secondary)] mb-1">API Key</p>
-                      <p className="font-mono text-[var(--text-primary)] bg-[var(--border)]/50 px-2 py-1 rounded-lg">{p.api_key_masked || '—'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[var(--text-secondary)] mb-1">Base URL</p>
-                      <p className="font-mono text-[var(--text-primary)] bg-[var(--border)]/50 px-2 py-1 rounded-lg truncate">{p.base_url || '(default)'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[var(--text-secondary)] mb-1">Created At</p>
-                      <p className="text-[var(--text-primary)] bg-[var(--border)]/50 px-2 py-1 rounded-lg">{p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}</p>
-                    </div>
-                  </div>
-                </div>
+                <ProviderAssignmentsEditor
+                  provider={p}
+                  assignments={assignments}
+                  onSave={handleSaveAssignments}
+                />
               )}
             </div>
           ))
@@ -679,13 +674,6 @@ export const LlmConfig: React.FC = () => {
             <Activity className="w-3.5 h-3.5" />
             Scenario Routing Overview
           </div>
-          <button
-            onClick={() => setAssignModal(true)}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 transition-colors flex items-center gap-1.5"
-          >
-            <Settings2 className="w-3.5 h-3.5" />
-            Edit Assignments
-          </button>
         </div>
 
         {assignments.length === 0 ? (
@@ -726,14 +714,6 @@ export const LlmConfig: React.FC = () => {
         isOpen={providerModal}
         editTarget={editTarget}
         onClose={() => { setProviderModal(false); setEditTarget(null); }}
-        onSaved={loadAll}
-      />
-
-      <AssignModal
-        isOpen={assignModal}
-        providers={providers}
-        assignments={assignments}
-        onClose={() => setAssignModal(false)}
         onSaved={loadAll}
       />
     </div>

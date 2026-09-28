@@ -23,7 +23,7 @@ export const MainContent: React.FC<MainContentProps> = ({
 }) => {
   return (
     <div
-      className={`p-2 w-full flex-1 min-h-0 overflow-hidden ${activeTab === "chat" ? "max-w-none" : "max-w-6xl mx-auto"}`}
+      className={`p-2 w-full flex-1 min-h-0 overflow-hidden ${activeTab === "chat" || activeTab === "admin" ? "max-w-[100rem] mx-auto px-4" : "max-w-6xl mx-auto"}`}
     >
       <AnimatePresence mode="wait">
         {activeTab === "chat" ? (
