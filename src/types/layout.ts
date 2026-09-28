@@ -3,7 +3,7 @@ import { Connector } from '../features/connectors';
 import { QuerySession } from '../services/chatHistory.service';
 
 export type Tab = 'chat' | 'connectors' | 'new-connector' | 'collection' | 'analysis' | 'admin';
-export type ViewMode = 'landing' | 'login' | 'admin-login' | 'app' | 'dashboard' | 'pricing' | 'privacy-policy' | 'terms-and-conditions';
+export type ViewMode = 'landing' | 'login' | 'admin-login' | 'app' | 'dashboard' | 'pricing' | 'privacy-policy' | 'terms-and-conditions' | 'help-center' | 'blogs';
 export type AdminTab = 'users' | 'workspaces' | 'assignUsers' | 'workspaceUsers' | 'company' | 'adminChats' | 'pendingKnowledge' | 'customPrompts' | 'scheduledReports' | 'pricing';
 
 export interface SidebarProps {

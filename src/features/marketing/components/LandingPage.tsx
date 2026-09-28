@@ -352,59 +352,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       </section>
 
       {/* Footer */}
-      <footer className="py-20 px-4 border-t border-slate-100">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-12">
-          <div className="col-span-2 space-y-6">
+      <footer className="py-16 px-4 bg-slate-50 border-t border-slate-100">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 lg:gap-8">
+          <div className="lg:w-1/3 flex flex-col items-start space-y-6">
             <a href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-xl">
                 D
               </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">DAgent</span>
+              <span className="text-2xl font-bold tracking-tight text-slate-900">DAgent</span>
             </a>
-            <p className="text-slate-500 text-sm max-w-xs">
-              Early stage AI lab based in San Francisco with a mission to build the most powerful AI tools for knowledge workers.
-            </p>
-            <div className="flex gap-4 text-slate-400">
-              <Twitter className="w-5 h-5 cursor-pointer hover:text-accent" />
-              <Github className="w-5 h-5 cursor-pointer hover:text-accent" />
-              <Linkedin className="w-5 h-5 cursor-pointer hover:text-accent" />
-              <TwitterIcon />
+            <div>
+              <p className="text-sm font-bold text-slate-700 mb-4 text-opacity-50">Connect with us</p>
+              <div className="flex gap-4 text-slate-400">
+                <Twitter className="w-5 h-5 cursor-not-allowed opacity-50" />
+                <Github className="w-5 h-5 cursor-not-allowed opacity-50" />
+                <Linkedin className="w-5 h-5 cursor-not-allowed opacity-50" />
+              </div>
             </div>
           </div>
-          <div>
-            <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Company</h4>
-            <ul className="space-y-4 text-sm text-slate-600">
-              <li><a href="#" className="hover:text-accent transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Affiliate Program</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Terms & Conditions</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Product</h4>
-            <ul className="space-y-4 text-sm text-slate-600">
-              <li><a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); onPricingClick?.(); }} className="hover:text-accent transition-colors cursor-pointer">Pricing</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Connectors</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Slack Agent</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">DAgent for Labs</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Resources</h4>
-            <ul className="space-y-4 text-sm text-slate-600">
-              <li><a href="#" className="hover:text-accent transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Community</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Capabilities</a></li>
-            </ul>
+          
+          <div className="lg:w-2/3 grid grid-cols-2 gap-8">
+            <div>
+              <h4 className="font-bold text-sm mb-6 text-slate-900">Company</h4>
+              <ul className="space-y-4 text-sm text-slate-600">
+                <li><a href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</a></li>
+                <li><a href="/terms-and-conditions" className="hover:text-accent transition-colors">Terms & Conditions</a></li>
+                <li><a href="mailto:support@dagent.aivistatech.com" className="hover:text-accent transition-colors">Contact Us</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-sm mb-6 text-slate-900">Resources</h4>
+              <ul className="space-y-4 text-sm text-slate-600">
+                <li><a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); onPricingClick?.(); }} className="hover:text-accent transition-colors">Pricing</a></li>
+                <li><a href="/blogs" className="hover:text-accent transition-colors">Blogs</a></li>
+                <li><a href="/help-center" className="hover:text-accent transition-colors">Help Center</a></li>
+              </ul>
+            </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400">
-          <p>© 2025 DAgent Labs, Inc. All rights reserved.</p>
-          <div className="flex gap-8">
-            <span>Privacy Settings</span>
-            <span>Do Not Sell or Share My Personal Information</span>
-          </div>
+        
+        <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-200/60 text-center">
+          <p className="text-sm text-slate-500">© 2026 DAgent Labs, Inc. All rights reserved.</p>
         </div>
       </footer>
     </div>
