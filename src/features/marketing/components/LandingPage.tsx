@@ -40,12 +40,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
+            <a href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold">
                 D
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900">DAgent</span>
-            </div>
+            </a>
 
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
               <a href="#features" className="hover:text-accent transition-colors">Features</a>
@@ -132,6 +132,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             </Button>
             <Button
               variant="outline"
+              onClick={onPricingClick}
               className="w-full sm:w-auto h-14 px-10 text-lg rounded-xl border-slate-200 text-slate-900"
             >
               Talk to Founder <ArrowRight className="ml-2 w-5 h-5" />
@@ -354,12 +355,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       <footer className="py-20 px-4 border-t border-slate-100">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-12">
           <div className="col-span-2 space-y-6">
-            <div className="flex items-center gap-2">
+            <a href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold">
                 D
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900">DAgent</span>
-            </div>
+            </a>
             <p className="text-slate-500 text-sm max-w-xs">
               Early stage AI lab based in San Francisco with a mission to build the most powerful AI tools for knowledge workers.
             </p>
@@ -373,28 +374,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
           <div>
             <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Company</h4>
             <ul className="space-y-4 text-sm text-slate-600">
-              <li>Careers</li>
-              <li>Affiliate Program</li>
-              <li><a href="/privacy-policy" className="hover:text-accent cursor-pointer transition-colors">Privacy Policy</a></li>
-              <li><a href="/terms-and-conditions" className="hover:text-accent cursor-pointer transition-colors">Terms & Conditions</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Careers</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Affiliate Program</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Terms & Conditions</a></li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Product</h4>
             <ul className="space-y-4 text-sm text-slate-600">
-              <li>Pricing</li>
-              <li>Connectors</li>
-              <li>Slack Agent</li>
-              <li>DAgent for Labs</li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); onPricingClick?.(); }} className="hover:text-accent transition-colors cursor-pointer">Pricing</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Connectors</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Slack Agent</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">DAgent for Labs</a></li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold text-sm mb-6 uppercase tracking-widest text-slate-400">Resources</h4>
             <ul className="space-y-4 text-sm text-slate-600">
-              <li>Blog</li>
-              <li>Help Center</li>
-              <li>Community</li>
-              <li>Capabilities</li>
+              <li><a href="#" className="hover:text-accent transition-colors">Blog</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Help Center</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Community</a></li>
+              <li><a href="#" className="hover:text-accent transition-colors">Capabilities</a></li>
             </ul>
           </div>
         </div>
