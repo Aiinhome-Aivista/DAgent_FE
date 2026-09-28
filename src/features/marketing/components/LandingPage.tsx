@@ -375,8 +375,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             <ul className="space-y-4 text-sm text-slate-600">
               <li>Careers</li>
               <li>Affiliate Program</li>
-              <li>Privacy Policy</li>
-              <li>Terms & Conditions</li>
+              <li><a href="/privacy-policy" className="hover:text-accent cursor-pointer transition-colors">Privacy Policy</a></li>
+              <li><a href="/terms-and-conditions" className="hover:text-accent cursor-pointer transition-colors">Terms & Conditions</a></li>
             </ul>
           </div>
           <div>
