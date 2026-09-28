@@ -132,6 +132,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             </Button>
             <Button
               variant="outline"
+              onClick={onPricingClick}
               className="w-full sm:w-auto h-14 px-10 text-lg rounded-xl border-slate-200 text-slate-900"
             >
               Talk to Founder <ArrowRight className="ml-2 w-5 h-5" />
