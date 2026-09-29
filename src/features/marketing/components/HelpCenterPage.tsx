@@ -84,7 +84,7 @@ export const HelpCenterPage: React.FC<HelpCenterPageProps> = ({ onGetStarted, on
         <h1 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight mb-8">
           Help Center
         </h1>
-        <div className="prose prose-slate max-w-none text-slate-600 space-y-6">
+        <div className="prose prose-slate max-w-none text-slate-600 space-y-6 text-justify">
           <p className="text-lg">
             Welcome to the DAgent Help Center. Find answers to common questions and learn how to get the most out of your AI data assistant.
           </p>
@@ -116,7 +116,7 @@ export const HelpCenterPage: React.FC<HelpCenterPageProps> = ({ onGetStarted, on
 
           <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4">Still need help?</h2>
           <p>
-            Our support team is here for you. Drop us an email at <a href="mailto:support@dagent.aivistatech.com" className="text-accent hover:underline">support@dagent.aivistatech.com</a> and we will get back to you within 24 hours.
+            Our support team is here for you. Drop us an email at <a href="mailto:syed.arshad@aiinhome.com" className="text-accent hover:underline">syed.arshad@aiinhome.com</a> and we will get back to you within 24 hours.
           </p>
         </div>
       </main>
@@ -147,7 +147,7 @@ export const HelpCenterPage: React.FC<HelpCenterPageProps> = ({ onGetStarted, on
               <ul className="space-y-4 text-sm text-slate-600">
                 <li><a href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</a></li>
                 <li><a href="/terms-and-conditions" className="hover:text-accent transition-colors">Terms & Conditions</a></li>
-                <li><a href="mailto:support@dagent.aivistatech.com" className="hover:text-accent transition-colors">Contact Us</a></li>
+                <li><a href="mailto:syed.arshad@aiinhome.com" className="hover:text-accent transition-colors">Contact Us</a></li>
               </ul>
             </div>
             <div>

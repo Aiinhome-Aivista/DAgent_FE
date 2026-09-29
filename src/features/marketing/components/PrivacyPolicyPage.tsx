@@ -84,7 +84,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onGetStart
         <h1 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight mb-8">
           Privacy Policy
         </h1>
-        <div className="prose prose-slate max-w-none text-slate-600 space-y-6">
+        <div className="prose prose-slate max-w-none text-slate-600 space-y-6 text-justify">
           <p>
             At <strong>DAgent</strong>, we take your privacy and data security seriously. 
             Our core mission is to provide powerful AI data analysis tools without compromising the confidentiality 
@@ -126,7 +126,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onGetStart
           </p>
 
           <p className="mt-12 text-sm text-slate-500">
-            Last updated: September 28, 2026. For privacy-related inquiries, contact <a href="mailto:support@dagent.aivistatech.com" className="text-accent hover:underline">support@dagent.aivistatech.com</a>.
+            Last updated: August 28, 2026. For privacy-related inquiries, contact <a href="mailto:syed.arshad@aiinhome.com" className="text-accent hover:underline">syed.arshad@aiinhome.com</a>.
           </p>
         </div>
       </main>
@@ -157,7 +157,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onGetStart
               <ul className="space-y-4 text-sm text-slate-600">
                 <li><a href="/privacy-policy" className="text-accent transition-colors">Privacy Policy</a></li>
                 <li><a href="/terms-and-conditions" className="hover:text-accent transition-colors">Terms & Conditions</a></li>
-                <li><a href="mailto:support@dagent.aivistatech.com" className="hover:text-accent transition-colors">Contact Us</a></li>
+                <li><a href="mailto:syed.arshad@aiinhome.com" className="hover:text-accent transition-colors">Contact Us</a></li>
               </ul>
             </div>
             <div>

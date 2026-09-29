@@ -84,7 +84,7 @@ export const TermsConditionsPage: React.FC<TermsConditionsPageProps> = ({ onGetS
         <h1 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight mb-8">
           Terms & Conditions
         </h1>
-        <div className="prose prose-slate max-w-none text-slate-600 space-y-6">
+        <div className="prose prose-slate max-w-none text-slate-600 space-y-6 text-justify">
           <p>
             Welcome to <strong>DAgent</strong>. By accessing or using our AI data analysis platform, 
             you agree to be bound by these Terms and Conditions. Please read them carefully.
@@ -133,7 +133,7 @@ export const TermsConditionsPage: React.FC<TermsConditionsPageProps> = ({ onGetS
           </p>
 
           <p className="mt-12 text-sm text-slate-500">
-            Last updated: September 28, 2026. If you have any questions regarding these terms, contact <a href="mailto:support@dagent.aivistatech.com" className="text-accent hover:underline">support@dagent.aivistatech.com</a>.
+            Last updated: August 28, 2026. If you have any questions regarding these terms, contact <a href="mailto:syed.arshad@aiinhome.com" className="text-accent hover:underline">syed.arshad@aiinhome.com</a>.
           </p>
         </div>
       </main>
@@ -164,7 +164,7 @@ export const TermsConditionsPage: React.FC<TermsConditionsPageProps> = ({ onGetS
               <ul className="space-y-4 text-sm text-slate-600">
                 <li><a href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</a></li>
                 <li><a href="/terms-and-conditions" className="text-accent transition-colors">Terms & Conditions</a></li>
-                <li><a href="mailto:support@dagent.aivistatech.com" className="hover:text-accent transition-colors">Contact Us</a></li>
+                <li><a href="mailto:syed.arshad@aiinhome.com" className="hover:text-accent transition-colors">Contact Us</a></li>
               </ul>
             </div>
             <div>

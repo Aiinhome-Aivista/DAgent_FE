@@ -377,7 +377,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               <ul className="space-y-4 text-sm text-slate-600">
                 <li><a href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</a></li>
                 <li><a href="/terms-and-conditions" className="hover:text-accent transition-colors">Terms & Conditions</a></li>
-                <li><a href="mailto:support@dagent.aivistatech.com" className="hover:text-accent transition-colors">Contact Us</a></li>
+                <li><a href="mailto:syed.arshad@aiinhome.com" className="hover:text-accent transition-colors">Contact Us</a></li>
               </ul>
             </div>
             <div>

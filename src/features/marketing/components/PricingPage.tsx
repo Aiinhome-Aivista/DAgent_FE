@@ -508,7 +508,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
         {/* Simple Contact Link under Pricing Grid */}
         {!loading && !error && (
           <div className="mt-12 text-center text-slate-600 text-lg">
-            For any queries, please contact us at <a href="mailto:support@dagent.aivistatech.com " className="text-accent font-semibold hover:underline">support@dagent.aivistatech.com </a>
+            For any queries, please contact us at <a href="mailto:syed.arshad@aiinhome.com " className="text-accent font-semibold hover:underline">syed.arshad@aiinhome.com </a>
           </div>
         )}
       </section>
@@ -540,7 +540,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onGetStarted, onLogin,
               <ul className="space-y-4 text-sm text-slate-600">
                 <li><a href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</a></li>
                 <li><a href="/terms-and-conditions" className="hover:text-accent transition-colors">Terms & Conditions</a></li>
-                <li><a href="mailto:support@dagent.aivistatech.com" className="hover:text-accent transition-colors">Contact Us</a></li>
+                <li><a href="mailto:syed.arshad@aiinhome.com" className="hover:text-accent transition-colors">Contact Us</a></li>
               </ul>
             </div>
             <div>
