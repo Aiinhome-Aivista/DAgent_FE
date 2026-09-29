@@ -184,7 +184,11 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
     try {
       const target = updatedAssignments.find(a => a.scenario === scenario);
       if (target) {
-        await llmService.updateAssignments([target]);
+        toast.promise(llmService.updateAssignments([target]), {
+          loading: 'Saving changes...',
+          success: 'Updated successfully!',
+          error: 'Failed to update',
+        }, { id: 'save-assignment' }); 
       }
     } catch {
       toast.error('Failed to update assignment');
@@ -404,7 +408,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
                 </p>
                 {prov && (
                   <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 font-mono">
-                    t={a.temperature} · {a.max_tokens} tok · {a.timeout || 90}s
+                    Temp: {a.temperature} · Tokens: {a.max_tokens} · Timeout: {a.timeout || 90}s
                   </p>
                 )}
               </div>
