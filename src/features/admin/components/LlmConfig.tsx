@@ -401,8 +401,9 @@ const ProviderAssignmentsEditor: React.FC<{
                     <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider">Max Tokens</label>
                     <input
                       type="number" min={256} max={32768} step={256}
-                      value={a.max_tokens}
-                      onChange={e => updateScenario(a.scenario, 'max_tokens', parseInt(e.target.value) || 256)}
+                      value={a.max_tokens === undefined ? '' : a.max_tokens}
+                      placeholder="256"
+                      onChange={e => updateScenario(a.scenario, 'max_tokens', e.target.value === '' ? '' : parseInt(e.target.value))}
                       className="w-full px-3 py-2 text-sm rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                     />
                   </div>
@@ -410,8 +411,9 @@ const ProviderAssignmentsEditor: React.FC<{
                     <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider">Timeout</label>
                     <input
                       type="number" min={5} max={3600} step={1}
-                      value={a.timeout || 90}
-                      onChange={e => updateScenario(a.scenario, 'timeout', parseInt(e.target.value) || 90)}
+                      value={a.timeout === undefined ? '' : a.timeout}
+                      placeholder="90"
+                      onChange={e => updateScenario(a.scenario, 'timeout', e.target.value === '' ? '' : parseInt(e.target.value))}
                       className="w-full px-3 py-2 text-sm rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                     />
                   </div>
@@ -509,21 +511,29 @@ export const LlmConfig: React.FC = () => {
 
   const handleSaveAssignments = async (newAssignments: ScenarioAssignment[], silent = false) => {
     try {
-      const res = await api.updateAssignments(newAssignments.map(a => ({
+      const promise = api.updateAssignments(newAssignments.map(a => ({
         scenario: a.scenario,
         provider_id: a.provider_id || null,
         temperature: a.temperature,
         max_tokens: a.max_tokens,
         timeout: a.timeout || 90,
       })));
+
+      toast.promise(promise, {
+        loading: 'Saving changes...',
+        success: 'Updated successfully!',
+        error: 'Failed to update',
+      }, { id: 'save-assignment' });
+
+      const res = await promise;
+      
       if (res.status) {
-        if (!silent) toast.success('Assignments saved!');
-        await loadAll();
+        setAssignments([...newAssignments]);
       } else {
-        toast.error(res.msg || 'Failed to save');
+        toast.error(res.msg || 'Failed to save', { id: 'save-assignment' });
       }
     } catch {
-      toast.error('Request failed');
+      toast.error('Request failed', { id: 'save-assignment' });
     }
   };
 
