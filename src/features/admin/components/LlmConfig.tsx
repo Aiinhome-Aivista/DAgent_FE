@@ -57,8 +57,6 @@ const SCENARIO_META: Record<string, { label: string; icon: string }> = {
   query_branch: { label: 'Query Branch', icon: '🌿' },
   web_search: { label: 'Web Search', icon: '🔍' },
   agent_planner: { label: 'Agent Planner', icon: '🤖' },
-  knowledge: { label: 'Knowledge', icon: '📚' },
-  sheet_processing: { label: 'Sheet Processing', icon: '📋' },
 };
 
 const EMPTY_FORM: ProviderFormData = {
@@ -201,8 +199,8 @@ const ProviderModal: React.FC<ProviderModalProps> = ({ isOpen, editTarget, onClo
                   type="button"
                   onClick={() => set('provider_type', key)}
                   className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${form.provider_type === key
-                      ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
-                      : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50'
+                    ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
+                    : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50'
                     }`}
                 >
                   <span style={{ color: meta.color }}>{meta.icon}</span>
@@ -272,9 +270,9 @@ const ProviderModal: React.FC<ProviderModalProps> = ({ isOpen, editTarget, onClo
             <button
               type="button"
               onClick={() => set('is_active', !form.is_active)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${form.is_active ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.is_active ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}`}
             >
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
 
@@ -362,8 +360,8 @@ const ProviderAssignmentsEditor: React.FC<{
               key={a.scenario}
               onClick={() => toggleScenario(a.scenario)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${isActive
-                  ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
-                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--text-secondary)]'
+                ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
+                : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--text-secondary)]'
                 }`}
             >
               <span className="text-sm">{meta?.icon}</span>
@@ -448,7 +446,15 @@ export const LlmConfig: React.FC = () => {
     try {
       const [pRes, aRes] = await Promise.all([api.getProviders(), api.getAssignments()]);
       if (pRes.status) setProviders(pRes.providers || []);
-      if (aRes.status) setAssignments(aRes.assignments || []);
+      if (aRes.status) {
+        const uniqueAssignments = (aRes.assignments || []).reduce((acc: ScenarioAssignment[], curr: ScenarioAssignment) => {
+          if (SCENARIO_META[curr.scenario] && !acc.find(a => a.scenario === curr.scenario)) {
+            acc.push(curr);
+          }
+          return acc;
+        }, []);
+        setAssignments(uniqueAssignments);
+      }
     } catch {
       toast.error('Failed to load LLM configuration');
     } finally {
@@ -697,7 +703,7 @@ export const LlmConfig: React.FC = () => {
                     {a.provider_name ? (
                       <p className="text-sm font-semibold truncate" style={{ color: provColor }}>{a.provider_name}</p>
                     ) : (
-                      <p className="text-sm font-semibold text-[var(--text-secondary)] italic">.env default</p>
+                      <p className="text-sm font-semibold text-[var(--text-secondary)] italic">Unassigned</p>
                     )}
                     <p className="text-xs text-[var(--text-secondary)] mt-1 font-mono">
                       t={a.temperature} · {(a.max_tokens / 1000).toFixed(a.max_tokens % 1000 === 0 ? 0 : 1)}k tok
