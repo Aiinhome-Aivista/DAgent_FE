@@ -27,6 +27,7 @@ export interface ScenarioAssignment {
   provider_id: number | null;
   temperature: number;
   max_tokens: number;
+  timeout?: number;
 }
 
 // ─── Scenarios ────────────────────────────────────────────────────────────────
@@ -88,7 +89,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
         const merged = SCENARIOS.map(s => {
           const found = fetched.find((a: any) => a.scenario === s.key);
           if (found) return found;
-          return { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096 };
+          return { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 };
         });
         setAssignments(merged);
       }
@@ -355,11 +356,19 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
                                         onChange={e => patchAssignment(a.scenario, { temperature: parseFloat(e.target.value) })}
                                         className="w-full accent-[var(--accent)] cursor-pointer h-1.5 mt-1" />
                                     </div>
-                                    <div>
-                                      <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Max Tokens</label>
-                                      <input type="number" min={128} max={32768} step={128} value={a.max_tokens}
-                                        onChange={e => patchAssignment(a.scenario, { max_tokens: parseInt(e.target.value) || 4096 })}
-                                        className={inp + ' mt-1 py-1 text-xs'} />
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div>
+                                        <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Max Tokens</label>
+                                        <input type="number" min={128} max={32768} step={128} value={a.max_tokens === undefined ? '' : a.max_tokens}
+                                          onChange={e => patchAssignment(a.scenario, { max_tokens: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                          className={inp + ' mt-1 py-1 text-xs'} />
+                                      </div>
+                                      <div>
+                                        <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Timeout (s)</label>
+                                        <input type="number" min={5} max={3600} step={1} value={a.timeout === undefined ? '' : a.timeout}
+                                          onChange={e => patchAssignment(a.scenario, { timeout: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                          className={inp + ' mt-1 py-1 text-xs'} />
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -394,7 +403,9 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
                   {prov ? prov.name : 'Unassigned'}
                 </p>
                 {prov && (
-                  <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 font-mono">t={a.temperature} · {a.max_tokens} tok</p>
+                  <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 font-mono">
+                    t={a.temperature} · {a.max_tokens} tok · {a.timeout || 90}s
+                  </p>
                 )}
               </div>
             );
