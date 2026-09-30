@@ -9,12 +9,14 @@ export interface CreateProviderPayload {
   model_name: string;
   base_url?: string;
   is_active?: boolean;
+  company_id?: number | null;
 }
 
 export const llmService = {
   // ── Providers ───────────────────────────────────────────────────────────────
-  getProviders: async (): Promise<{ status: boolean; providers: LLMProvider[] }> => {
-    return apiService.get(API_ENDPOINTS.LLM.PROVIDERS);
+  getProviders: async (company_id?: number | null): Promise<{ status: boolean; providers: LLMProvider[] }> => {
+    const params = company_id ? `?company_id=${company_id}` : '';
+    return apiService.get(`${API_ENDPOINTS.LLM.PROVIDERS}${params}`);
   },
 
   createProvider: async (data: CreateProviderPayload): Promise<{ status: boolean; msg: string; id: number }> => {
@@ -34,13 +36,15 @@ export const llmService = {
   },
 
   // ── Assignments ─────────────────────────────────────────────────────────────
-  getAssignments: async (): Promise<{ status: boolean; assignments: ScenarioAssignment[] }> => {
-    return apiService.get(API_ENDPOINTS.LLM.ASSIGNMENTS);
+  getAssignments: async (company_id?: number | string | null): Promise<{ status: boolean; assignments: ScenarioAssignment[] }> => {
+    const params = company_id ? `?company_id=${company_id}` : '';
+    return apiService.get(`${API_ENDPOINTS.LLM.ASSIGNMENTS}${params}`);
   },
 
   updateAssignments: async (
-    assignments: Partial<ScenarioAssignment>[]
+    assignments: Partial<ScenarioAssignment>[],
+    company_id?: number | null
   ): Promise<{ status: boolean; msg: string }> => {
-    return apiService.put(API_ENDPOINTS.LLM.ASSIGNMENTS, { assignments });
+    return apiService.put(API_ENDPOINTS.LLM.ASSIGNMENTS, { assignments, company_id: company_id ?? null });
   },
 };
