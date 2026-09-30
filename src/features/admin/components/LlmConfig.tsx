@@ -12,7 +12,7 @@ import { defaultConfig } from '../../../services/api.config';
 interface LlmProvider {
   id: number;
   name: string;
-  provider_type: 'gemini' | 'mistral_cloud' | 'mistral_local' | 'openai';
+  provider_type: 'gemini' | 'mistral_cloud' | 'mistral_local' | 'openai' | 'openrouter';
   model_name: string;
   api_key_masked: string;
   base_url?: string;
@@ -46,6 +46,7 @@ const PROVIDER_TYPE_META: Record<string, { label: string; color: string; icon: R
   mistral_cloud: { label: 'Mistral Cloud', color: '#FF7000', icon: <Globe className="w-3.5 h-3.5" /> },
   mistral_local: { label: 'Mistral Local', color: '#22c55e', icon: <Server className="w-3.5 h-3.5" /> },
   openai: { label: 'OpenAI', color: '#10a37f', icon: <Cpu className="w-3.5 h-3.5" /> },
+  openrouter: { label: 'OpenRouter', color: '#8b5cf6', icon: <Globe className="w-3.5 h-3.5" /> },
 };
 
 const SCENARIO_META: Record<string, { label: string; icon: string }> = {
@@ -160,8 +161,8 @@ const ProviderModal: React.FC<ProviderModalProps> = ({ isOpen, editTarget, onClo
   };
 
   const set = (k: keyof ProviderFormData, v: any) => setForm(f => ({ ...f, [k]: v }));
-  const needsKey = ['gemini', 'mistral_cloud', 'openai'].includes(form.provider_type);
-  const needsUrl = ['mistral_local', 'openai'].includes(form.provider_type);
+  const needsKey = ['gemini', 'mistral_cloud', 'openai', 'openrouter'].includes(form.provider_type);
+  const needsUrl = ['mistral_local', 'openai', 'openrouter'].includes(form.provider_type);
 
   if (!isOpen) return null;
 
@@ -228,8 +229,9 @@ const ProviderModal: React.FC<ProviderModalProps> = ({ isOpen, editTarget, onClo
               placeholder={
                 form.provider_type === 'gemini' ? 'gemini-1.5-pro' :
                   form.provider_type === 'openai' ? 'gpt-4o' :
-                    form.provider_type === 'mistral_cloud' ? 'mistral-small-latest' :
-                      'mistral:latest'
+                    form.provider_type === 'openrouter' ? 'anthropic/claude-3-haiku' :
+                      form.provider_type === 'mistral_cloud' ? 'mistral-small-latest' :
+                        'mistral:latest'
               }
               className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
             />
@@ -258,7 +260,11 @@ const ProviderModal: React.FC<ProviderModalProps> = ({ isOpen, editTarget, onClo
               </label>
               <input
                 value={form.base_url} onChange={e => set('base_url', e.target.value)}
-                placeholder={form.provider_type === 'mistral_local' ? 'http://localhost:11434' : 'https://api.openai.com/v1'}
+                placeholder={
+                  form.provider_type === 'mistral_local' ? 'http://localhost:11434' : 
+                  form.provider_type === 'openrouter' ? 'https://openrouter.ai/api/v1' : 
+                  'https://api.openai.com/v1'
+                }
                 className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
               />
             </div>
