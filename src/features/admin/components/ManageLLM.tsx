@@ -28,6 +28,7 @@ export interface ScenarioAssignment {
   provider_id: number | null;
   temperature: number;
   max_tokens: number;
+  timeout?: number;
 }
 
 // ─── Scenarios ────────────────────────────────────────────────────────────────
@@ -59,9 +60,9 @@ interface ManageLLMProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const ManageLLM: React.FC<ManageLLMProps> = ({ 
-  searchQuery, 
-  isCreatingLLM, 
+export const ManageLLM: React.FC<ManageLLMProps> = ({
+  searchQuery,
+  isCreatingLLM,
   setIsCreatingLLM,
   isCreatingCompanyConfig,
   setIsCreatingCompanyConfig
@@ -69,7 +70,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
   const [providers, setProviders] = useState<LLMProvider[]>([]);
   const [globalAssignments, setGlobalAssignments] = useState<ScenarioAssignment[]>([]);
   const [companyAssignments, setCompanyAssignments] = useState<any[]>([]); // all company assignments
-  
+
   const groupedCompanyAssignments = React.useMemo(() => {
     const groups: Record<number, any[]> = {};
     companyAssignments.forEach(a => {
@@ -111,16 +112,18 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
         llmService.getAssignments(), // global assignments
         llmService.getAssignments('all'), // all company assignments
       ]);
-      
+
       if (provRes.status) {
         setProviders(provRes.providers.map((p: any) => ({ ...p, provider: p.provider_type })));
       }
-      
+
       if (globalAssRes.status) {
         const fetched = globalAssRes.assignments;
         const merged = SCENARIOS.map(s => {
           const found = fetched.find((a: any) => a.scenario === s.key);
           return found || { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096 };
+          if (found) return found;
+          return { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 };
         });
         setGlobalAssignments(merged);
       }
@@ -140,7 +143,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
     companyService.getCompanies().then((res: any) => {
       const list = res?.data ?? [];
       setCompanies(Array.isArray(list) ? list : []);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   React.useEffect(() => { fetchData(); }, [fetchData]);
@@ -228,6 +231,11 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
       const target = updatedAssignments.find(a => a.scenario === scenario);
       if (target) {
         await llmService.updateAssignments([target], null);
+        toast.promise(llmService.updateAssignments([target]), {
+          loading: 'Saving changes...',
+          success: 'Updated successfully!',
+          error: 'Failed to update',
+        }, { id: 'save-assignment' });
       }
     } catch {
       toast.error('Failed to update assignment');
@@ -424,11 +432,19 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
                                         onChange={e => patchAssignment(a.scenario, { temperature: parseFloat(e.target.value) })}
                                         className="w-full accent-[var(--accent)] cursor-pointer h-1.5 mt-1" />
                                     </div>
-                                    <div>
-                                      <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Max Tokens</label>
-                                      <input type="number" min={128} max={32768} step={128} value={a.max_tokens}
-                                        onChange={e => patchAssignment(a.scenario, { max_tokens: parseInt(e.target.value) || 4096 })}
-                                        className={inp + ' mt-1 py-1 text-xs'} />
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div>
+                                        <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Max Tokens</label>
+                                        <input type="number" min={128} max={32768} step={128} value={a.max_tokens === undefined ? '' : a.max_tokens}
+                                          onChange={e => patchAssignment(a.scenario, { max_tokens: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                          className={inp + ' mt-1 py-1 text-xs'} />
+                                      </div>
+                                      <div>
+                                        <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Timeout (s)</label>
+                                        <input type="number" min={5} max={3600} step={1} value={a.timeout === undefined ? '' : a.timeout}
+                                          onChange={e => patchAssignment(a.scenario, { timeout: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                          className={inp + ' mt-1 py-1 text-xs'} />
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -463,7 +479,9 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
                   {prov ? prov.name : 'Unassigned'}
                 </p>
                 {prov && (
-                  <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 font-mono">t={a.temperature} · {a.max_tokens} tok</p>
+                  <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 font-mono">
+                    Temp: {a.temperature} · Tokens: {a.max_tokens} · Timeout: {a.timeout || 90}s
+                  </p>
                 )}
               </div>
             );
@@ -485,7 +503,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
                     <Building2 className="w-4 h-4 text-[var(--accent)]" />
                     <span className="text-sm font-bold text-[var(--text-primary)]">{compName}</span>
                   </div>
-                  <button 
+                  <button
                     onClick={() => {
                       setSelectedCompanyId(compId);
                       setNewCompanyAssignments(assigns);

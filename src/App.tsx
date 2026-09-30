@@ -7,6 +7,10 @@ import { ChatWindow } from './features/chat';
 import { AgentWorkflow } from './features/workflow';
 import { LandingPage } from './features/marketing/components/LandingPage';
 import { PricingPage } from './features/marketing/components/PricingPage';
+import { PrivacyPolicyPage } from './features/marketing/components/PrivacyPolicyPage';
+import { TermsConditionsPage } from './features/marketing/components/TermsConditionsPage';
+import { HelpCenterPage } from './features/marketing/components/HelpCenterPage';
+import { BlogPage } from './features/marketing/components/BlogPage';
 import { LoginPage } from './features/auth/components/LoginPage';
 import { Dashboard } from './features/dashboard/components/Dashboard';
 import { Moon, Sun, Layout, Settings, LogOut, Menu, MessageSquare, Database, Plus, Sparkles, BarChart3, Clock, Search, ChevronDown, User, Check, X, Star } from 'lucide-react';
@@ -31,6 +35,10 @@ function AppContent() {
     userId ? 'app' :
     window.location.pathname.startsWith('/admin/login') ? 'admin-login' : 
     window.location.pathname.startsWith('/pricing') ? 'pricing' : 
+    window.location.pathname.startsWith('/privacy-policy') ? 'privacy-policy' : 
+    window.location.pathname.startsWith('/terms-and-conditions') ? 'terms-and-conditions' : 
+    window.location.pathname.startsWith('/help-center') ? 'help-center' : 
+    window.location.pathname.startsWith('/blogs') ? 'blogs' : 
     'landing'
   );
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -491,6 +499,23 @@ function AppContent() {
   if (viewMode === 'pricing') {
     return <PricingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} />;
   }
+
+  if (viewMode === 'privacy-policy') {
+    return <PrivacyPolicyPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} onPricingClick={navigateToPricing} />;
+  }
+
+  if (viewMode === 'terms-and-conditions') {
+    return <TermsConditionsPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} onPricingClick={navigateToPricing} />;
+  }
+
+  if (viewMode === 'help-center') {
+    return <HelpCenterPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} onPricingClick={navigateToPricing} />;
+  }
+
+  if (viewMode === 'blogs') {
+    return <BlogPage onBackToLanding={navigateToLanding} onPricingClick={navigateToPricing} />;
+  }
+
 
   if (viewMode === 'login' || viewMode === 'admin-login') {
     return <LoginPage onBack={handleBackToLanding} onLoginSuccess={handleLoginSuccess} isAdminLogin={viewMode === 'admin-login'} />;
