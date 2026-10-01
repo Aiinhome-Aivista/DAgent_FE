@@ -41,6 +41,10 @@ export const llmService = {
     return apiService.get(`${API_ENDPOINTS.LLM.ASSIGNMENTS}${params}`);
   },
 
+  deleteAssignments: async (company_id: number): Promise<{ status: boolean; msg: string }> => {
+    return apiService.delete(`${API_ENDPOINTS.LLM.ASSIGNMENTS}?company_id=${company_id}`);
+  },
+
   updateAssignments: async (
     assignments: Partial<ScenarioAssignment>[],
     company_id?: number | null
