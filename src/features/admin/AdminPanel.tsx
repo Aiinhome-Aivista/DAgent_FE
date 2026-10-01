@@ -373,22 +373,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           )}
 
           {adminSubTab === "llmConfig" && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsCreatingCompanyConfig(true)}
-                className="px-4 py-2 text-sm font-medium rounded-xl border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                Add Company Config
-              </button>
-              <button
-                onClick={() => setIsCreatingLLM(true)}
-                className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                Add Provider
-              </button>
-            </div>
+            <button
+              onClick={() => setIsCreatingLLM(true)}
+              className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Add Provider
+            </button>
           )}
         </div>
       </div>

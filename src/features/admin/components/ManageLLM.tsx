@@ -456,6 +456,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
             )}
           </div>
 
+
           {/* ── Scenario Overview Grid ───────────────────────────────────────────── */}
           <div className="mt-4 rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
             <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)] flex items-center gap-2">
@@ -684,55 +685,6 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
               );
             })
           )}
-        </div>
-      )}
-
-
-      {/* ── Company Configurations List ──────────────────────────────────────── */}
-      {Object.keys(groupedCompanyAssignments).length > 0 && (
-        <div className="mt-8 space-y-4">
-          <h3 className="text-lg font-bold text-[var(--text-primary)] px-1">Company Configurations</h3>
-          {Object.entries(groupedCompanyAssignments).map(([compIdStr, assigns]) => {
-            const compId = Number(compIdStr);
-            const compName = companies.find(c => c.id === compId)?.company_name || `Company #${compId}`;
-            return (
-              <div key={compId} className="rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
-                <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)] flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-[var(--accent)]" />
-                    <span className="text-sm font-bold text-[var(--text-primary)]">{compName}</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setSelectedCompanyId(compId);
-                      setNewCompanyAssignments(assigns);
-                      _setIsCreatingCompanyConfig(true);
-                    }}
-                    className="text-xs font-medium text-[var(--accent)] hover:underline cursor-pointer"
-                  >
-                    Edit Routing
-                  </button>
-                </div>
-                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-px bg-[var(--border)]">
-                  {SCENARIOS.map(s => {
-                    const a = assigns.find(x => x.scenario === s.key);
-                    const prov = a ? providers.find(p => p.id === a.provider_id) : null;
-                    return (
-                      <div key={s.key} className="bg-[var(--surface)] px-4 py-3">
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)] mb-1">{s.icon} {s.label}</div>
-                        <p className={`text-xs font-semibold truncate ${prov ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]/40'}`}>
-                          {prov ? prov.name : 'Unassigned'}
-                        </p>
-                        {prov && a && (
-                          <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 font-mono">t={a.temperature} · {a.max_tokens} tok</p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
         </div>
       )}
 
