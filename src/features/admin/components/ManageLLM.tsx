@@ -123,6 +123,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
         const fetched = globalAssRes.assignments;
         const merged = SCENARIOS.map(s => {
           const found = fetched.find((a: any) => a.scenario === s.key);
+          return found || { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096 };
           if (found) return found;
           return { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 };
         });
@@ -286,375 +287,375 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
       {activeTab === 'global' && (
         <div className="space-y-4">
           {/* ── Providers Table ─────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
+          <div className="rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
 
-        {/* Header row */}
-        <div className="grid grid-cols-[8%_22%_13%_20%_13%_24%] border-b border-[var(--border)] bg-[var(--bg)]/50">
-          {['SL NO', 'Provider', 'Type', 'Model', 'Status', 'Actions'].map(h => (
-            <div key={h} className="px-6 py-4 text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider text-left flex items-center">
-              {h}
+            {/* Header row */}
+            <div className="grid grid-cols-[8%_22%_13%_20%_13%_24%] border-b border-[var(--border)] bg-[var(--bg)]/50">
+              {['SL NO', 'Provider', 'Type', 'Model', 'Status', 'Actions'].map(h => (
+                <div key={h} className="px-6 py-4 text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider text-left flex items-center">
+                  {h}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center text-[var(--text-secondary)]">
-            <Cpu className="w-8 h-8 mx-auto mb-2 opacity-25" />
-            <p className="text-sm">No providers found.</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-[var(--border)]">
-            {filtered.map((p, idx) => {
-              const isExpanded = expandedProvider === p.id;
-              const scenariosForProvider = globalAssignments.filter(a => a.provider_id === p.id);
-
-              return (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
-
-                  {/* Main row */}
-                  <div className="grid grid-cols-[8%_22%_13%_20%_13%_24%] items-center hover:bg-[var(--surface-hover)] transition-colors border-b border-[var(--border)] last:border-0">
-
-                    {/* SL NO */}
-                    <div className="px-6 py-4 text-sm font-medium text-[var(--text-secondary)] flex items-center">
-                      {idx + 1}
-                    </div>
-
-                    {/* Name */}
-                    <div className="px-6 py-4 flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] shrink-0">
-                        <Cpu className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">{p.name}</p>
-                        {p.base_url && <p className="text-xs text-[var(--text-secondary)] truncate font-mono">{p.base_url}</p>}
-                      </div>
-                    </div>
-
-                    {/* Provider type */}
-                    <div className="px-6 py-4 flex items-center">
-                      <span className="inline-flex items-center justify-center px-3 rounded-md bg-[var(--bg)] border border-[var(--border)] text-[11px] font-mono text-[var(--text-secondary)] w-fit h-6">
-                        {p.provider}
-                      </span>
-                    </div>
-
-                    {/* Model */}
-                    <div className="px-6 py-4 flex items-center gap-1.5 min-w-0">
-                      <Brain className="w-3.5 h-3.5 shrink-0 text-[var(--text-secondary)]" />
-                      <span className="font-mono text-xs text-[var(--text-secondary)] truncate">{p.model_name}</span>
-                    </div>
-
-                    {/* Status */}
-                    <div className="px-6 py-4 flex items-center">
-                      <button
-                        onClick={() => handleToggleActive(p)}
-                        className={`inline-flex items-center justify-center gap-1.5 px-3 rounded-full text-[11px] font-medium transition-colors cursor-pointer h-6 w-fit ${p.is_active
-                          ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
-                          : 'bg-[var(--border)]/60 text-[var(--text-secondary)] hover:bg-[var(--border)]'
-                          }`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${p.is_active ? 'bg-emerald-500' : 'bg-[var(--text-secondary)]/40'}`} />
-                        {p.is_active ? 'Active' : 'Inactive'}
-                      </button>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="px-3 py-4 flex items-center gap-1 flex-nowrap shrink-0">
-                      <button title="Test Connection" onClick={() => handleTest(p)} disabled={testingId === p.id}
-                        className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50">
-                        {testingId === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-                      </button>
-                      <button title="Scenario routing" onClick={() => setExpandedProvider(isExpanded ? null : p.id)}
-                        className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors cursor-pointer">
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </button>
-                      <button onClick={() => openEdit(p)}
-                        className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors cursor-pointer">
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => {
-                        setProviderToDelete(p);
-                        setDeleteConfirmationText("");
-                        setIsCaptchaValid(false);
-                      }} className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Expanded scenario routing */}
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                        <div className="px-5 py-4 border-t border-[var(--border)] bg-[var(--accent)]/[0.02]">
-                          <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-3">
-                            Scenarios using <span className="text-[var(--accent)]">{p.name}</span> — click to toggle
-                          </p>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {SCENARIOS.map(s => {
-                              const a = globalAssignments.find(x => x.scenario === s.key)!;
-                              const mine = a.provider_id === p.id;
-                              return (
-                                <button key={s.key}
-                                  onClick={() => patchAssignment(s.key, { provider_id: mine ? null : p.id })}
-                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${mine
-                                    ? 'bg-[var(--accent)]/15 border-[var(--accent)]/40 text-[var(--accent)]'
-                                    : 'bg-[var(--bg)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)]'
-                                    }`}>
-                                  {s.icon} {s.label}
-                                  {mine && <Check className="w-3 h-3" />}
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {/* Temp / tokens for assigned scenarios */}
-                          {scenariosForProvider.length > 0 && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                              {scenariosForProvider.map(a => {
-                                const s = SCENARIOS.find(x => x.key === a.scenario)!;
-                                return (
-                                  <div key={a.scenario} className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2">
-                                    <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-primary)]">
-                                      {s.icon} {s.label}
-                                    </div>
-                                    <div>
-                                      <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">
-                                        Temp <span className="text-[var(--accent)] font-bold">{a.temperature}</span>
-                                      </label>
-                                      <input type="range" min={0} max={1} step={0.05} value={a.temperature}
-                                        onChange={e => patchAssignment(a.scenario, { temperature: parseFloat(e.target.value) })}
-                                        className="w-full accent-[var(--accent)] cursor-pointer h-1.5 mt-1" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      <div>
-                                        <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Max Tokens</label>
-                                        <input type="number" min={128} max={32768} step={128} value={a.max_tokens === undefined ? '' : a.max_tokens}
-                                          onChange={e => patchAssignment(a.scenario, { max_tokens: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
-                                          className={inp + ' mt-1 py-1 text-xs'} />
-                                      </div>
-                                      <div>
-                                        <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Timeout (s)</label>
-                                        <input type="number" min={5} max={3600} step={1} value={a.timeout === undefined ? '' : a.timeout}
-                                          onChange={e => patchAssignment(a.scenario, { timeout: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
-                                          className={inp + ' mt-1 py-1 text-xs'} />
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* ── Scenario Overview Grid ───────────────────────────────────────────── */}
-      <div className="mt-4 rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
-        <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)] flex items-center gap-2">
-          <Network className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
-          <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Scenario Routing Overview</span>
-        </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-px bg-[var(--border)]">
-          {SCENARIOS.map(s => {
-            const a = globalAssignments.find(x => x.scenario === s.key)!;
-            const prov = providers.find(p => p.id === a.provider_id);
-            return (
-              <div key={s.key} className="bg-[var(--surface)] px-4 py-3">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)] mb-1">{s.icon} {s.label}</div>
-                <p className={`text-xs font-semibold truncate ${prov ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]/40'}`}>
-                  {prov ? prov.name : 'Unassigned'}
-                </p>
-                {prov && (
-                  <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 font-mono">
-                    Temp: {a.temperature} · Tokens: {a.max_tokens} · Timeout: {a.timeout || 90}s
-                  </p>
-                )}
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center text-[var(--text-secondary)]">
+                <Cpu className="w-8 h-8 mx-auto mb-2 opacity-25" />
+                <p className="text-sm">No providers found.</p>
               </div>
-            );
-          })}
+            ) : (
+              <div className="divide-y divide-[var(--border)]">
+                {filtered.map((p, idx) => {
+                  const isExpanded = expandedProvider === p.id;
+                  const scenariosForProvider = globalAssignments.filter(a => a.provider_id === p.id);
+
+                  return (
+                    <motion.div key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
+
+                      {/* Main row */}
+                      <div className="grid grid-cols-[8%_22%_13%_20%_13%_24%] items-center hover:bg-[var(--surface-hover)] transition-colors border-b border-[var(--border)] last:border-0">
+
+                        {/* SL NO */}
+                        <div className="px-6 py-4 text-sm font-medium text-[var(--text-secondary)] flex items-center">
+                          {idx + 1}
+                        </div>
+
+                        {/* Name */}
+                        <div className="px-6 py-4 flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] shrink-0">
+                            <Cpu className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-[var(--text-primary)] truncate">{p.name}</p>
+                            {p.base_url && <p className="text-xs text-[var(--text-secondary)] truncate font-mono">{p.base_url}</p>}
+                          </div>
+                        </div>
+
+                        {/* Provider type */}
+                        <div className="px-6 py-4 flex items-center">
+                          <span className="inline-flex items-center justify-center px-3 rounded-md bg-[var(--bg)] border border-[var(--border)] text-[11px] font-mono text-[var(--text-secondary)] w-fit h-6">
+                            {p.provider}
+                          </span>
+                        </div>
+
+                        {/* Model */}
+                        <div className="px-6 py-4 flex items-center gap-1.5 min-w-0">
+                          <Brain className="w-3.5 h-3.5 shrink-0 text-[var(--text-secondary)]" />
+                          <span className="font-mono text-xs text-[var(--text-secondary)] truncate">{p.model_name}</span>
+                        </div>
+
+                        {/* Status */}
+                        <div className="px-6 py-4 flex items-center">
+                          <button
+                            onClick={() => handleToggleActive(p)}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 rounded-full text-[11px] font-medium transition-colors cursor-pointer h-6 w-fit ${p.is_active
+                              ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
+                              : 'bg-[var(--border)]/60 text-[var(--text-secondary)] hover:bg-[var(--border)]'
+                              }`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${p.is_active ? 'bg-emerald-500' : 'bg-[var(--text-secondary)]/40'}`} />
+                            {p.is_active ? 'Active' : 'Inactive'}
+                          </button>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="px-3 py-4 flex items-center gap-1 flex-nowrap shrink-0">
+                          <button title="Test Connection" onClick={() => handleTest(p)} disabled={testingId === p.id}
+                            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50">
+                            {testingId === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                          </button>
+                          <button title="Scenario routing" onClick={() => setExpandedProvider(isExpanded ? null : p.id)}
+                            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors cursor-pointer">
+                            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          </button>
+                          <button onClick={() => openEdit(p)}
+                            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors cursor-pointer">
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => {
+                            setProviderToDelete(p);
+                            setDeleteConfirmationText("");
+                            setIsCaptchaValid(false);
+                          }} className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Expanded scenario routing */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                            <div className="px-5 py-4 border-t border-[var(--border)] bg-[var(--accent)]/[0.02]">
+                              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-3">
+                                Scenarios using <span className="text-[var(--accent)]">{p.name}</span> — click to toggle
+                              </p>
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                {SCENARIOS.map(s => {
+                                  const a = globalAssignments.find(x => x.scenario === s.key)!;
+                                  const mine = a.provider_id === p.id;
+                                  return (
+                                    <button key={s.key}
+                                      onClick={() => patchAssignment(s.key, { provider_id: mine ? null : p.id })}
+                                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${mine
+                                        ? 'bg-[var(--accent)]/15 border-[var(--accent)]/40 text-[var(--accent)]'
+                                        : 'bg-[var(--bg)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)]'
+                                        }`}>
+                                      {s.icon} {s.label}
+                                      {mine && <Check className="w-3 h-3" />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Temp / tokens for assigned scenarios */}
+                              {scenariosForProvider.length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                  {scenariosForProvider.map(a => {
+                                    const s = SCENARIOS.find(x => x.key === a.scenario)!;
+                                    return (
+                                      <div key={a.scenario} className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2">
+                                        <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-primary)]">
+                                          {s.icon} {s.label}
+                                        </div>
+                                        <div>
+                                          <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">
+                                            Temp <span className="text-[var(--accent)] font-bold">{a.temperature}</span>
+                                          </label>
+                                          <input type="range" min={0} max={1} step={0.05} value={a.temperature}
+                                            onChange={e => patchAssignment(a.scenario, { temperature: parseFloat(e.target.value) })}
+                                            className="w-full accent-[var(--accent)] cursor-pointer h-1.5 mt-1" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                          <div>
+                                            <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Max Tokens</label>
+                                            <input type="number" min={128} max={32768} step={128} value={a.max_tokens === undefined ? '' : a.max_tokens}
+                                              onChange={e => patchAssignment(a.scenario, { max_tokens: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                              className={inp + ' mt-1 py-1 text-xs'} />
+                                          </div>
+                                          <div>
+                                            <label className="text-[10px] text-[var(--text-secondary)] font-medium uppercase">Timeout (s)</label>
+                                            <input type="number" min={5} max={3600} step={1} value={a.timeout === undefined ? '' : a.timeout}
+                                              onChange={e => patchAssignment(a.scenario, { timeout: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                              className={inp + ' mt-1 py-1 text-xs'} />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── Scenario Overview Grid ───────────────────────────────────────────── */}
+          <div className="mt-4 rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
+            <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)] flex items-center gap-2">
+              <Network className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+              <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Scenario Routing Overview</span>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-px bg-[var(--border)]">
+              {SCENARIOS.map(s => {
+                const a = globalAssignments.find(x => x.scenario === s.key)!;
+                const prov = providers.find(p => p.id === a.provider_id);
+                return (
+                  <div key={s.key} className="bg-[var(--surface)] px-4 py-3">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)] mb-1">{s.icon} {s.label}</div>
+                    <p className={`text-xs font-semibold truncate ${prov ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]/40'}`}>
+                      {prov ? prov.name : 'Unassigned'}
+                    </p>
+                    {prov && (
+                      <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 font-mono">
+                        Temp: {a.temperature} · Tokens: {a.max_tokens} · Timeout: {a.timeout || 90}s
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
-      </div>
       )}
 
       {activeTab === 'company' && (
-      <div className="space-y-4" id="company-routing-table">
-        {/* ── Company Configurations Table ──────────────────────────────────────── */}
-        <h3 className="text-lg font-bold text-[var(--text-primary)] px-1 flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-[var(--accent)]" />
-          Company-wise Routing
-        </h3>
-        
-        {companies.length === 0 ? (
-          <div className="py-16 text-center text-[var(--text-secondary)] flex flex-col items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-             <Building2 className="w-8 h-8 mb-3 opacity-20" />
-             <p className="text-sm">No companies available.</p>
-          </div>
-        ) : (
-          companies.map(c => {
-            const isExpanded = selectedCompanyId === c.id;
-            const isConfigured = !!groupedCompanyAssignments[c.id];
-            
-            return (
-              <div key={c.id} className="rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
-                <div
-                  onClick={() => {
-                    if (isExpanded) {
-                      setSelectedCompanyId(null);
-                    } else {
-                      setSelectedCompanyId(c.id);
-                      setNewCompanyAssignments(groupedCompanyAssignments[c.id] || SCENARIOS.map(s => ({ scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 })));
-                    }
-                  }}
-                  className="px-5 py-4 flex items-center justify-between bg-[var(--bg)] cursor-pointer hover:bg-[var(--surface-hover)] transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-[var(--text-primary)]">{c.company_name}</span>
-                    {isConfigured && (
-                      <span className="px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-[10px] font-bold uppercase tracking-wide">
-                        Configured
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[var(--text-secondary)] flex items-center gap-2">
-                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </div>
-                </div>
+        <div className="space-y-4" id="company-routing-table">
+          {/* ── Company Configurations Table ──────────────────────────────────────── */}
+          <h3 className="text-lg font-bold text-[var(--text-primary)] px-1 flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-[var(--accent)]" />
+            Company-wise Routing
+          </h3>
 
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="p-5 border-t border-[var(--border)] bg-[var(--surface)]">
-                         <div className="border border-[var(--border)] rounded-xl overflow-hidden divide-y divide-[var(--border)]">
+          {companies.length === 0 ? (
+            <div className="py-16 text-center text-[var(--text-secondary)] flex flex-col items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+              <Building2 className="w-8 h-8 mb-3 opacity-20" />
+              <p className="text-sm">No companies available.</p>
+            </div>
+          ) : (
+            companies.map(c => {
+              const isExpanded = selectedCompanyId === c.id;
+              const isConfigured = !!groupedCompanyAssignments[c.id];
+
+              return (
+                <div key={c.id} className="rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
+                  <div
+                    onClick={() => {
+                      if (isExpanded) {
+                        setSelectedCompanyId(null);
+                      } else {
+                        setSelectedCompanyId(c.id);
+                        setNewCompanyAssignments(groupedCompanyAssignments[c.id] || SCENARIOS.map(s => ({ scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 })));
+                      }
+                    }}
+                    className="px-5 py-4 flex items-center justify-between bg-[var(--bg)] cursor-pointer hover:bg-[var(--surface-hover)] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-[var(--text-primary)]">{c.company_name}</span>
+                      {isConfigured && (
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-[10px] font-bold uppercase tracking-wide">
+                          Configured
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[var(--text-secondary)] flex items-center gap-2">
+                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-5 border-t border-[var(--border)] bg-[var(--surface)]">
+                          <div className="border border-[var(--border)] rounded-xl overflow-hidden divide-y divide-[var(--border)]">
                             <div className="grid grid-cols-[25%_30%_15%_15%_15%] bg-[var(--bg)]/50 px-4 py-3 text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
-                               <div>Scenario</div>
-                               <div>Provider</div>
-                               <div>Temperature</div>
-                               <div>Max Tokens</div>
-                               <div>Timeout</div>
+                              <div>Scenario</div>
+                              <div>Provider</div>
+                              <div>Temperature</div>
+                              <div>Max Tokens</div>
+                              <div>Timeout</div>
                             </div>
                             {SCENARIOS.map(s => {
-                                const a = newCompanyAssignments.find(x => x.scenario === s.key) || { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 };
-                                const globalA = globalAssignments.find(x => x.scenario === s.key) || { temperature: 0.3, max_tokens: 4096, timeout: 90 };
-                                
-                                return (
-                                  <div key={s.key} className="grid grid-cols-[25%_30%_15%_15%_15%] items-center px-4 py-3 hover:bg-[var(--surface-hover)] transition-colors">
-                                    <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-                                      {s.icon} {s.label}
-                                    </div>
-                                    <div className="pr-4">
-                                      <select
-                                        value={a.provider_id ?? ''}
+                              const a = newCompanyAssignments.find(x => x.scenario === s.key) || { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 };
+                              const globalA = globalAssignments.find(x => x.scenario === s.key) || { temperature: 0.3, max_tokens: 4096, timeout: 90 };
+
+                              return (
+                                <div key={s.key} className="grid grid-cols-[25%_30%_15%_15%_15%] items-center px-4 py-3 hover:bg-[var(--surface-hover)] transition-colors">
+                                  <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
+                                    {s.icon} {s.label}
+                                  </div>
+                                  <div className="pr-4">
+                                    <select
+                                      value={a.provider_id ?? ''}
+                                      onChange={e => {
+                                        const val = e.target.value ? Number(e.target.value) : null;
+                                        setNewCompanyAssignments(prev => {
+                                          const next = [...prev];
+                                          const idx = next.findIndex(x => x.scenario === s.key);
+                                          if (idx >= 0) next[idx] = { ...next[idx], provider_id: val };
+                                          else next.push({ scenario: s.key, provider_id: val, temperature: 0.3, max_tokens: 4096, timeout: 90 });
+                                          return next;
+                                        });
+                                      }}
+                                      className={inp + ' py-1'}
+                                    >
+                                      <option value="">Global Default</option>
+                                      {providers.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div className="pr-4">
+                                    {a.provider_id ? (
+                                      <input type="number" min={0} max={1} step={0.1} value={a.temperature}
                                         onChange={e => {
-                                          const val = e.target.value ? Number(e.target.value) : null;
+                                          const val = parseFloat(e.target.value);
                                           setNewCompanyAssignments(prev => {
                                             const next = [...prev];
                                             const idx = next.findIndex(x => x.scenario === s.key);
-                                            if (idx >= 0) next[idx] = { ...next[idx], provider_id: val };
-                                            else next.push({ scenario: s.key, provider_id: val, temperature: 0.3, max_tokens: 4096, timeout: 90 });
+                                            if (idx >= 0) next[idx] = { ...next[idx], temperature: val };
+                                            else next.push({ scenario: s.key, provider_id: a.provider_id, temperature: val, max_tokens: a.max_tokens, timeout: a.timeout });
                                             return next;
                                           });
                                         }}
-                                        className={inp + ' py-1'}
-                                      >
-                                        <option value="">Global Default</option>
-                                        {providers.map(p => (
-                                          <option key={p.id} value={p.id}>{p.name}</option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                    <div className="pr-4">
-                                      {a.provider_id ? (
-                                        <input type="number" min={0} max={1} step={0.1} value={a.temperature}
-                                          onChange={e => {
-                                             const val = parseFloat(e.target.value);
-                                             setNewCompanyAssignments(prev => {
-                                               const next = [...prev];
-                                               const idx = next.findIndex(x => x.scenario === s.key);
-                                               if (idx >= 0) next[idx] = { ...next[idx], temperature: val };
-                                               else next.push({ scenario: s.key, provider_id: a.provider_id, temperature: val, max_tokens: a.max_tokens, timeout: a.timeout });
-                                               return next;
-                                             });
-                                          }}
-                                          className={inp + ' py-1 text-xs'} />
-                                      ) : (
-                                        <input type="number" disabled value={globalA.temperature} title="Using Global Default" className={inp + ' py-1 text-xs opacity-50 cursor-not-allowed bg-transparent'} />
-                                      )}
-                                    </div>
-                                    <div className="pr-4">
-                                      {a.provider_id ? (
-                                        <input type="number" step={128} value={a.max_tokens}
-                                          onChange={e => {
-                                             const val = parseInt(e.target.value);
-                                             setNewCompanyAssignments(prev => {
-                                               const next = [...prev];
-                                               const idx = next.findIndex(x => x.scenario === s.key);
-                                               if (idx >= 0) next[idx] = { ...next[idx], max_tokens: val };
-                                               else next.push({ scenario: s.key, provider_id: a.provider_id, temperature: a.temperature, max_tokens: val, timeout: a.timeout });
-                                               return next;
-                                             });
-                                          }}
-                                          className={inp + ' py-1 text-xs'} />
-                                      ) : (
-                                        <input type="number" disabled value={globalA.max_tokens} title="Using Global Default" className={inp + ' py-1 text-xs opacity-50 cursor-not-allowed bg-transparent'} />
-                                      )}
-                                    </div>
-                                    <div className="pr-4">
-                                      {a.provider_id ? (
-                                        <input type="number" step={1} value={a.timeout || 90}
-                                          onChange={e => {
-                                             const val = parseInt(e.target.value);
-                                             setNewCompanyAssignments(prev => {
-                                               const next = [...prev];
-                                               const idx = next.findIndex(x => x.scenario === s.key);
-                                               if (idx >= 0) next[idx] = { ...next[idx], timeout: val };
-                                               else next.push({ scenario: s.key, provider_id: a.provider_id, temperature: a.temperature, max_tokens: a.max_tokens, timeout: val });
-                                               return next;
-                                             });
-                                          }}
-                                          className={inp + ' py-1 text-xs'} />
-                                      ) : (
-                                        <input type="number" disabled value={globalA.timeout || 90} title="Using Global Default" className={inp + ' py-1 text-xs opacity-50 cursor-not-allowed bg-transparent'} />
-                                      )}
-                                    </div>
+                                        className={inp + ' py-1 text-xs'} />
+                                    ) : (
+                                      <input type="number" disabled value={globalA.temperature} title="Using Global Default" className={inp + ' py-1 text-xs opacity-50 cursor-not-allowed bg-transparent'} />
+                                    )}
                                   </div>
-                                );
+                                  <div className="pr-4">
+                                    {a.provider_id ? (
+                                      <input type="number" step={128} value={a.max_tokens}
+                                        onChange={e => {
+                                          const val = parseInt(e.target.value);
+                                          setNewCompanyAssignments(prev => {
+                                            const next = [...prev];
+                                            const idx = next.findIndex(x => x.scenario === s.key);
+                                            if (idx >= 0) next[idx] = { ...next[idx], max_tokens: val };
+                                            else next.push({ scenario: s.key, provider_id: a.provider_id, temperature: a.temperature, max_tokens: val, timeout: a.timeout });
+                                            return next;
+                                          });
+                                        }}
+                                        className={inp + ' py-1 text-xs'} />
+                                    ) : (
+                                      <input type="number" disabled value={globalA.max_tokens} title="Using Global Default" className={inp + ' py-1 text-xs opacity-50 cursor-not-allowed bg-transparent'} />
+                                    )}
+                                  </div>
+                                  <div className="pr-4">
+                                    {a.provider_id ? (
+                                      <input type="number" step={1} value={a.timeout || 90}
+                                        onChange={e => {
+                                          const val = parseInt(e.target.value);
+                                          setNewCompanyAssignments(prev => {
+                                            const next = [...prev];
+                                            const idx = next.findIndex(x => x.scenario === s.key);
+                                            if (idx >= 0) next[idx] = { ...next[idx], timeout: val };
+                                            else next.push({ scenario: s.key, provider_id: a.provider_id, temperature: a.temperature, max_tokens: a.max_tokens, timeout: val });
+                                            return next;
+                                          });
+                                        }}
+                                        className={inp + ' py-1 text-xs'} />
+                                    ) : (
+                                      <input type="number" disabled value={globalA.timeout || 90} title="Using Global Default" className={inp + ' py-1 text-xs opacity-50 cursor-not-allowed bg-transparent'} />
+                                    )}
+                                  </div>
+                                </div>
+                              );
                             })}
-                         </div>
-                         <div className="flex justify-end gap-3 pt-4">
-                             <button
-                               onClick={async () => {
-                                 if (!isConfigured) return;
-                                 if (window.confirm("Are you sure you want to delete routing for this company?")) {
-                                   try {
-                                     await llmService.deleteAssignments(c.id);
-                                     toast.success("Routing deleted");
-                                     setSelectedCompanyId(null);
-                                     fetchData();
-                                   } catch (e: any) {
-                                     toast.error(e.message || "Failed to delete");
-                                   }
-                                 }
-                               }} 
-                               disabled={!isConfigured}
-                               title={!isConfigured ? "No custom routing to delete" : "Delete entire company routing"}
-                               className={`px-4 py-2 rounded-xl border text-sm font-medium transition-colors flex items-center gap-2 ${isConfigured ? 'border-[var(--border)] text-rose-500 hover:bg-rose-500/10 cursor-pointer' : 'border-[var(--border)]/50 text-[var(--text-secondary)]/30 cursor-not-allowed'}`}
-                             >
-                               <Trash2 className="w-3.5 h-3.5" />
-                               Delete Routing
-                             </button>
+                          </div>
+                          <div className="flex justify-end gap-3 pt-4">
+                            <button
+                              onClick={async () => {
+                                if (!isConfigured) return;
+                                if (window.confirm("Are you sure you want to delete routing for this company?")) {
+                                  try {
+                                    await llmService.deleteAssignments(c.id);
+                                    toast.success("Routing deleted");
+                                    setSelectedCompanyId(null);
+                                    fetchData();
+                                  } catch (e: any) {
+                                    toast.error(e.message || "Failed to delete");
+                                  }
+                                }
+                              }}
+                              disabled={!isConfigured}
+                              title={!isConfigured ? "No custom routing to delete" : "Delete entire company routing"}
+                              className={`px-4 py-2 rounded-xl border text-sm font-medium transition-colors flex items-center gap-2 ${isConfigured ? 'border-[var(--border)] text-rose-500 hover:bg-rose-500/10 cursor-pointer' : 'border-[var(--border)]/50 text-[var(--text-secondary)]/30 cursor-not-allowed'}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete Routing
+                            </button>
                             <button
                               onClick={async () => {
                                 setSaving(true);
@@ -674,18 +675,66 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
                               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                               Save Changes
                             </button>
-                         </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })
-        )}
-      </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })
+          )}
+        </div>
       )}
 
+
+      {/* ── Company Configurations List ──────────────────────────────────────── */}
+      {Object.keys(groupedCompanyAssignments).length > 0 && (
+        <div className="mt-8 space-y-4">
+          <h3 className="text-lg font-bold text-[var(--text-primary)] px-1">Company Configurations</h3>
+          {Object.entries(groupedCompanyAssignments).map(([compIdStr, assigns]) => {
+            const compId = Number(compIdStr);
+            const compName = companies.find(c => c.id === compId)?.company_name || `Company #${compId}`;
+            return (
+              <div key={compId} className="rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
+                <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg)] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[var(--accent)]" />
+                    <span className="text-sm font-bold text-[var(--text-primary)]">{compName}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedCompanyId(compId);
+                      setNewCompanyAssignments(assigns);
+                      _setIsCreatingCompanyConfig(true);
+                    }}
+                    className="text-xs font-medium text-[var(--accent)] hover:underline cursor-pointer"
+                  >
+                    Edit Routing
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-px bg-[var(--border)]">
+                  {SCENARIOS.map(s => {
+                    const a = assigns.find(x => x.scenario === s.key);
+                    const prov = a ? providers.find(p => p.id === a.provider_id) : null;
+                    return (
+                      <div key={s.key} className="bg-[var(--surface)] px-4 py-3">
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)] mb-1">{s.icon} {s.label}</div>
+                        <p className={`text-xs font-semibold truncate ${prov ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]/40'}`}>
+                          {prov ? prov.name : 'Unassigned'}
+                        </p>
+                        {prov && a && (
+                          <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 font-mono">t={a.temperature} · {a.max_tokens} tok</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Add / Edit Modal ─────────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -870,7 +919,6 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
           </div>
         )}
       </AnimatePresence>
-
 
     </>
   );
