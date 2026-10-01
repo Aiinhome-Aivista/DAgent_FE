@@ -111,7 +111,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               New: DAgent Business Plan →
             </Badge> */}
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1]">
-              Ask your data anything. Get insights instantly.
+              Ask Your Data Anything with AI
             </h1>
             <p className="mt-6 text-xl text-slate-600 max-w-2xl mx-auto">
               No coding required. DAgent connects to your databases, spreadsheets, and apps to help you find answers faster.
