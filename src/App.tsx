@@ -10,7 +10,6 @@ import { PricingPage } from './features/marketing/components/PricingPage';
 import { PrivacyPolicyPage } from './features/marketing/components/PrivacyPolicyPage';
 import { TermsConditionsPage } from './features/marketing/components/TermsConditionsPage';
 import { HelpCenterPage } from './features/marketing/components/HelpCenterPage';
-import { BlogPage } from './features/marketing/components/BlogPage';
 import { LoginPage } from './features/auth/components/LoginPage';
 import { Dashboard } from './features/dashboard/components/Dashboard';
 import { Moon, Sun, Layout, Settings, LogOut, Menu, MessageSquare, Database, Plus, Sparkles, BarChart3, Clock, Search, ChevronDown, User, Check, X, Star } from 'lucide-react';
@@ -38,7 +37,6 @@ function AppContent() {
     window.location.pathname.startsWith('/privacy-policy') ? 'privacy-policy' : 
     window.location.pathname.startsWith('/terms-and-conditions') ? 'terms-and-conditions' : 
     window.location.pathname.startsWith('/help-center') ? 'help-center' : 
-    window.location.pathname.startsWith('/blogs') ? 'blogs' : 
     'landing'
   );
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -510,10 +508,6 @@ function AppContent() {
 
   if (viewMode === 'help-center') {
     return <HelpCenterPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} onPricingClick={navigateToPricing} />;
-  }
-
-  if (viewMode === 'blogs') {
-    return <BlogPage onBackToLanding={navigateToLanding} onPricingClick={navigateToPricing} />;
   }
 
 

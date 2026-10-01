@@ -154,7 +154,7 @@ export const HelpCenterPage: React.FC<HelpCenterPageProps> = ({ onGetStarted, on
               <h4 className="font-bold text-sm mb-6 text-slate-900">Resources</h4>
               <ul className="space-y-4 text-sm text-slate-600">
                 <li><a href="#" onClick={(e) => { e.preventDefault(); onPricingClick?.(); }} className="hover:text-accent transition-colors">Pricing</a></li>
-                <li><a href="/blogs" className="hover:text-accent transition-colors">Blogs</a></li>
+
                 <li><a href="/help-center" className="text-accent transition-colors">Help Center</a></li>
               </ul>
             </div>

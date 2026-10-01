@@ -4,10 +4,11 @@ import {
   Edit2, Trash2, X, Save, Eye, EyeOff, Key, Play,
   Cpu, Globe, Brain, Check, ChevronDown, ChevronUp,
   Network, MessageSquare, BarChart2, Layers, Zap,
-  Search, Activity, FileSearch, Loader2
+  Search, Activity, FileSearch, Loader2, Building2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { llmService } from '../../../services/llm.service';
+import { companyService } from '../../../services/company.service';
 import { Captcha } from '../../../ui-kit';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -53,18 +54,41 @@ interface ManageLLMProps {
   searchQuery: string;
   isCreatingLLM: boolean;
   setIsCreatingLLM: (val: boolean) => void;
+  isCreatingCompanyConfig?: boolean;
+  setIsCreatingCompanyConfig?: (val: boolean) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM, setIsCreatingLLM }) => {
+export const ManageLLM: React.FC<ManageLLMProps> = ({
+  searchQuery,
+  isCreatingLLM,
+  setIsCreatingLLM,
+  isCreatingCompanyConfig,
+  setIsCreatingCompanyConfig
+}) => {
   const [providers, setProviders] = useState<LLMProvider[]>([]);
-  const [assignments, setAssignments] = useState<ScenarioAssignment[]>([]);
+  const [globalAssignments, setGlobalAssignments] = useState<ScenarioAssignment[]>([]);
+  const [companyAssignments, setCompanyAssignments] = useState<any[]>([]); // all company assignments
+
+  const groupedCompanyAssignments = React.useMemo(() => {
+    const groups: Record<number, any[]> = {};
+    companyAssignments.forEach(a => {
+      if (a.company_id == null) return;
+      if (!groups[a.company_id]) groups[a.company_id] = [];
+      groups[a.company_id].push(a);
+    });
+    return groups;
+  }, [companyAssignments]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testingId, setTestingId] = useState<number | null>(null);
 
-  // modal
+  // Companies
+  const [companies, setCompanies] = useState<{ id: number; company_name: string }[]>([]);
+
+  // modal (Add Provider)
   const [form, setForm] = useState<Omit<LLMProvider, 'id'>>(BLANK);
   const [editId, setEditId] = useState<number | null>(null);
   const [showKey, setShowKey] = useState(false);
@@ -73,31 +97,54 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
   const [isCaptchaValid, setIsCaptchaValid] = useState(false);
   const [expandedProvider, setExpandedProvider] = useState<number | null>(null);
 
+  // modal (Add Company Config) - Fallbacks if not provided by parent
+  const [localIsCreatingComp, setLocalIsCreatingComp] = useState(false);
+  const _isCreatingCompanyConfig = isCreatingCompanyConfig ?? localIsCreatingComp;
+  const _setIsCreatingCompanyConfig = setIsCreatingCompanyConfig ?? setLocalIsCreatingComp;
+
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [newCompanyAssignments, setNewCompanyAssignments] = useState<ScenarioAssignment[]>([]);
+  const [activeTab, setActiveTab] = useState<'global' | 'company'>('global');
+
   const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
-      const [provRes, assRes] = await Promise.all([
-        llmService.getProviders(),
-        llmService.getAssignments(),
+      const [provRes, globalAssRes, companyAssRes] = await Promise.all([
+        llmService.getProviders(), // global providers
+        llmService.getAssignments(), // global assignments
+        llmService.getAssignments('all'), // all company assignments
       ]);
+
       if (provRes.status) {
         setProviders(provRes.providers.map((p: any) => ({ ...p, provider: p.provider_type })));
       }
-      if (assRes.status) {
-        // Merge missing scenarios from SCENARIOS with defaults
-        const fetched = assRes.assignments;
+
+      if (globalAssRes.status) {
+        const fetched = globalAssRes.assignments;
         const merged = SCENARIOS.map(s => {
           const found = fetched.find((a: any) => a.scenario === s.key);
           if (found) return found;
           return { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 };
         });
-        setAssignments(merged);
+        setGlobalAssignments(merged);
+      }
+
+      if (companyAssRes.status) {
+        setCompanyAssignments(companyAssRes.assignments || []);
       }
     } catch {
       toast.error('Failed to load LLM config');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Load companies on mount
+  React.useEffect(() => {
+    companyService.getCompanies().then((res: any) => {
+      const list = res?.data ?? [];
+      setCompanies(Array.isArray(list) ? list : []);
+    }).catch(() => { });
   }, []);
 
   React.useEffect(() => { fetchData(); }, [fetchData]);
@@ -123,7 +170,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
         api_key: form.api_key,
         model_name: form.model_name,
         base_url: form.base_url,
-        is_active: form.is_active
+        is_active: form.is_active,
       };
 
       if (editId !== null) {
@@ -179,16 +226,16 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
   };
 
   const patchAssignment = async (scenario: string, patch: Partial<ScenarioAssignment>) => {
-    const updatedAssignments = assignments.map(a => a.scenario === scenario ? { ...a, ...patch } : a);
-    setAssignments(updatedAssignments);
+    const updatedAssignments = globalAssignments.map(a => a.scenario === scenario ? { ...a, ...patch } : a);
+    setGlobalAssignments(updatedAssignments);
     try {
       const target = updatedAssignments.find(a => a.scenario === scenario);
       if (target) {
-        toast.promise(llmService.updateAssignments([target]), {
+        toast.promise(llmService.updateAssignments([target], null), {
           loading: 'Saving changes...',
           success: 'Updated successfully!',
           error: 'Failed to update',
-        }, { id: 'save-assignment' }); 
+        }, { id: 'save-assignment' });
       }
     } catch {
       toast.error('Failed to update assignment');
@@ -220,13 +267,31 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
 
   return (
     <>
-      {/* ── Providers Table ─────────────────────────────────────────────────── */}
+      {/* ── Tabs ─────────────────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-6 mb-6 border-b border-[var(--border)]">
+        <button
+          onClick={() => setActiveTab('global')}
+          className={`px-4 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'global' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer'}`}
+        >
+          Global Configuration
+        </button>
+        <button
+          onClick={() => setActiveTab('company')}
+          className={`px-4 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'company' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer'}`}
+        >
+          Company-wise Routing
+        </button>
+      </div>
+
+      {activeTab === 'global' && (
+        <div className="space-y-4">
+          {/* ── Providers Table ─────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
 
         {/* Header row */}
         <div className="grid grid-cols-[8%_22%_13%_20%_13%_24%] border-b border-[var(--border)] bg-[var(--bg)]/50">
           {['SL NO', 'Provider', 'Type', 'Model', 'Status', 'Actions'].map(h => (
-            <div key={h} className="px-6 py-4 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider text-left flex items-center">
+            <div key={h} className="px-6 py-4 text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider text-left flex items-center">
               {h}
             </div>
           ))}
@@ -241,7 +306,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
           <div className="divide-y divide-[var(--border)]">
             {filtered.map((p, idx) => {
               const isExpanded = expandedProvider === p.id;
-              const scenariosForProvider = assignments.filter(a => a.provider_id === p.id);
+              const scenariosForProvider = globalAssignments.filter(a => a.provider_id === p.id);
 
               return (
                 <motion.div key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
@@ -326,7 +391,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
                           </p>
                           <div className="flex flex-wrap gap-2 mb-4">
                             {SCENARIOS.map(s => {
-                              const a = assignments.find(x => x.scenario === s.key)!;
+                              const a = globalAssignments.find(x => x.scenario === s.key)!;
                               const mine = a.provider_id === p.id;
                               return (
                                 <button key={s.key}
@@ -398,7 +463,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-px bg-[var(--border)]">
           {SCENARIOS.map(s => {
-            const a = assignments.find(x => x.scenario === s.key)!;
+            const a = globalAssignments.find(x => x.scenario === s.key)!;
             const prov = providers.find(p => p.id === a.provider_id);
             return (
               <div key={s.key} className="bg-[var(--surface)] px-4 py-3">
@@ -416,6 +481,211 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
           })}
         </div>
       </div>
+      </div>
+      )}
+
+      {activeTab === 'company' && (
+      <div className="space-y-4" id="company-routing-table">
+        {/* ── Company Configurations Table ──────────────────────────────────────── */}
+        <h3 className="text-lg font-bold text-[var(--text-primary)] px-1 flex items-center gap-2">
+          <Building2 className="w-5 h-5 text-[var(--accent)]" />
+          Company-wise Routing
+        </h3>
+        
+        {companies.length === 0 ? (
+          <div className="py-16 text-center text-[var(--text-secondary)] flex flex-col items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+             <Building2 className="w-8 h-8 mb-3 opacity-20" />
+             <p className="text-sm">No companies available.</p>
+          </div>
+        ) : (
+          companies.map(c => {
+            const isExpanded = selectedCompanyId === c.id;
+            const isConfigured = !!groupedCompanyAssignments[c.id];
+            
+            return (
+              <div key={c.id} className="rounded-2xl border border-[var(--border)] overflow-hidden bg-[var(--surface)]">
+                <div
+                  onClick={() => {
+                    if (isExpanded) {
+                      setSelectedCompanyId(null);
+                    } else {
+                      setSelectedCompanyId(c.id);
+                      setNewCompanyAssignments(groupedCompanyAssignments[c.id] || SCENARIOS.map(s => ({ scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 })));
+                    }
+                  }}
+                  className="px-5 py-4 flex items-center justify-between bg-[var(--bg)] cursor-pointer hover:bg-[var(--surface-hover)] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-[var(--text-primary)]">{c.company_name}</span>
+                    {isConfigured && (
+                      <span className="px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-[10px] font-bold uppercase tracking-wide">
+                        Configured
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[var(--text-secondary)] flex items-center gap-2">
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-5 border-t border-[var(--border)] bg-[var(--surface)]">
+                         <div className="border border-[var(--border)] rounded-xl overflow-hidden divide-y divide-[var(--border)]">
+                            <div className="grid grid-cols-[25%_30%_15%_15%_15%] bg-[var(--bg)]/50 px-4 py-3 text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+                               <div>Scenario</div>
+                               <div>Provider</div>
+                               <div>Temperature</div>
+                               <div>Max Tokens</div>
+                               <div>Timeout</div>
+                            </div>
+                            {SCENARIOS.map(s => {
+                                const a = newCompanyAssignments.find(x => x.scenario === s.key) || { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 };
+                                const globalA = globalAssignments.find(x => x.scenario === s.key) || { temperature: 0.3, max_tokens: 4096, timeout: 90 };
+                                
+                                return (
+                                  <div key={s.key} className="grid grid-cols-[25%_30%_15%_15%_15%] items-center px-4 py-3 hover:bg-[var(--surface-hover)] transition-colors">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
+                                      {s.icon} {s.label}
+                                    </div>
+                                    <div className="pr-4">
+                                      <select
+                                        value={a.provider_id ?? ''}
+                                        onChange={e => {
+                                          const val = e.target.value ? Number(e.target.value) : null;
+                                          setNewCompanyAssignments(prev => {
+                                            const next = [...prev];
+                                            const idx = next.findIndex(x => x.scenario === s.key);
+                                            if (idx >= 0) next[idx] = { ...next[idx], provider_id: val };
+                                            else next.push({ scenario: s.key, provider_id: val, temperature: 0.3, max_tokens: 4096, timeout: 90 });
+                                            return next;
+                                          });
+                                        }}
+                                        className={inp + ' py-1'}
+                                      >
+                                        <option value="">Global Default</option>
+                                        {providers.map(p => (
+                                          <option key={p.id} value={p.id}>{p.name}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div className="pr-4">
+                                      {a.provider_id ? (
+                                        <input type="number" min={0} max={1} step={0.1} value={a.temperature}
+                                          onChange={e => {
+                                             const val = parseFloat(e.target.value);
+                                             setNewCompanyAssignments(prev => {
+                                               const next = [...prev];
+                                               const idx = next.findIndex(x => x.scenario === s.key);
+                                               if (idx >= 0) next[idx] = { ...next[idx], temperature: val };
+                                               else next.push({ scenario: s.key, provider_id: a.provider_id, temperature: val, max_tokens: a.max_tokens, timeout: a.timeout });
+                                               return next;
+                                             });
+                                          }}
+                                          className={inp + ' py-1 text-xs'} />
+                                      ) : (
+                                        <input type="number" disabled value={globalA.temperature} title="Using Global Default" className={inp + ' py-1 text-xs opacity-50 cursor-not-allowed bg-transparent'} />
+                                      )}
+                                    </div>
+                                    <div className="pr-4">
+                                      {a.provider_id ? (
+                                        <input type="number" step={128} value={a.max_tokens}
+                                          onChange={e => {
+                                             const val = parseInt(e.target.value);
+                                             setNewCompanyAssignments(prev => {
+                                               const next = [...prev];
+                                               const idx = next.findIndex(x => x.scenario === s.key);
+                                               if (idx >= 0) next[idx] = { ...next[idx], max_tokens: val };
+                                               else next.push({ scenario: s.key, provider_id: a.provider_id, temperature: a.temperature, max_tokens: val, timeout: a.timeout });
+                                               return next;
+                                             });
+                                          }}
+                                          className={inp + ' py-1 text-xs'} />
+                                      ) : (
+                                        <input type="number" disabled value={globalA.max_tokens} title="Using Global Default" className={inp + ' py-1 text-xs opacity-50 cursor-not-allowed bg-transparent'} />
+                                      )}
+                                    </div>
+                                    <div className="pr-4">
+                                      {a.provider_id ? (
+                                        <input type="number" step={1} value={a.timeout || 90}
+                                          onChange={e => {
+                                             const val = parseInt(e.target.value);
+                                             setNewCompanyAssignments(prev => {
+                                               const next = [...prev];
+                                               const idx = next.findIndex(x => x.scenario === s.key);
+                                               if (idx >= 0) next[idx] = { ...next[idx], timeout: val };
+                                               else next.push({ scenario: s.key, provider_id: a.provider_id, temperature: a.temperature, max_tokens: a.max_tokens, timeout: val });
+                                               return next;
+                                             });
+                                          }}
+                                          className={inp + ' py-1 text-xs'} />
+                                      ) : (
+                                        <input type="number" disabled value={globalA.timeout || 90} title="Using Global Default" className={inp + ' py-1 text-xs opacity-50 cursor-not-allowed bg-transparent'} />
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                            })}
+                         </div>
+                         <div className="flex justify-end gap-3 pt-4">
+                             <button
+                               onClick={async () => {
+                                 if (!isConfigured) return;
+                                 if (window.confirm("Are you sure you want to delete routing for this company?")) {
+                                   try {
+                                     await llmService.deleteAssignments(c.id);
+                                     toast.success("Routing deleted");
+                                     setSelectedCompanyId(null);
+                                     fetchData();
+                                   } catch (e: any) {
+                                     toast.error(e.message || "Failed to delete");
+                                   }
+                                 }
+                               }} 
+                               disabled={!isConfigured}
+                               title={!isConfigured ? "No custom routing to delete" : "Delete entire company routing"}
+                               className={`px-4 py-2 rounded-xl border text-sm font-medium transition-colors flex items-center gap-2 ${isConfigured ? 'border-[var(--border)] text-rose-500 hover:bg-rose-500/10 cursor-pointer' : 'border-[var(--border)]/50 text-[var(--text-secondary)]/30 cursor-not-allowed'}`}
+                             >
+                               <Trash2 className="w-3.5 h-3.5" />
+                               Delete Routing
+                             </button>
+                            <button
+                              onClick={async () => {
+                                setSaving(true);
+                                try {
+                                  await llmService.updateAssignments(newCompanyAssignments, c.id);
+                                  toast.success("Company routing saved!");
+                                  fetchData();
+                                } catch (e: any) {
+                                  toast.error(e.message || "Failed to save");
+                                } finally {
+                                  setSaving(false);
+                                }
+                              }}
+                              disabled={saving}
+                              className="px-5 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                            >
+                              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                              Save Changes
+                            </button>
+                         </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })
+        )}
+      </div>
+      )}
+
 
       {/* ── Add / Edit Modal ─────────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -600,6 +870,8 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({ searchQuery, isCreatingLLM
           </div>
         )}
       </AnimatePresence>
+
+
     </>
   );
 };
