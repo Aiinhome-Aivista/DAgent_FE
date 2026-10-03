@@ -328,13 +328,18 @@ const ProviderAssignmentsEditor: React.FC<{
   }, [local, assignments, onSave]);
 
   const toggleScenario = (scenario: string) => {
-    setLocal(prev => prev.map(a =>
-      a.scenario === scenario
-        ? { ...a, provider_id: a.provider_id === provider.id ? null : provider.id }
-        : a
-    ));
-    // The useEffect will pick up this change and auto-save after 800ms,
-    // but we can also let the debounce handle it perfectly.
+    setLocal(prev => prev.map(a => {
+      if (a.scenario === scenario) {
+        const isActive = a.provider_id === provider.id;
+        return {
+          ...a,
+          provider_id: isActive ? null : provider.id,
+          provider_name: isActive ? null : provider.name,
+          provider_type: isActive ? null : provider.provider_type
+        };
+      }
+      return a;
+    }));
   };
 
   const updateScenario = (scenario: string, key: keyof ScenarioAssignment, val: any) => {
