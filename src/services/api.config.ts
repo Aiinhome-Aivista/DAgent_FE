@@ -11,7 +11,8 @@ export const defaultConfig: ApiConfig = {
   // baseUrl: 'http://localhost:3019/',
   // baseUrl: 'http://157.173.221.226:3004',
   // baseUrl: 'http://187.127.163.17:3019',
-   baseUrl:'http://72.61.226.68:3019/',
+  //  baseUrl:'http://72.61.226.68:3019/',
+   baseUrl:'https://agentic-api.jktyre.co.in',
   timeout: 10000,
 };
 
