@@ -515,15 +515,12 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
               <select
                 value={selectedDataCategory}
                 onChange={(e) => {
-                  const val = e.target.value;
-                  setSelectedDataCategory(val);
-                  if (val === "global") {
-                    setSelectedWorkspaceId(0);
-                  }
+                  setSelectedDataCategory(e.target.value);
                 }}
                 disabled={isEditMode}
                 className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer disabled:cursor-auto"
               >
+                <option value="global">Global/Generic</option>
                 {dataCategories.map((dc) => (
                   <option key={dc.value} value={dc.value}>
                     {dc.label}
@@ -542,7 +539,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
                     e.target.value === "" ? "" : Number(e.target.value),
                   )
                 }
-                disabled={isEditMode || selectedDataCategory === "global"}
+                disabled={isEditMode}
                 className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)]/50 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] transition-all disabled:opacity-50 cursor-pointer disabled:cursor-auto"
               >
                 <option value="">-- Choose a workspace --</option>
