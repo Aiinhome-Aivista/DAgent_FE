@@ -8,8 +8,8 @@ export interface ApiConfig {
 }
 
 export const defaultConfig: ApiConfig = {
-  baseUrl: 'http://localhost:3019',
-  // baseUrl: 'https://agentic-api.jktyre.co.in',
+  // baseUrl: 'http://localhost:3019',
+  baseUrl: 'https://agentic-api.jktyre.co.in',
   timeout: 10000,
 };
 
