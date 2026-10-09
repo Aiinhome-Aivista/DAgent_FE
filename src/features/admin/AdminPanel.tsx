@@ -31,6 +31,7 @@ import { ScheduledReports } from "./components/ScheduledReports";
 import { ManagePricing } from "./components/ManagePricing";
 import { ManageLLM } from "./components/ManageLLM";
 import { ManageMasterData } from "./components/ManageMasterData";
+import { AdminKGraphReview } from "./components/AdminKGraphReview";
 
 interface AdminPanelProps {
   adminSubTab: AdminTab;
@@ -66,7 +67,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isCreatingLLM, setIsCreatingLLM] = useState(false);
   const [isCreatingCompanyConfig, setIsCreatingCompanyConfig] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
-  const [newWorkspaceType, setNewWorkspaceType] = useState("Generic");
+  const [newWorkspaceType, setNewWorkspaceType] = useState("");
   const [workspaceTypes, setWorkspaceTypes] = useState<any[]>([]);
 
   useEffect(() => {
@@ -119,6 +120,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           const typesResponse = await workspaceService.getWorkspaceTypes();
           if (typesResponse?.data) {
             setWorkspaceTypes(typesResponse.data);
+            if (typesResponse.data.length > 0 && newWorkspaceType === "") {
+              setNewWorkspaceType(typesResponse.data[0].type_name);
+            }
           }
         } catch (e) {
           console.log(
@@ -226,20 +230,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     );
   });
 
-  const tabDisplayNames: Record<AdminTab, string> = {
-    company: "Company",
-    users: "Users",
-    workspaces: "Workspaces",
-    assignUsers: "Assignments",
-    workspaceUsers: "Workspace Users",
-    customPrompts: "Custom Prompts",
-    pricing: "Pricing",
-    llmConfig: "LLM Configuration",
-    adminChats: "Chat Views",
-    pendingKnowledge: "KG History",
-    scheduledReports: "Scheduled Reports",
-    masterData: "Master Data",
-  };
 
   const tabDetails: Record<AdminTab, { title: string; desc: string }> = {
     company: {
@@ -278,10 +268,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       title: "Scheduled Reports",
       desc: "Configure automated scheduled reports and recipients.",
     },
-    pricing: {
-      title: "Pricing Plans",
-      desc: "Manage subscription plans and features.",
-    },
+    // pricing: {
+    //   title: "Pricing Plans",
+    //   desc: "Manage subscription plans and features.",
+    // },
     llmConfig: {
       title: "LLM Configuration",
       desc: "Configure AI providers and model assignments.",
@@ -289,6 +279,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     masterData: {
       title: "Master Data Management",
       desc: "Manage Data Categories and Prompt Types.",
+    },
+    kGraphReview: {
+      title: "K-Graph Review",
+      desc: "Review visual Knowledge Graphs.",
     },
   };
 
@@ -311,16 +305,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
 
         <div className="flex items-center gap-4 w-full sm:w-auto">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
-            <input
-              type="text"
-              placeholder="Search here"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-            />
-          </div>
+          {adminSubTab !== "company" && (
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+              <input
+                type="text"
+                placeholder="Search here"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+              />
+            </div>
+          )}
 
           {adminSubTab === "users" && (
             <button
@@ -352,17 +348,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </button>
           )}
 
-          {adminSubTab === "company" && (
-            <button
-              onClick={() => setIsCreatingCompany(true)}
-              className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
-            >
-              <Building2 className="w-4 h-4" />
-              Add Company
-            </button>
-          )}
 
-          {adminSubTab === "pricing" && (
+
+          {/* {adminSubTab === "pricing" && (
             <button
               onClick={() => setIsCreatingPlan(true)}
               className="px-4 py-2 text-sm font-medium rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
@@ -370,7 +358,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <CreditCard className="w-4 h-4" />
               Create Plan
             </button>
-          )}
+          )} */}
 
           {adminSubTab === "llmConfig" && (
             <button
@@ -504,13 +492,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   />
                 )}
 
-                {adminSubTab === "pricing" && (
+                {/* {adminSubTab === "pricing" && (
                   <ManagePricing
                     searchQuery={searchQuery}
                     isModalOpen={isCreatingPlan}
                     setIsModalOpen={setIsCreatingPlan}
                   />
-                )}
+                )} */}
 
                 {adminSubTab === "llmConfig" && (
                   <ManageLLM
@@ -524,6 +512,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 {adminSubTab === "masterData" && (
                   <ManageMasterData searchQuery={searchQuery} />
+                )}
+
+                {adminSubTab === "kGraphReview" && (
+                  <AdminKGraphReview />
                 )}
               </motion.div>
             </AnimatePresence>

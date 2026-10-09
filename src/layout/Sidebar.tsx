@@ -24,7 +24,8 @@ import {
   UserCheck,
   Link,
   Archive,
-  HardDrive
+  HardDrive,
+  Network
 } from "lucide-react";
 import { Workspace, workspaceService } from "../services/workspace.service";
 import { SidebarProps } from "../types/layout";
@@ -160,12 +161,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 { id: 'assignUsers', icon: Link, label: 'Assignments' },
                 { id: 'workspaceUsers', icon: UserCheck, label: 'Workspace Users' },
                 { id: 'customPrompts', icon: Terminal, label: 'Custom Prompts' },
-                { id: 'pricing', icon: CreditCard, label: 'Pricing' },
+                // { id: 'pricing', icon: CreditCard, label: 'Pricing' },
                 { id: 'llmConfig', icon: Cpu, label: 'LLM Settings' },
                 { id: 'adminChats', icon: MessageSquare, label: 'Chat Views' },
                 { id: 'pendingKnowledge', icon: Archive, label: 'KG History' },
                 { id: 'scheduledReports', icon: FileText, label: 'Scheduled Reports' },
-                { id: 'masterData', icon: HardDrive, label: 'Master Data' }
+                { id: 'masterData', icon: HardDrive, label: 'Master Data' },
+                // { id: 'kGraphReview', icon: Network, label: 'K-Graph Review' }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -811,10 +813,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Settings + Logout — fixed at the bottom */}
       <div className="px-3 pb-3 space-y-1 shrink-0 mt-auto border-t border-[var(--border)] pt-3">
-        {/* <button className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200 cursor-pointer"> */}
         <button
-          onClick={() => setIsSettingsOpen(true)}
-          className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200"
+          onClick={() => roleName === "Admin" && setIsSettingsOpen(true)}
+          className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl text-[var(--text-secondary)] transition-colors duration-200 ${
+            roleName === "Admin" 
+              ? "hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] cursor-pointer" 
+              : "opacity-50 cursor-not-allowed"
+          }`}
         >
           <Settings className="w-4 h-4 shrink-0" />
           {isSidebarOpen && (
@@ -845,10 +850,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Settings Modal */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
+      {roleName === "Admin" && (
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      )}
     </motion.aside>
   );
 };

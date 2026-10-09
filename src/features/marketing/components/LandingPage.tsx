@@ -51,7 +51,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
               <a href="#features" className="hover:text-accent transition-colors">Features</a>
               <a href="#use-cases" className="hover:text-accent transition-colors">Use Cases</a>
               <a href="#security" className="hover:text-accent transition-colors">Security</a>
-              <button onClick={onPricingClick} className="hover:text-accent transition-colors">Pricing</button>
+              {/* <button onClick={onPricingClick} className="hover:text-accent transition-colors">Pricing</button> */}
             </div>
 
             <div className="hidden md:flex items-center gap-4">
@@ -90,7 +90,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             <a href="#features" className="block text-lg font-medium">Features</a>
             <a href="#use-cases" className="block text-lg font-medium">Use Cases</a>
             <a href="#security" className="block text-lg font-medium">Security</a>
-            <button onClick={onPricingClick} className="block text-lg font-medium w-full text-left">Pricing</button>
+            {/* <button onClick={onPricingClick} className="block text-lg font-medium w-full text-left">Pricing</button> */}
             <div className="pt-4 flex flex-col gap-3">
               <Button variant="outline" onClick={onLogin} className="w-full">Log in</Button>
               <Button onClick={onGetStarted} className="w-full bg-accent text-white">Sign Up</Button>
@@ -132,7 +132,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             </Button>
             <Button
               variant="outline"
-              onClick={onPricingClick}
               className="w-full sm:w-auto h-14 px-10 text-lg rounded-xl border-slate-200 text-slate-900"
             >
               Talk to Founder <ArrowRight className="ml-2 w-5 h-5" />
@@ -383,7 +382,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             <div>
               <h4 className="font-bold text-sm mb-6 text-slate-900">Resources</h4>
               <ul className="space-y-4 text-sm text-slate-600">
-                <li><a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); onPricingClick?.(); }} className="hover:text-accent transition-colors">Pricing</a></li>
+                {/* <li><a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); onPricingClick?.(); }} className="hover:text-accent transition-colors">Pricing</a></li> */}
 
                 <li><a href="/help-center" className="hover:text-accent transition-colors">Help Center</a></li>
               </ul>

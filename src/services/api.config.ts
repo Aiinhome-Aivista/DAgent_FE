@@ -8,8 +8,8 @@ export interface ApiConfig {
 }
 
 export const defaultConfig: ApiConfig = {
-  // baseUrl: 'http://localhost:3020',
-  baseUrl: 'https://agentic-api.jktyre.co.in',
+  baseUrl: 'http://localhost:3019',
+  // baseUrl: 'https://agentic-api.jktyre.co.in',
   timeout: 10000,
 };
 
@@ -20,11 +20,16 @@ export const API_ENDPOINTS = {
   },
   USER: {
     USAGE_STATS: '/api/user/usage-stats',
+    CHANGE_PASSWORD: '/change_password',
+    GET_PASSWORD: '/api/user/password',
   },
   DATA_SOURCE: {
     CONNECTION_HISTORY: '/connection_history',
     CREATE_CONNECTORS: '/create_connectors',
     WEB_SEARCH: '/search',
+  },
+  KGRAPH: {
+    GET_ALL: '/api/kgraphs',
   },
   IMPORT: {
     AGENT: '/agents',
@@ -121,5 +126,5 @@ export const API_ENDPOINTS = {
   LLM: {
     PROVIDERS: '/api/llm/providers',
     ASSIGNMENTS: '/api/llm/assignments',
-  },
+  }
 }

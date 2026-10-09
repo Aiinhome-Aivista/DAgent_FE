@@ -33,25 +33,11 @@ export const ConnectorList = ({ onSelect }: ConnectorListProps = {}) => {
   }, []);
 
   const checkConnectorAllowed = (connectorName: string, allowedStr: string) => {
-    const allowed = allowedStr.toLowerCase();
-    const name = connectorName.toLowerCase();
-    if (!allowedStr) return true; // fallback if no plan string
-    
-    // Allow all connectors for Gold/Custom plans
-    if (allowed.includes('all') || allowed.includes('custom') || allowed.includes('unlimited')) return true;
-
-    if (name.includes('upload') || name.includes('document')) return allowed.includes('file upload');
-    if (name.includes('mysql')) return allowed.includes('mysql');
-    if (name.includes('postgres')) return allowed.includes('postgres');
-    if (name.includes('web search')) return allowed.includes('llm search') || allowed.includes('web search');
-    if (name.includes('snowflake')) return allowed.includes('snowflake');
-    return allowed.includes(name);
+    // Pricing checks bypassed
+    return true;
   };
 
-  const isPlanUnlimited = (() => {
-    const allowed = allowedConnectors.toLowerCase();
-    return allowed.includes('all') || allowed.includes('custom') || allowed.includes('unlimited');
-  })();
+  const isPlanUnlimited = true;
 
   const filtered = SUPPORTED_CONNECTORS.map(c => {
     const isAllowed = checkConnectorAllowed(c.name, allowedConnectors);

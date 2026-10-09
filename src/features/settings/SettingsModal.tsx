@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Database, HardDrive, Upload, Activity } from 'lucide-react';
+import { X, Database, HardDrive, Upload, Activity, Lock, Save, Loader2, Eye, EyeOff } from 'lucide-react';
 import { apiService } from '../../services/api.service';
 import { API_ENDPOINTS } from '../../services/api.config';
+import { useAuthContext } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -20,22 +22,56 @@ interface UsageStats {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const { roleName, userId } = useAuthContext();
+  const isAdmin = roleName === 'Admin';
+  
   const [stats, setStats] = useState<UsageStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Password change state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      fetchUsageStats();
+      if (!isAdmin) {
+        fetchUsageStats();
+      } else {
+        // Reset password fields when admin opens modal
+        setNewPassword('');
+        setConfirmPassword('');
+        setShowCurrentPassword(false);
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
+        fetchCurrentPassword();
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, isAdmin]);
+
+  const fetchCurrentPassword = async () => {
+    try {
+      const currentUserId = userId || localStorage.getItem('DAgent_user_id') || '1';
+      const response = await apiService.get(`${API_ENDPOINTS.USER.GET_PASSWORD}?user_id=${currentUserId}`) as any;
+      if (response && response.password) {
+        setCurrentPassword(response.password);
+      }
+    } catch (err) {
+      console.error('Failed to load current password:', err);
+    }
+  };
 
   const fetchUsageStats = async () => {
     setLoading(true);
     setError(null);
     try {
-      const userId = localStorage.getItem('DAgent_user_id') || '1';
-      const response = await apiService.get(`${API_ENDPOINTS.USER.USAGE_STATS}?user_id=${userId}`) as any;
+      const currentUserId = userId || localStorage.getItem('DAgent_user_id') || '1';
+      const response = await apiService.get(`${API_ENDPOINTS.USER.USAGE_STATS}?user_id=${currentUserId}`) as any;
       if (response && response.usage_stats) {
         setStats(response.usage_stats);
       }
@@ -43,6 +79,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       setError(err.message || 'Failed to load usage stats');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const currentUserId = userId || localStorage.getItem('DAgent_user_id');
+      await apiService.post(API_ENDPOINTS.USER.CHANGE_PASSWORD, {
+        user_id: currentUserId,
+        new_password: newPassword
+      });
+      toast.success('Password updated successfully!');
+      setNewPassword('');
+      setConfirmPassword('');
+      onClose();
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.msg || err.message || 'Failed to update password';
+      toast.error(errorMessage);
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
@@ -101,7 +167,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-50 overflow-hidden"
           >
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Plan & Usage</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Settings
+              </h2>
               <button
                 onClick={onClose}
                 className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
@@ -111,49 +179,92 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             </div>
 
             <div className="p-6">
-              {loading ? (
-                <div className="flex justify-center items-center h-48">
-                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : error ? (
-                <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 p-4 rounded-lg border border-red-200 dark:border-red-500/20 text-center">
-                  {error}
-                </div>
-              ) : stats ? (
-                <div className="space-y-6">
-                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-5 text-white shadow-lg">
-                    <h3 className="text-sm font-medium text-blue-100 uppercase tracking-wider mb-1">Current Plan</h3>
-                    <div className="text-2xl font-bold mb-1">{stats.plan_name}</div>
-                    <div className="text-sm text-blue-100 flex items-center gap-1.5">
-                      <Database className="w-4 h-4" /> {stats.company_name}
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-[var(--text-secondary)]">
+                        Current Password
+                      </label>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+                      <input
+                        type={showCurrentPassword ? "text" : "password"}
+                        readOnly
+                        value={currentPassword}
+                        placeholder={currentPassword ? "" : "••••••••"}
+                        className="w-full pl-9 pr-10 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-secondary)] opacity-70 cursor-not-allowed focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      >
+                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    {renderProgressBar(
-                      stats.metrics.storage.used,
-                      stats.metrics.storage.total,
-                      "Data Storage",
-                      <HardDrive className="w-4 h-4 text-blue-500" />,
-                      stats.metrics.storage.unit
-                    )}
-
-                    {renderProgressBar(
-                      stats.metrics.uploads.used,
-                      stats.metrics.uploads.total,
-                      "Daily Uploads",
-                      <Upload className="w-4 h-4 text-green-500" />
-                    )}
-
-                    {renderProgressBar(
-                      stats.metrics.queries.used,
-                      stats.metrics.queries.total,
-                      "Daily Queries",
-                      <Activity className="w-4 h-4 text-purple-500" />
-                    )}
+                  <div className="pt-2">
+                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                      New Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        required
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        className="w-full pl-9 pr-10 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-shadow"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : null}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        className="w-full pl-9 pr-10 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-shadow"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isUpdatingPassword || !newPassword || !confirmPassword}
+                    className="w-full py-2 mt-4 rounded-xl bg-[var(--accent)] text-sm font-semibold text-white hover:bg-[var(--accent)]/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm shadow-[var(--accent)]/20"
+                  >
+                    {isUpdatingPassword ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Update Password
+                      </>
+                    )}
+                  </button>
+                </form>
             </div>
           </motion.div>
         </>

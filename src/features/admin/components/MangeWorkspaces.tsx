@@ -94,9 +94,6 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                       {t.type_name}
                     </option>
                   ))}
-                  {workspaceTypes.length === 0 && (
-                    <option value="Generic">Generic</option>
-                  )}
                 </select>
               </div>
               <button
@@ -110,7 +107,7 @@ export const MangeWorkspace: React.FC<MangeWorkspaceProps> = ({
                 onClick={() => {
                   setIsCreatingWorkspace(false);
                   setNewWorkspaceName("");
-                  setNewWorkspaceType("Generic");
+                  setNewWorkspaceType(workspaceTypes.length > 0 ? workspaceTypes[0].type_name : "");
                 }}
                 className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors h-[46px] cursor-pointer"
               >
