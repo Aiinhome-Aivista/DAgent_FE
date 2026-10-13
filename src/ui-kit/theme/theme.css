@@ -96,8 +96,38 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
+  /* Global sleek scrollbar styling across the app */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.6);
+  }
+
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 5px;
+    height: 5px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -105,22 +135,21 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--text-secondary);
-    opacity: 0.2;
-    border-radius: 10px;
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 9999px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--text-secondary);
-    opacity: 0.4;
+    background: rgba(148, 163, 184, 0.6);
   }
 
   .custom-h-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
   }
 
   .custom-h-scrollbar::-webkit-scrollbar {
+    width: 5px;
     height: 5px;
   }
 
@@ -129,11 +158,11 @@
   }
 
   .custom-h-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 9999px;
   }
 
   .custom-h-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: rgba(148, 163, 184, 0.6);
   }
 }

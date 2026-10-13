@@ -150,9 +150,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Main nav area */}
       <div className="flex flex-col mt-2 flex-1 min-h-0 overflow-hidden">
         {/* Scrollable middle section */}
-        <div className="flex-1 overflow-y-auto min-h-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar pr-1">
           {roleName === "Admin" && (
-            <div className="flex flex-col shrink-0 gap-1 px-3 mt-2 mb-2">
+            <div className="flex flex-col shrink-0 gap-1 px-3 mt-2 mb-4">
               {[
                 { id: 'company', icon: Building2, label: 'Company' },
                 { id: 'users', icon: Users, label: 'Users' },

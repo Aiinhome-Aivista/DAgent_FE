@@ -173,7 +173,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             <thead className="bg-[var(--surface)] sticky top-0 z-10">
               <tr>
                 {tableColumns.map(col => (
-                  <th key={col.key} className="px-4 py-2.5 font-bold text-[var(--text-secondary)] border-b border-[var(--border)] uppercase tracking-tighter shadow-sm">
+                  <th key={col.key} className="px-4 py-2.5 font-bold text-[var(--text-secondary)] border-b border-[var(--border)] uppercase tracking-tighter shadow-sm whitespace-nowrap">
                     {col.label}
                   </th>
                 ))}
@@ -192,7 +192,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
                       cellVal = cellVal.replace(/\$/g, '₹');
                     }
                     return (
-                      <td key={`${i}-${col.key}`} className="px-4 py-2.5 font-mono text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                      <td key={`${i}-${col.key}`} className="px-4 py-2.5 font-mono text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors whitespace-nowrap">
                         {cellVal}
                       </td>
                     );

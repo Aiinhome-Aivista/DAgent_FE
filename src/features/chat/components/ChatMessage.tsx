@@ -31,7 +31,7 @@ export const ChatMessage = React.memo(({ message }: ChatMessageProps) => {
         />
 
         {isAssistant && message.visualizations && message.visualizations.length > 0 && (
-          <div className="mt-4 space-y-4 w-full overflow-x-auto">
+          <div className="mt-4 space-y-4 w-full min-w-0">
             {message.visualizations.map((viz, idx) => (
               <ChatVisualization key={idx} visualization={viz} />
             ))}
