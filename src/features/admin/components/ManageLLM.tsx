@@ -123,9 +123,8 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
         const fetched = globalAssRes.assignments;
         const merged = SCENARIOS.map(s => {
           const found = fetched.find((a: any) => a.scenario === s.key);
-          return found || { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096 };
           if (found) return found;
-          return { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 };
+          return { scenario: s.key, provider_id: null, temperature: 0.1, max_tokens: 4096, timeout: 90 };
         });
         setGlobalAssignments(merged);
       }
@@ -512,7 +511,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
                         setSelectedCompanyId(null);
                       } else {
                         setSelectedCompanyId(c.id);
-                        setNewCompanyAssignments(groupedCompanyAssignments[c.id] || SCENARIOS.map(s => ({ scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 })));
+                        setNewCompanyAssignments(groupedCompanyAssignments[c.id] || SCENARIOS.map(s => ({ scenario: s.key, provider_id: null, temperature: 0.1, max_tokens: 4096, timeout: 90 })));
                       }
                     }}
                     className="px-5 py-4 flex items-center justify-between bg-[var(--bg)] cursor-pointer hover:bg-[var(--surface-hover)] transition-colors"
@@ -548,8 +547,8 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
                               <div>Timeout</div>
                             </div>
                             {SCENARIOS.map(s => {
-                              const a = newCompanyAssignments.find(x => x.scenario === s.key) || { scenario: s.key, provider_id: null, temperature: 0.3, max_tokens: 4096, timeout: 90 };
-                              const globalA = globalAssignments.find(x => x.scenario === s.key) || { temperature: 0.3, max_tokens: 4096, timeout: 90 };
+                              const a = newCompanyAssignments.find(x => x.scenario === s.key) || { scenario: s.key, provider_id: null, temperature: 0.1, max_tokens: 4096, timeout: 90 };
+                              const globalA = globalAssignments.find(x => x.scenario === s.key) || { temperature: 0.1, max_tokens: 4096, timeout: 90 };
 
                               return (
                                 <div key={s.key} className="grid grid-cols-[25%_30%_15%_15%_15%] items-center px-4 py-3 hover:bg-[var(--surface-hover)] transition-colors">
@@ -565,7 +564,7 @@ export const ManageLLM: React.FC<ManageLLMProps> = ({
                                           const next = [...prev];
                                           const idx = next.findIndex(x => x.scenario === s.key);
                                           if (idx >= 0) next[idx] = { ...next[idx], provider_id: val };
-                                          else next.push({ scenario: s.key, provider_id: val, temperature: 0.3, max_tokens: 4096, timeout: 90 });
+                                          else next.push({ scenario: s.key, provider_id: val, temperature: 0.1, max_tokens: 4096, timeout: 90 });
                                           return next;
                                         });
                                       }}
