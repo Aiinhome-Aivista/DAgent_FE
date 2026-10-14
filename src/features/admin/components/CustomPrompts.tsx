@@ -109,7 +109,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
     setIsEditMode(false);
     setSelectedWorkspaceId("");
     setSelectedPromptType("");
-    setSelectedDataCategory("global");
+    setSelectedDataCategory("");
     setPromptText("");
     setViewMode("form");
   };
@@ -118,7 +118,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
     setIsEditMode(true);
     setSelectedWorkspaceId(prompt.workspace_id);
     setSelectedPromptType(prompt.prompt_type);
-    setSelectedDataCategory(prompt.data_category || "global");
+    setSelectedDataCategory(prompt.data_category);
     setPromptText(prompt.custom_prompt);
     setViewMode("form");
   };
@@ -170,7 +170,7 @@ export const CustomPrompts: React.FC<CustomPromptsProps> = ({
     setDeleteTarget({
       workspace_id: p.workspace_id,
       prompt_type: p.prompt_type,
-      data_category: p.data_category || "global",
+      data_category: p.data_category,
       workspace_name:
         p.workspace_id === 0
           ? "Global Fallback"
