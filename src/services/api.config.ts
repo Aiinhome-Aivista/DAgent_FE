@@ -17,7 +17,7 @@ export const defaultConfig: ApiConfig = {
   // baseUrl: 'http://187.127.163.17:3019',
   // baseUrl: 'http://72.61.226.68:3020/',
   // baseUrl: 'https://aivista.co.in/dagentme',
-  timeout: 10000,
+  timeout: 120000,
 };
 
 export const API_ENDPOINTS = {
