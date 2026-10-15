@@ -191,18 +191,23 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
     setIsTesting(true);
     setErrorMsg('');
     try {
+      const isHana = connector?.name?.toLowerCase().includes('hana') || false;
+      const hostStr = formData.host?.trim() || '';
+      const portNum = Number(formData.port);
+      const isHanaCloud = isHana && (hostStr.toLowerCase().includes('hanacloud.ondemand.com') || portNum === 443);
+
       const payload: any = {
         user_id: userId,
         session_id: localStorage.getItem('DAgent_session_id'),
-        name: formData.name,
+        name: formData.name?.trim(),
         type: connector?.name ? connector.name.toLowerCase().replace(/\s+/g, '_') : 'mysql',
-        host: formData.host,
-        port: Number(formData.port),
-        username: formData.username,
+        host: hostStr,
+        port: portNum,
+        username: formData.username?.trim(),
         password: formData.password,
-        database: formData.database,
-        schema: formData.schema || undefined,
-        encrypt: formData.encrypt || false
+        database: formData.database?.trim() || undefined,
+        schema: formData.schema?.trim() || undefined,
+        encrypt: isHanaCloud ? true : (formData.encrypt || false)
       };
 
       if (formData.use_ssh) {

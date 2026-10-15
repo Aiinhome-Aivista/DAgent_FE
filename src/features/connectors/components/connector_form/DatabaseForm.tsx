@@ -37,7 +37,7 @@ export const DatabaseForm = ({
     const newErrors: Record<string, string> = {};
     if (!formData.host?.trim()) newErrors.host = "Host is required";
     if (!isSnowflake && !formData.port?.toString().trim()) newErrors.port = "Port is required";
-    if (!formData.database?.trim()) newErrors.database = "Database name is required";
+    if (!isHana && !formData.database?.trim()) newErrors.database = "Database name is required";
     
     if (isSnowflake) {
       if (!formData.warehouse?.trim()) newErrors.warehouse = "Warehouse is required";
@@ -63,7 +63,7 @@ export const DatabaseForm = ({
     else if (nameLower.includes('oracle')) portPlaceholder = "1521";
     else if (nameLower.includes('mongo')) portPlaceholder = "27017";
     else if (nameLower.includes('snowflake')) portPlaceholder = "443";
-    else if (nameLower.includes('hana')) portPlaceholder = "30015";
+    else if (nameLower.includes('hana')) portPlaceholder = "443";
   }
 
   return (
@@ -101,8 +101,8 @@ export const DatabaseForm = ({
 
         <div onMouseEnter={() => handleMouseEnter('database')}>
           <Input
-            label={isHana ? "Database Name / Tenant DB (e.g. HDB)" : "Database Name"}
-            placeholder={isHana ? "HDB" : "main_db"}
+            label={isHana ? "Tenant DB (Optional for HANA Cloud, e.g. HDB)" : "Database Name"}
+            placeholder={isHana ? "Leave empty for HANA Cloud" : "main_db"}
             value={formData.database}
             onChange={(e) => {
               setFormData({ ...formData, database: e.target.value });
@@ -110,15 +110,15 @@ export const DatabaseForm = ({
             }}
             onFocus={() => handleFocus('database')}
             error={errors.database}
-            required
+            required={!isHana}
           />
         </div>
 
         {(isPostgreSQL || isSnowflake || isHana) && (
           <div onMouseEnter={() => handleMouseEnter('schema')}>
             <Input
-              label={isSnowflake ? "Schema" : isHana ? "Schema (e.g. SAPABAP1)" : "Schema (Optional)"}
-              placeholder={isSnowflake ? "PUBLIC" : isHana ? "SAPABAP1" : "public"}
+              label={isSnowflake ? "Schema" : isHana ? "Schema (e.g. SAP_S4#AI_BI_EXT or SAPABAP1)" : "Schema (Optional)"}
+              placeholder={isSnowflake ? "PUBLIC" : isHana ? "SAP_S4#AI_BI_EXT" : "public"}
               value={formData.schema || ''}
               onChange={(e) => {
                 setFormData({ ...formData, schema: e.target.value });
