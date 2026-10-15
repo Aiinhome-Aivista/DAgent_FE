@@ -8,6 +8,7 @@ const getBrandIcon = (name: string) => {
   if (lower.includes('mysql'))        return 'https://cdn.simpleicons.org/mysql';
   if (lower.includes('snowflake'))    return 'https://cdn.simpleicons.org/snowflake';
   if (lower.includes('google sheets'))return 'https://cdn.simpleicons.org/googlesheets';
+  if (lower.includes('hana') || lower.includes('sap')) return 'https://cdn.simpleicons.org/sap';
   return null;
 };
 

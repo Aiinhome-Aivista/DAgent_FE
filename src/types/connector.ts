@@ -28,5 +28,6 @@ export interface ConnectorFormData {
   ssh_username?: string;
   ssh_password?: string;
   use_same_credentials?: boolean;
+  encrypt?: boolean;
 }
 

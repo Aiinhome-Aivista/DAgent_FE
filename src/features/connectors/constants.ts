@@ -33,8 +33,17 @@ export const SUPPORTED_CONNECTORS = [
     status: 'disconnected',
     disabled: true,
   },
+  // ─── SAP HANA ERP ──────────────────────────────────────────────────────────
   {
     id: '5',
+    name: 'SAP HANA',
+    description: 'Connect your SAP HANA / S/4HANA ERP database for instant AI analysis and reporting',
+    type: 'Database',
+    icon: 'database',
+    status: 'disconnected',
+  },
+  {
+    id: '6',
     name: 'Google Sheets',
     description: 'Connect your Google Sheets to query and analyze spreadsheet data with AI',
     type: 'Integration',
@@ -43,7 +52,7 @@ export const SUPPORTED_CONNECTORS = [
     disabled: true,
   },
   {
-    id: '6',
+    id: '7',
     name: 'Web Search using LLM',
     description: 'Query the web using large language models to fetch and analyze live data',
     type: 'Integration',
@@ -51,7 +60,7 @@ export const SUPPORTED_CONNECTORS = [
     status: 'disconnected',
   },
   {
-    id: '7',
+    id: '8',
     name: 'Upload CSV File',
     description: 'Upload one or more CSV files to instantly analyze and query your tabular data with AI',
     type: 'File Upload',
@@ -59,7 +68,7 @@ export const SUPPORTED_CONNECTORS = [
     status: 'disconnected',
   },
   {
-    id: '8',
+    id: '9',
     name: 'Upload SQL File',
     description: 'Upload one or more SQL dump files to run queries and gain insights from your database exports',
     type: 'File Upload',
@@ -69,7 +78,7 @@ export const SUPPORTED_CONNECTORS = [
   },
   // ─── NEW ───────────────────────────────────────────────────────────────────
   {
-    id: '9',
+    id: '10',
     name: 'FTP Connector',
     description: 'Connect to an FTP server to fetch files with incremental progress tracking and scheduled sync',
     type: 'Integration',
@@ -78,7 +87,7 @@ export const SUPPORTED_CONNECTORS = [
     disabled: true,
   },
   {
-    id: '10',
+    id: '11',
     name: 'Upload Document',
     description: 'Upload PDF, DOC, or DOCX files for AI analysis',
     type: 'File Upload',
@@ -88,7 +97,7 @@ export const SUPPORTED_CONNECTORS = [
   },
   // ─── Tally ERP ─────────────────────────────────────────────────────────────
   // {
-  //   id: '11',
+  //   id: '12',
   //   name: 'Tally ERP',
   //   description: 'Connect to your Tally ERP server to fetch accounting, inventory and financial data via XML API',
   //   type: 'Integration',

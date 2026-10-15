@@ -195,13 +195,14 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
         user_id: userId,
         session_id: localStorage.getItem('DAgent_session_id'),
         name: formData.name,
-        type: connector?.name ? connector.name.toLowerCase() : 'mysql',
+        type: connector?.name ? connector.name.toLowerCase().replace(/\s+/g, '_') : 'mysql',
         host: formData.host,
         port: Number(formData.port),
         username: formData.username,
         password: formData.password,
         database: formData.database,
-        schema: formData.schema || undefined
+        schema: formData.schema || undefined,
+        encrypt: formData.encrypt || false
       };
 
       if (formData.use_ssh) {
@@ -534,6 +535,7 @@ export const ConnectorForm = ({ onBack, onTestSuccess }: ConnectorFormProps) => 
                 onBack={onBack}
                 isPostgreSQL={connector?.name === 'PostgreSQL'}
                 isSnowflake={connector?.name === 'Snowflake'}
+                isHana={connector?.name === 'SAP HANA'}
                 connectorName={connector?.name}
               />
             )}

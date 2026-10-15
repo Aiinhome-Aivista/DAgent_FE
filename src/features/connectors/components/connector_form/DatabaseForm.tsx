@@ -13,6 +13,7 @@ interface DatabaseFormProps {
   onBack: () => void;
   isPostgreSQL?: boolean;
   isSnowflake?: boolean;
+  isHana?: boolean;
   connectorName?: string;
 }
 
@@ -26,6 +27,7 @@ export const DatabaseForm = ({
   onBack,
   isPostgreSQL,
   isSnowflake,
+  isHana,
   connectorName
 }: DatabaseFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -61,6 +63,7 @@ export const DatabaseForm = ({
     else if (nameLower.includes('oracle')) portPlaceholder = "1521";
     else if (nameLower.includes('mongo')) portPlaceholder = "27017";
     else if (nameLower.includes('snowflake')) portPlaceholder = "443";
+    else if (nameLower.includes('hana')) portPlaceholder = "30015";
   }
 
   return (
@@ -98,8 +101,8 @@ export const DatabaseForm = ({
 
         <div onMouseEnter={() => handleMouseEnter('database')}>
           <Input
-            label="Database Name"
-            placeholder="main_db"
+            label={isHana ? "Database Name / Tenant DB (e.g. HDB)" : "Database Name"}
+            placeholder={isHana ? "HDB" : "main_db"}
             value={formData.database}
             onChange={(e) => {
               setFormData({ ...formData, database: e.target.value });
@@ -111,11 +114,11 @@ export const DatabaseForm = ({
           />
         </div>
 
-        {(isPostgreSQL || isSnowflake) && (
+        {(isPostgreSQL || isSnowflake || isHana) && (
           <div onMouseEnter={() => handleMouseEnter('schema')}>
             <Input
-              label={isSnowflake ? "Schema" : "Schema (Optional)"}
-              placeholder={isSnowflake ? "PUBLIC" : "public"}
+              label={isSnowflake ? "Schema" : isHana ? "Schema (e.g. SAPABAP1)" : "Schema (Optional)"}
+              placeholder={isSnowflake ? "PUBLIC" : isHana ? "SAPABAP1" : "public"}
               value={formData.schema || ''}
               onChange={(e) => {
                 setFormData({ ...formData, schema: e.target.value });
@@ -205,7 +208,18 @@ export const DatabaseForm = ({
         </div>
       </div>
 
-      <div className="pt-4 pb-2 border-t mt-6">
+      <div className="pt-4 pb-2 border-t mt-6 space-y-3">
+        {isHana && (
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-4 w-4 text-blue-600 rounded"
+              checked={formData.encrypt || false}
+              onChange={(e) => setFormData({ ...formData, encrypt: e.target.checked })}
+            />
+            <span className="text-sm font-medium text-gray-700">Use SSL / TLS Encryption (Required for SAP HANA Cloud / BTP)</span>
+          </label>
+        )}
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="checkbox"
