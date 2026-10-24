@@ -104,6 +104,8 @@ export const API_ENDPOINTS = {
   HANA: {
     DISCOVER_METADATA: '/hana/discover-metadata',  // POST — extract schema from SAP HANA
     GET_METADATA: '/hana/metadata',                 // GET  — read stored metadata
+    KGRAPH_STATUS: '/hana/kgraph-status',           // GET  — poll KGraph build status
+    BUILD_KGRAPH: '/hana/build-kgraph',             // POST — trigger background KGraph build
   },
   ADMIN: {
     GET_CHATS: '/api/admin/chats',

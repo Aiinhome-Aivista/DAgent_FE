@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Connector } from '../../connectors/types';
+import { connectorService } from '@/src/services/connector.service';
 import { Button, Badge } from '@/src/ui-kit';
 import { Loader2, AlertCircle } from 'lucide-react';
 
@@ -73,7 +75,10 @@ export const IngestDataView = ({
           uniqueTables.set(tableName, {
             table: tableName,
             rows: (typeof t === 'object' && t.rows !== undefined) ? t.rows : 'N/A',
-            columns: (typeof t === 'object' && t.columns !== undefined) ? t.columns : 'N/A'
+            columns: (typeof t === 'object' && t.columns !== undefined) ? t.columns : 'N/A',
+            role: typeof t === 'object' ? t.role : undefined,
+            primary_keys: typeof t === 'object' ? t.primary_keys : undefined,
+            foreign_keys: typeof t === 'object' ? t.foreign_keys : undefined
           });
         }
       });
@@ -89,6 +94,58 @@ export const IngestDataView = ({
     activeConnector?.name?.toLowerCase().includes('hana') ||
     activeConnector?.name?.toLowerCase().includes('sap')
   );
+
+  // ── SAP HANA: poll the metadata-only KGraph build status ──────────────────
+  const hanaInfo = data?.hana;
+  const hanaSessionId: string | undefined = hanaInfo?.session_id;
+  const [kgStatus, setKgStatus] = useState<{ state: string; nodes?: number; edges?: number; error?: string | null }>({
+    state: hanaInfo?.kgraph?.status || 'queued',
+  });
+
+  useEffect(() => {
+    if (!isHana || !hanaSessionId) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const poll = async () => {
+      try {
+        const res: any = await connectorService.getHanaKgraphStatus(hanaSessionId);
+        if (cancelled) return;
+        const rows: any[] = res?.data || [];
+        const state: string = res?.kgraph_status || 'building';
+        setKgStatus({
+          state,
+          nodes: rows.reduce((n, r) => n + (Number(r.node_count) || 0), 0),
+          edges: rows.reduce((n, r) => n + (Number(r.edge_count) || 0), 0),
+          error: rows.find((r) => r.status === 'error')?.error || null,
+        });
+        if (state === 'building' || state === 'queued' || state === 'not_started') {
+          timer = setTimeout(poll, 4000);
+        }
+      } catch {
+        if (!cancelled) timer = setTimeout(poll, 8000);
+      }
+    };
+    poll();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [isHana, hanaSessionId]);
+
+  const renderKgStatus = () => {
+    if (kgStatus.state === 'ready') {
+      return <span className="text-emerald-400">Ready · {kgStatus.nodes ?? 0} nodes · {kgStatus.edges ?? 0} edges</span>;
+    }
+    if (kgStatus.state === 'error') {
+      return <span className="text-red-400" title={kgStatus.error || ''}>Failed</span>;
+    }
+    return (
+      <span className="text-blue-400 inline-flex items-center gap-1.5">
+        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Building...
+      </span>
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -259,7 +316,7 @@ export const IngestDataView = ({
                     {isHana ? 'KGraph' : 'Last Sync'}
                   </div>
                   <div className="text-sm font-bold mt-2">
-                    {isHana ? <span className="text-blue-400">Building...</span> : (summary?.last_sync || 'Never')}
+                    {isHana ? renderKgStatus() : (summary?.last_sync || 'Never')}
                   </div>
                 </div>
               </div>
@@ -272,8 +329,15 @@ export const IngestDataView = ({
                   {tables.length > 0 ? (
                     tables.map((t: any, idx: number) => (
                       <div key={idx} className="flex justify-between items-center p-3 rounded-lg bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors">
-                        <span className="font-mono text-sm">{t.table}</span>
-                        <span className="text-xs text-[var(--text-secondary)]">{typeof t.rows === 'number' ? t.rows.toLocaleString() : t.rows} rows • {t.columns} cols</span>
+                        <span className="font-mono text-sm flex items-center gap-2">
+                          {t.table}
+                          {isHana && t.role && (
+                            <span className={`text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border ${t.role === 'master' ? 'text-purple-400 border-purple-500/30 bg-purple-500/10' : 'text-amber-400 border-amber-500/30 bg-amber-500/10'}`}>
+                              {t.role === 'master' ? 'Master' : 'Transaction'}
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-xs text-[var(--text-secondary)]">{typeof t.rows === 'number' ? t.rows.toLocaleString() : t.rows} rows • {t.columns} cols{isHana && Array.isArray(t.primary_keys) ? ` • PK: ${t.primary_keys.length ? t.primary_keys.join(', ') : '—'} • ${t.foreign_keys ?? 0} FK` : ''}</span>
                       </div>
                     ))
                   ) : (

@@ -23,6 +23,8 @@ export interface IConnectorService {
   // ─── SAP HANA metadata (no data copy) ──────────────────────────────────
   discoverHanaMetadata(payload: { user_id: number; connection_id: number; session_id?: string | null }): Promise<any>;
   getHanaMetadata(connectionId: number, sessionId?: string | null, userId?: number | null): Promise<any>;
+  getHanaKgraphStatus(sessionId: string, connectionId?: number | null): Promise<any>;
+  rebuildHanaKgraph(payload: { connection_id: number; session_id: string; user_id?: number | null }): Promise<any>;
 }
 
 class ConnectorService implements IConnectorService {
@@ -158,6 +160,23 @@ class ConnectorService implements IConnectorService {
     if (sessionId) params.set('session_id', sessionId);
     if (userId)    params.set('user_id', String(userId));
     return this.api.get(`${API_ENDPOINTS.HANA.GET_METADATA}?${params.toString()}`);
+  }
+
+  /**
+   * Poll the SAP HANA KGraph build status (queued | building | ready | error).
+   */
+  async getHanaKgraphStatus(sessionId: string, connectionId?: number | null): Promise<any> {
+    const params = new URLSearchParams();
+    params.set('session_id', sessionId);
+    if (connectionId) params.set('connection_id', String(connectionId));
+    return this.api.get(`${API_ENDPOINTS.HANA.KGRAPH_STATUS}?${params.toString()}`);
+  }
+
+  /**
+   * Rebuild the SAP HANA KGraph from the metadata already stored (HANA is not contacted).
+   */
+  async rebuildHanaKgraph(payload: { connection_id: number; session_id: string; user_id?: number | null }): Promise<any> {
+    return this.api.post(API_ENDPOINTS.HANA.BUILD_KGRAPH, payload);
   }
 }
 
