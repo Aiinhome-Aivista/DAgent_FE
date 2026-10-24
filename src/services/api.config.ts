@@ -100,6 +100,11 @@ export const API_ENDPOINTS = {
     SCHEDULE_DELETE: '/ftp/schedule',
     FETCH_LOG: '/ftp/fetch_log',
   },
+  // ─── SAP HANA Metadata (no data copy — schema only) ─────────────────────────────
+  HANA: {
+    DISCOVER_METADATA: '/hana/discover-metadata',  // POST — extract schema from SAP HANA
+    GET_METADATA: '/hana/metadata',                 // GET  — read stored metadata
+  },
   ADMIN: {
     GET_CHATS: '/api/admin/chats',
     PUSH_TO_KG: '/api/admin/push_to_kg',

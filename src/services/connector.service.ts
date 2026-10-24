@@ -20,6 +20,9 @@ export interface IConnectorService {
   importCsvData(payload: { user_id: number; connection_id?: number; connection_ids?: number[]; session_id: string }): Promise<any>;
   importSqlData(payload: { user_id: number; connection_id: number; session_id: string }): Promise<any>;
   deleteConnectionHistory(id: string, sessionId: string): Promise<any>;
+  // ─── SAP HANA metadata (no data copy) ──────────────────────────────────
+  discoverHanaMetadata(payload: { user_id: number; connection_id: number; session_id?: string | null }): Promise<any>;
+  getHanaMetadata(connectionId: number, sessionId?: string | null, userId?: number | null): Promise<any>;
 }
 
 class ConnectorService implements IConnectorService {
@@ -129,7 +132,33 @@ class ConnectorService implements IConnectorService {
   async importSqlData(payload: { user_id: number; connection_id: number; session_id: string }): Promise<any> {
     return this.api.post('/import-sql-data', payload);
   }
-}
 
+  // ─── SAP HANA: Metadata-only extraction (no raw data copied) ──────────────────
+  /**
+   * Trigger SAP HANA metadata discovery for whitelisted SAP_S4 views.
+   * Connects to HANA, extracts schema/columns/PK/FK (NO raw data rows),
+   * stores in sap_hana_view_metadata, then builds a KGraph in background.
+   */
+  async discoverHanaMetadata(
+    payload: { user_id: number; connection_id: number; session_id?: string | null }
+  ): Promise<any> {
+    return this.api.post(API_ENDPOINTS.HANA.DISCOVER_METADATA, payload);
+  }
+
+  /**
+   * Fetch the stored metadata for a SAP HANA connection.
+   */
+  async getHanaMetadata(
+    connectionId: number,
+    sessionId?: string | null,
+    userId?: number | null
+  ): Promise<any> {
+    const params = new URLSearchParams();
+    params.set('connection_id', String(connectionId));
+    if (sessionId) params.set('session_id', sessionId);
+    if (userId)    params.set('user_id', String(userId));
+    return this.api.get(`${API_ENDPOINTS.HANA.GET_METADATA}?${params.toString()}`);
+  }
+}
 
 export const connectorService: IConnectorService = new ConnectorService(apiService);

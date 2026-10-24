@@ -85,6 +85,11 @@ export const IngestDataView = ({
   const tables = Array.from(new Map(rawTables.map((t: any) => [t.table, t])).values()) as any[];
   const dataSize = summary?.data_size_mb || summary?.['data size mb'] || 0;
 
+  const isHana = !!(
+    activeConnector?.name?.toLowerCase().includes('hana') ||
+    activeConnector?.name?.toLowerCase().includes('sap')
+  );
+
   return (
     <div className="space-y-8">
       <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg)]/50">
@@ -93,9 +98,17 @@ export const IngestDataView = ({
             {activeConnector ? `${activeConnector.name} Details` : 'Database Details'}
           </h3>
           {activeConnector && (
-            <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Connected
+            <div className="flex items-center gap-2">
+              {isHana && (
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest border border-blue-500/20">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                  Metadata Only
+                </div>
+              )}
+              <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Connected
+              </div>
             </div>
           )}
         </div>
@@ -220,7 +233,9 @@ export const IngestDataView = ({
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-                  <div className="text-[10px] uppercase tracking-widest text-[var(--text-secondary)] mb-1">Total Rows</div>
+                  <div className="text-[10px] uppercase tracking-widest text-[var(--text-secondary)] mb-1">
+                    {isHana ? 'Row Count (Metadata)' : 'Total Rows'}
+                  </div>
                   <div className="text-2xl font-bold font-mono">
                     {summary?.total_rows?.toLocaleString() || '0'}
                   </div>
@@ -232,19 +247,27 @@ export const IngestDataView = ({
                   </div>
                 </div>
                 <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-                  <div className="text-[10px] uppercase tracking-widest text-[var(--text-secondary)] mb-1">Data Size</div>
+                  <div className="text-[10px] uppercase tracking-widest text-[var(--text-secondary)] mb-1">
+                    {isHana ? 'Data Copied' : 'Data Size'}
+                  </div>
                   <div className="text-2xl font-bold font-mono">
-                    {dataSize} MB
+                    {isHana ? <span className="text-base text-emerald-400">None ✓</span> : `${dataSize} MB`}
                   </div>
                 </div>
                 <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-                  <div className="text-[10px] uppercase tracking-widest text-[var(--text-secondary)] mb-1">Last Sync</div>
-                  <div className="text-sm font-bold mt-2">{summary?.last_sync || 'Never'}</div>
+                  <div className="text-[10px] uppercase tracking-widest text-[var(--text-secondary)] mb-1">
+                    {isHana ? 'KGraph' : 'Last Sync'}
+                  </div>
+                  <div className="text-sm font-bold mt-2">
+                    {isHana ? <span className="text-blue-400">Building...</span> : (summary?.last_sync || 'Never')}
+                  </div>
                 </div>
               </div>
 
               <div className="mt-6">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-3">Tables</h4>
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-3">
+                  {isHana ? 'SAP HANA Views (Schema Only)' : 'Tables'}
+                </h4>
                 <div className="space-y-2">
                   {tables.length > 0 ? (
                     tables.map((t: any, idx: number) => (
