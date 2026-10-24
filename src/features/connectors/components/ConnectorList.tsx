@@ -2,11 +2,9 @@ import { Connector } from '../types';
 import { ConnectorCard } from './ConnectorCard';
 import { Input } from '@/src/ui-kit';
 import { Search } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useConnectorContext } from '../../../context/ConnectorContext';
 import { SUPPORTED_CONNECTORS } from '../constants';
-import { apiService } from '@/src/services/api.service';
-import { API_ENDPOINTS } from '@/src/services/api.config';
 
 interface ConnectorListProps {
   onSelect?: (connector: any) => void;
@@ -14,23 +12,7 @@ interface ConnectorListProps {
 
 export const ConnectorList = ({ onSelect }: ConnectorListProps = {}) => {
   const [search, setSearch] = useState('');
-  const [allowedConnectors, setAllowedConnectors] = useState<string>('');
   const { setSelectedConnector } = useConnectorContext();
-
-  useEffect(() => {
-    const fetchUsageStats = async () => {
-      try {
-        const userId = localStorage.getItem('DAgent_user_id') || '1';
-        const response = await apiService.get(`${API_ENDPOINTS.USER.USAGE_STATS}?user_id=${userId}`) as any;
-        if (response && response.usage_stats) {
-          setAllowedConnectors(response.usage_stats.allowed_connectors || '');
-        }
-      } catch (err) {
-        console.error('Failed to load usage stats for connectors', err);
-      }
-    };
-    fetchUsageStats();
-  }, []);
 
   const checkConnectorAllowed = (connectorName: string, allowedStr: string) => {
     // Pricing checks bypassed
@@ -40,7 +22,7 @@ export const ConnectorList = ({ onSelect }: ConnectorListProps = {}) => {
   const isPlanUnlimited = true;
 
   const filtered = SUPPORTED_CONNECTORS.map(c => {
-    const isAllowed = checkConnectorAllowed(c.name, allowedConnectors);
+    const isAllowed = checkConnectorAllowed(c.name, '');
     // If the plan grants all connectors (Gold/Custom/Unlimited),
     // override the hardcoded `disabled: true` from constants
     const isDisabled = isPlanUnlimited ? false : (c.disabled || !isAllowed);

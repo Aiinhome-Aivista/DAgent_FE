@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Database, HardDrive, Upload, Activity, Lock, Save, Loader2, Eye, EyeOff } from 'lucide-react';
+import { X, Lock, Save, Loader2, Eye, EyeOff } from 'lucide-react';
 import { apiService } from '../../services/api.service';
 import { API_ENDPOINTS } from '../../services/api.config';
 import { useAuthContext } from '../../context/AuthContext';
@@ -11,23 +11,8 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-interface UsageStats {
-  company_name: string;
-  plan_name: string;
-  metrics: {
-    storage: { used: number; total: number; unit: string };
-    uploads: { used: number; total: number };
-    queries: { used: number; total: number };
-  };
-}
-
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { roleName, userId } = useAuthContext();
-  const isAdmin = roleName === 'Admin';
-  
-  const [stats, setStats] = useState<UsageStats | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { userId } = useAuthContext();
   
   // Password change state
   const [newPassword, setNewPassword] = useState('');
@@ -40,19 +25,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   useEffect(() => {
     if (isOpen) {
-      if (!isAdmin) {
-        fetchUsageStats();
-      } else {
-        // Reset password fields when admin opens modal
-        setNewPassword('');
-        setConfirmPassword('');
-        setShowCurrentPassword(false);
-        setShowNewPassword(false);
-        setShowConfirmPassword(false);
-        fetchCurrentPassword();
-      }
+      // Reset password fields when modal opens
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+      fetchCurrentPassword();
     }
-  }, [isOpen, isAdmin]);
+  }, [isOpen]);
 
   const fetchCurrentPassword = async () => {
     try {
@@ -63,22 +44,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       }
     } catch (err) {
       console.error('Failed to load current password:', err);
-    }
-  };
-
-  const fetchUsageStats = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const currentUserId = userId || localStorage.getItem('DAgent_user_id') || '1';
-      const response = await apiService.get(`${API_ENDPOINTS.USER.USAGE_STATS}?user_id=${currentUserId}`) as any;
-      if (response && response.usage_stats) {
-        setStats(response.usage_stats);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to load usage stats');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -110,41 +75,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     } finally {
       setIsUpdatingPassword(false);
     }
-  };
-
-  const renderProgressBar = (used: number, total: number, label: string, icon: React.ReactNode, unit: string = '') => {
-    const isUnlimited = total === -1 || total === 0;
-    const percent = isUnlimited ? 0 : Math.min((used / total) * 100, 100);
-
-    return (
-      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-            {icon}
-            {label}
-          </div>
-          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-            {isUnlimited ? (
-              <>{used} {unit} Used / Unlimited</>
-            ) : (
-              <>{used} {unit} / {total} {unit}</>
-            )}
-          </span>
-        </div>
-
-        {!isUnlimited && (
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${percent}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className={`h-2.5 rounded-full ${percent > 90 ? 'bg-red-500' : percent > 75 ? 'bg-yellow-500' : 'bg-blue-500'
-                }`}
-            ></motion.div>
-          </div>
-        )}
-      </div>
-    );
   };
 
   if (!isOpen) return null;
