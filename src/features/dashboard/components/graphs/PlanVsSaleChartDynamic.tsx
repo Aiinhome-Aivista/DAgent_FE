@@ -42,26 +42,49 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
             if (!shortName) return "Unknown";
             const map: Record<string, string> = {
               "CZ": "Central Zone",
+              "CENTRAL": "Central Zone",
+              "CENTRAL ZONE": "Central Zone",
               "WZ": "West Zone",
-              "NP": "Nepal Zone",
+              "WEST": "West Zone",
+              "WEST ZONE": "West Zone",
+              "NP": "Nepal",
+              "NEPAL": "Nepal",
+              "NEPAL ZONE": "Nepal",
               "NZ": "North Zone",
+              "NORTH": "North Zone",
+              "NORTH ZONE": "North Zone",
               "TZ": "South Zone II",
+              "SOUTH - II": "South Zone II",
+              "SOUTH ZONE - II": "South Zone II",
+              "SOUTH ZONE II": "South Zone II",
               "SZ": "South Zone I",
-              "EZ": "East Zone"
+              "SOUTH": "South Zone I",
+              "SOUTH - I": "South Zone I",
+              "SOUTH ZONE - I": "South Zone I",
+              "SOUTH ZONE I": "South Zone I",
+              "EZ": "East Zone",
+              "EAST": "East Zone",
+              "EAST ZONE": "East Zone"
             };
             return map[shortName.toUpperCase()] || shortName;
           };
 
-          const mappedData = json.data.map((item: any) => {
-            const rawZone = item.zone || item.Region || item.region || item.territory || "Unknown";
-            return {
-              city: item.zone ? getFullName(item.zone) : rawZone,
-              originalZone: rawZone,
-              planValue: item.planValueCr || 0,
-              saleValue: item.saleValueCr || item.saleV || 0,
-              achevValue: item.achievValuePct || 0
-            };
-          }).sort((a: any, b: any) => String(a.city).localeCompare(String(b.city)));
+          const mappedData = json.data
+            .filter((item: any) => {
+              const z = (item.zone || item.Region || item.region || item.territory || "").trim().toLowerCase();
+              return z !== "unknown" && z !== "";
+            })
+            .map((item: any) => {
+              const rawZone = item.zone || item.Region || item.region || item.territory || "";
+              return {
+                city: item.zone ? getFullName(item.zone) : rawZone,
+                originalZone: rawZone,
+                planValue: item.planValueCr || 0,
+                saleValue: item.saleValueCr || item.saleV || 0,
+                achevValue: item.achievValuePct || 0
+              };
+            })
+            .sort((a: any, b: any) => String(a.city).localeCompare(String(b.city)));
           setDynamicRegionData(mappedData);
         } else {
           setDynamicRegionData([]);
@@ -81,10 +104,23 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
       "Central Zone": "CZ",
       "West Zone": "WZ",
       "Nepal Zone": "NP",
+      "Nepal": "NP",
       "North Zone": "NZ",
       "South Zone II": "TZ",
+      "South Zone - II": "TZ",
       "South Zone I": "SZ",
-      "East Zone": "EZ"
+      "East Zone": "EZ",
+      "NORTH": "NZ",
+      "WEST": "WZ",
+      "EAST": "EZ",
+      "SOUTH": "SZ",
+      "CZ": "CZ",
+      "WZ": "WZ",
+      "NP": "NP",
+      "NZ": "NZ",
+      "TZ": "TZ",
+      "SZ": "SZ",
+      "EZ": "EZ"
     };
     return map[fullName] || fullName;
   };
