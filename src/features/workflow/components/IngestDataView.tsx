@@ -119,14 +119,16 @@ export const IngestDataView = ({
           edges: rows.reduce((n, r) => n + (Number(r.edge_count) || 0), 0),
           error: rows.find((r) => r.status === 'error')?.error || null,
         });
-        if (state === 'building' || state === 'queued' || state === 'not_started') {
+        if (state === 'building' || state === 'queued') {
           timer = setTimeout(poll, 4000);
         }
       } catch {
         if (!cancelled) timer = setTimeout(poll, 8000);
       }
     };
-    poll();
+    if (kgStatus.state === 'building' || kgStatus.state === 'queued') {
+      poll();
+    }
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
@@ -139,6 +141,9 @@ export const IngestDataView = ({
     }
     if (kgStatus.state === 'error') {
       return <span className="text-red-400" title={kgStatus.error || ''}>Failed</span>;
+    }
+    if (kgStatus.state === 'not_started') {
+      return <span className="text-zinc-400">Pending (On Continue)</span>;
     }
     return (
       <span className="text-blue-400 inline-flex items-center gap-1.5">
