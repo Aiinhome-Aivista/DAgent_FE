@@ -21,6 +21,8 @@ export const useSessionId = () => {
   return sessionId;
 };
 
+export type FilterOption = string | number | { value: string | number; label: string };
+
 export const FilterSelect = ({
   label,
   value,
@@ -31,7 +33,7 @@ export const FilterSelect = ({
   label: string;
   value: string | number;
   onChange: (e: any) => void;
-  options: (string | number)[];
+  options: FilterOption[];
   defaultLabel?: string;
 }) => (
   <div
@@ -47,11 +49,15 @@ export const FilterSelect = ({
       className="text-xs font-medium text-slate-700 bg-transparent outline-none cursor-pointer w-full"
     >
       <option value="All">{defaultLabel}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
+      {options.map((opt, idx) => {
+        const val = typeof opt === "object" && opt !== null ? (opt as any).value : opt;
+        const lbl = typeof opt === "object" && opt !== null ? (opt as any).label : opt;
+        return (
+          <option key={`${val}-${idx}`} value={val}>
+            {lbl}
+          </option>
+        );
+      })}
     </select>
   </div>
 );
@@ -59,9 +65,9 @@ export const FilterSelect = ({
 export const useDashboardFilters = () => {
   const sessionId = useSessionId();
   const [filters, setFilters] = useState<{
-    categories: string[];
-    constructions: string[];
-    tyreTypes: string[];
+    categories: FilterOption[];
+    constructions: FilterOption[];
+    tyreTypes: FilterOption[];
     years: number[];
     months: string[];
   }>({
