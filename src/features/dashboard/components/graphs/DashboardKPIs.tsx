@@ -225,9 +225,11 @@ export const DashboardKPIs = () => {
             >
               <p
                 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 truncate"
-                title={metric.label}
+                title={typeof metric.label === 'object' && metric.label !== null ? JSON.stringify(metric.label) : String(metric.label ?? '')}
               >
-                {metric.label}
+                {typeof metric.label === 'object' && metric.label !== null
+                  ? String((metric.label as any).label ?? (metric.label as any).value ?? JSON.stringify(metric.label))
+                  : String(metric.label ?? '')}
               </p>
               <div className="min-w-0">
                 <h3 className="text-[1.1rem] font-black text-slate-700 leading-tight my-0.5 uppercase truncate">
@@ -235,22 +237,31 @@ export const DashboardKPIs = () => {
                     let formattedVal: React.ReactNode = "";
                     const nonCurrencyMetrics = ["Billing Scope", "Dealer Spread", "Attrition", "New Dealer", "Rotation"];
                     
+                    let val = metric.value;
+                    if (val !== null && typeof val === "object") {
+                      val = (val as any).value ?? (val as any).label ?? JSON.stringify(val);
+                    }
+
+                    const labelStr = typeof metric.label === 'object' && metric.label !== null
+                      ? String((metric.label as any).label ?? '')
+                      : String(metric.label ?? '');
+
                     if (
-                      typeof metric.value === "string" &&
-                      /^\s*[\d,.]+/.test(metric.value) &&
-                      !metric.value.includes("₹") &&
-                      !metric.value.includes("%") &&
-                      !nonCurrencyMetrics.includes(metric.label)
+                      typeof val === "string" &&
+                      /^\s*[\d,.]+/.test(val) &&
+                      !val.includes("₹") &&
+                      !val.includes("%") &&
+                      !nonCurrencyMetrics.includes(labelStr)
                     ) {
-                      formattedVal = `₹${metric.value.replace(/\$/g, "").trim()}`;
-                    } else if (typeof metric.value === "string") {
-                      formattedVal = metric.value.replace(/\$/g, "₹");
-                    } else if (typeof metric.value === "number") {
-                      formattedVal = nonCurrencyMetrics.includes(metric.label) 
-                        ? String(metric.value) 
-                        : `₹${metric.value}`;
+                      formattedVal = `₹${val.replace(/\$/g, "").trim()}`;
+                    } else if (typeof val === "string") {
+                      formattedVal = val.replace(/\$/g, "₹");
+                    } else if (typeof val === "number") {
+                      formattedVal = nonCurrencyMetrics.includes(labelStr) 
+                        ? String(val) 
+                        : `₹${val}`;
                     } else {
-                      return metric.value as React.ReactNode;
+                      formattedVal = String(val ?? "");
                     }
 
                     if (typeof formattedVal === "string") {
@@ -271,8 +282,10 @@ export const DashboardKPIs = () => {
                     return formattedVal;
                   })()}
                 </h3>
-                <p className="text-[9px] text-slate-400 mt-0.5 truncate" title={metric.subtext}>
-                  {metric.subtext}
+                <p className="text-[9px] text-slate-400 mt-0.5 truncate" title={typeof metric.subtext === 'object' && metric.subtext !== null ? JSON.stringify(metric.subtext) : String(metric.subtext ?? '')}>
+                  {typeof metric.subtext === 'object' && metric.subtext !== null
+                    ? String((metric.subtext as any).label ?? (metric.subtext as any).value ?? JSON.stringify(metric.subtext))
+                    : String(metric.subtext ?? '')}
                 </p>
               </div>
             </div>
