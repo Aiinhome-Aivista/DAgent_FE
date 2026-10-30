@@ -134,20 +134,30 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
               </svg>
             </button>
           )}
-          <h3 className="text-slate-800 font-bold text-lg text-left">
-            Sales Revenue (Cr) {currentZone ? `- ${currentZone}` : ""}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-slate-800 font-bold text-lg text-left">
+              Sales Revenue (Cr)
+            </h3>
+            <span className="text-xs font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
+              2026 YTD
+            </span>
+            {currentZone && (
+              <span className="text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                - {currentZone}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="w-full relative" style={{ height: '350px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="w-full relative" style={{ height: '380px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isLoading ? (
           <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
         ) : dynamicRegionData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={dynamicRegionData}
-              margin={{ top: 20, right: 20, bottom: 40, left: 0 }}
+              margin={{ top: 35, right: 30, bottom: 40, left: 0 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -196,23 +206,26 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
                 verticalAlign="top"
                 wrapperStyle={{ paddingBottom: "20px" }}
               />
-              <Area
+              <Line
                 yAxisId="left"
                 type="linear"
                 dataKey="planValue"
                 name="Plan Value"
-                fill="#FCD34D"
-                stroke="none"
-                activeDot={false}
+                stroke="#F59E0B"
+                strokeWidth={2.5}
+                dot={{ fill: "#F59E0B", stroke: "#ffffff", strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6 }}
+                connectNulls={false}
               >
                 <LabelList
                   dataKey="planValue"
                   position="top"
-                  fill="#EAB308"
-                  fontSize={12}
+                  fill="#D97706"
+                  fontSize={11}
                   fontWeight="bold"
+                  dy={-10}
                 />
-              </Area>
+              </Line>
               <Bar
                 yAxisId="left"
                 dataKey="saleValue"
@@ -226,30 +239,31 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
                 <LabelList
                   dataKey="saleValue"
                   position="top"
-                  fill="#0EA5E9"
-                  fontSize={12}
+                  fill="#0284C7"
+                  fontSize={11}
                   fontWeight="bold"
-                  dy={-15}
+                  dy={-12}
                 />
               </Bar>
               <Line
                 yAxisId="right"
                 type="linear"
                 dataKey="achevValue"
-                name="Achev Value %"
+                name="Achiev Value %"
                 stroke="#84CC16"
-                strokeWidth={2}
-                dot={{ fill: "#84CC16", strokeWidth: 2, r: 4 }}
+                strokeWidth={2.5}
+                dot={{ fill: "#84CC16", stroke: "#ffffff", strokeWidth: 2, r: 4 }}
                 activeDot={{ r: 6 }}
                 connectNulls={false}
               >
                 <LabelList
                   dataKey="achevValue"
                   position="top"
-                  fill="#84CC16"
-                  fontSize={12}
+                  fill="#15803D"
+                  fontSize={11}
                   fontWeight="bold"
-                  dy={-35}
+                  dy={-30}
+                  formatter={(val: any) => (val !== undefined && val !== null ? `${val}%` : '')}
                 />
               </Line>
             </ComposedChart>
