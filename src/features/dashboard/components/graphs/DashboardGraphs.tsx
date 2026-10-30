@@ -727,40 +727,8 @@ const SummaryRevisedDownloadCard = () => {
 
 
 export const DashboardGraphs = ({ isWorkspacesLoading }: { isWorkspacesLoading?: boolean }) => {
-  const [selectedZone, setSelectedZone] = useState<string | null>(null);
-
-  const getZoneFullName = (zone: string) => {
-    const map: Record<string, string> = {
-      'WZ': 'West Zone',
-      'EZ': 'East Zone',
-      'NZ': 'North Zone',
-      'SZ': 'South Zone',
-      'CZ': 'Central Zone'
-    };
-    return map[zone.toUpperCase()] || zone;
-  };
-
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent("zone-changed", { detail: selectedZone }));
-  }, [selectedZone]);
-
   return (
     <div className="flex flex-col gap-6 overflow-x-hidden">
-      {selectedZone && (
-        <div className="flex items-center justify-center relative py-2">
-          <h2 className="text-2xl font-bold text-slate-700 font-serif">
-            Sales Dashboard - {getZoneFullName(selectedZone)}
-          </h2>
-          <button
-            onClick={() => setSelectedZone(null)}
-            className="absolute right-4 p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-            title="Clear Filter"
-          >
-            <X className="w-5 h-5 text-slate-400 hover:text-red-500 transition-colors" />
-          </button>
-        </div>
-      )}
-
       <div className="flex flex-col gap-3">
         {/* Executive Summary Card */}
         <SummaryCard isWorkspacesLoading={isWorkspacesLoading} />
@@ -769,34 +737,35 @@ export const DashboardGraphs = ({ isWorkspacesLoading }: { isWorkspacesLoading?:
         <SummaryRevisedDownloadCard />
 
         {/* Plan vs Sale & Achievement */}
-        <PlanVsSaleChartDynamic onZoneClick={(zone) => setSelectedZone(zone)} />
+        <PlanVsSaleChartDynamic />
 
         {/* Year-wise Comparison Filterable Chart */}
-        <YearComparisonChartDynamic zone={selectedZone} />
+        <YearComparisonChartDynamic />
       </div>
 
       <div className="grid grid-cols-1 gap-6">
         {/* Sales by Zone */}
-        <ZonePieChartDynamic zone={selectedZone} />
+        <ZonePieChartDynamic />
 
         {/* Top 10 Tyre Types by Sales */}
-        <TyreSalesChartDynamic zone={selectedZone} />
+        <TyreSalesChartDynamic />
 
         {/* Category Sales */}
-        <CategorySalesCardDynamic zone={selectedZone} />
+        <CategorySalesCardDynamic />
 
         {/* Actual Sales by Account Category */}
-        <AccountCategorySalesCardDynamic zone={selectedZone} />
+        <AccountCategorySalesCardDynamic />
 
         {/* Non Billed Accounts % */}
-        <NonBilledAccountsCardDynamic zone={selectedZone} />
+        <NonBilledAccountsCardDynamic />
 
         {/* Overdue% (as on Date) */}
-        <OverduePieChartDynamic zone={selectedZone} />
+        <OverduePieChartDynamic />
 
         {/* Exposure % */}
-        <ExposureCardDynamic zone={selectedZone} />
+        <ExposureCardDynamic />
       </div>
     </div>
   );
 };
+
