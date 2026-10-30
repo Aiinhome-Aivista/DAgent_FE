@@ -6,9 +6,10 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer
 } from 'recharts';
-import { Download, Table as TableIcon, BarChart3, PieChart as PieIcon, LineChart as LineChartIcon, Image as ImageIcon } from 'lucide-react';
+import { Download, FileSpreadsheet, Loader2, Table as TableIcon, BarChart3, PieChart as PieIcon, LineChart as LineChartIcon, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/src/ui-kit';
 import { Visualization } from '../types';
+import { defaultConfig } from '@/src/services/api.config';
 import { toPng } from 'html-to-image';
 
 interface ChatVisualizationProps {
@@ -18,6 +19,78 @@ interface ChatVisualizationProps {
 const COLORS = ['var(--accent)', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
 
 export const ChatVisualization = React.memo(({ visualization }: ChatVisualizationProps) => {
+  const [isDownloading, setIsDownloading] = React.useState(false);
+
+  const handleDownloadCsv = async (viz: any) => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch(`${defaultConfig.baseUrl}/export-query-csv`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: viz.session_id,
+          sql_query: viz.sql_query,
+          filename: viz.filename,
+        })
+      });
+      if (!response.ok) {
+        throw new Error("Failed to export CSV");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = viz.filename || 'export.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("[CSV Download Error]", err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  if (visualization.type === 'csv_export') {
+    return (
+      <div className="bg-[var(--surface)] rounded-xl border border-green-500/30 p-4 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2 mb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-green-500/15 border border-green-500/30 flex items-center justify-center text-green-600 shrink-0">
+            <FileSpreadsheet className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-[var(--text-primary)]">
+              {visualization.filename || 'export_data.csv'}
+            </div>
+            <div className="text-xs text-[var(--text-secondary)] mt-0.5 flex items-center gap-2">
+              <span className="font-semibold text-green-600">
+                {visualization.total_records ? `${Number(visualization.total_records).toLocaleString()} records` : 'Complete Dataset'}
+              </span>
+              <span>•</span>
+              <span>CSV Format</span>
+              {visualization.threshold && (
+                <>
+                  <span>•</span>
+                  <span>Exceeds {visualization.threshold} limit</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => handleDownloadCsv(visualization)}
+          disabled={isDownloading}
+          className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg flex items-center gap-2 text-xs shrink-0 shadow-sm transition-all border-none cursor-pointer"
+        >
+          {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          <span>{isDownloading ? "Exporting..." : "Download CSV"}</span>
+        </Button>
+      </div>
+    );
+  }
+
   const { type, data, title, columns, xKey = 'label', yKey = 'value' } = visualization;
 
   const resolveKeys = () => {

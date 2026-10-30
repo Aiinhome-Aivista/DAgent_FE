@@ -10,6 +10,18 @@ export interface AdminUser {
 }
 
 export const adminService = {
+    getSystemConfigs: async (): Promise<any> => {
+        return apiService.get('/api/system-config');
+    },
+
+    updateSystemConfig: async (key: string, value: any, description: string = ''): Promise<any> => {
+        return apiService.post('/api/system-config', {
+            key,
+            value,
+            description
+        });
+    },
+
     getUsers: async (): Promise<any> => {
         return apiService.get(API_ENDPOINTS.USERS.GET_USERS);
     },
