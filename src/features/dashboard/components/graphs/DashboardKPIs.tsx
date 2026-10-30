@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { defaultConfig } from "@/src/services/api.config";
 
 export const DashboardKPIs = () => {
@@ -174,23 +174,8 @@ export const DashboardKPIs = () => {
     }
   };
 
-  const hasMetricsData = metrics.some((m) => m.value && m.value !== "");
-
-  const renderInitialSkeleton = () => (
+  const renderSkeleton = () => (
     <div className="flex flex-col gap-2 w-full flex-1 min-h-0 overflow-y-auto pr-1">
-      {/* Bold Status Header */}
-      <div className="bg-indigo-50 border border-indigo-200/80 rounded-xl p-3 flex items-center gap-2.5 shadow-xs">
-        <Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
-        <div className="flex flex-col min-w-0">
-          <span className="text-[11px] font-black text-indigo-900 tracking-wide uppercase">
-            Loading Metrics...
-          </span>
-          <span className="text-[9px] text-indigo-600 font-medium truncate">
-            Fetching executive summary KPIs
-          </span>
-        </div>
-      </div>
-
       {[...Array(6)].map((_, i) => (
         <div
           key={i}
@@ -207,20 +192,11 @@ export const DashboardKPIs = () => {
   );
 
   return (
-    <div className="flex flex-col gap-3 w-full h-full relative">
-      {/* Header with high-visibility reload status */}
+    <div className="flex flex-col gap-3 w-full h-full">
       <div className="flex justify-between items-center px-1 shrink-0">
-        <div className="flex items-center gap-2">
-          <h3 className="text-[11px] font-black text-slate-600 uppercase tracking-wider">
-            Key Metrics
-          </h3>
-          {isLoading && (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-100 text-indigo-700 border border-indigo-200 animate-pulse shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-ping" />
-              Reloading...
-            </span>
-          )}
-        </div>
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          Key Metrics
+        </h3>
         <button
           onClick={handleRefresh}
           disabled={isLoading}
@@ -237,32 +213,15 @@ export const DashboardKPIs = () => {
         </button>
       </div>
 
-      {isLoading && !hasMetricsData ? (
-        renderInitialSkeleton()
+      {isLoading ? (
+        renderSkeleton()
       ) : (
-        <div className="relative flex-1 min-h-0 flex flex-col">
-          {/* Bold visual overlay when actively reloading existing data */}
-          {isLoading && (
-            <div className="absolute inset-0 bg-white/70 backdrop-blur-[1.5px] z-20 flex flex-col items-center justify-center gap-2 rounded-xl border border-indigo-200/80 shadow-inner">
-              <div className="bg-white/95 px-4 py-2.5 rounded-xl shadow-lg border border-indigo-200 flex items-center gap-2.5 animate-bounce">
-                <RefreshCw className="w-4 h-4 text-indigo-600 animate-spin" />
-                <span className="text-xs font-black text-indigo-900 tracking-wide uppercase">
-                  Reloading Metrics...
-                </span>
-              </div>
-            </div>
-          )}
-
-          <div
-            className={`flex flex-col gap-2 w-full flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent ${
-              isLoading ? "opacity-40" : ""
-            }`}
-          >
-            {metrics.map((metric, index) => (
-              <div
-                key={index}
-                className="bg-white p-[14px] rounded-xl border border-slate-200 shadow-xs flex flex-col justify-center gap-1.5 shrink-0 hover:border-indigo-200 hover:shadow-sm transition-all duration-150"
-              >
+        <div className="flex flex-col gap-2 w-full flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+          {metrics.map((metric, index) => (
+            <div
+              key={index}
+              className="bg-white p-[14px] rounded-xl border border-slate-200 shadow-xs flex flex-col justify-center gap-1.5 shrink-0 hover:border-indigo-200 hover:shadow-sm transition-all duration-150"
+            >
                 <p
                   className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 truncate"
                   title={metric.label}
@@ -327,9 +286,8 @@ export const DashboardKPIs = () => {
               </div>
             ))}
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  };
 
