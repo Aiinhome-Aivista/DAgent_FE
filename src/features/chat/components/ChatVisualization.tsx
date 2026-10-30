@@ -9,6 +9,7 @@ import {
 import { Download, FileSpreadsheet, Loader2, Table as TableIcon, BarChart3, PieChart as PieIcon, LineChart as LineChartIcon, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/src/ui-kit';
 import { Visualization } from '../types';
+import { apiService } from '@/src/services/api.service';
 import { defaultConfig } from '@/src/services/api.config';
 import { toPng } from 'html-to-image';
 
@@ -24,27 +25,15 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
   const handleDownloadCsv = async (viz: any) => {
     setIsDownloading(true);
     try {
-      const response = await fetch(`${defaultConfig.baseUrl}/export-query-csv`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      await apiService.download(
+        '/export-query-csv',
+        {
           session_id: viz.session_id,
           sql_query: viz.sql_query,
           filename: viz.filename,
-        })
-      });
-      if (!response.ok) {
-        throw new Error("Failed to export CSV");
-      }
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = viz.filename || 'export.csv';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+        },
+        viz.filename || 'export.csv'
+      );
     } catch (err) {
       console.error("[CSV Download Error]", err);
     } finally {
@@ -232,14 +221,15 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             <TableIcon className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
             <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] truncate" title={title || 'Data Table'}>{title || 'Data Table'}</span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={handleDownload}
-            className="h-10 w-10 p-0 text-xs flex items-center justify-center rounded-lg border-[var(--border)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] hover:border-[var(--accent)]/30 transition-all shrink-0"
+            title="Download CSV"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all shadow-sm shrink-0 cursor-pointer"
           >
-            <Download className="w-6 h-6" />
-          </Button>
+            <Download className="w-4 h-4 text-[var(--accent)]" />
+            <span>Download CSV</span>
+          </button>
         </div>
         <div className="overflow-x-auto max-h-64 custom-scrollbar">
           <table className="w-full text-left text-xs border-collapse">
@@ -286,14 +276,15 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
           <BarChart3 className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
           <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] truncate" title={title || 'Bar Chart'}>{title || 'Bar Chart'}</span>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
+        <button
+          type="button"
           onClick={handleDownloadPng}
-          className="h-10 w-10 p-0 text-xs flex items-center justify-center rounded-lg border-[var(--border)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] hover:border-[var(--accent)]/30 transition-all shrink-0 download-button-exclude"
+          title="Download Chart as PNG"
+          className="download-button-exclude flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all shadow-sm shrink-0 cursor-pointer"
         >
-          <Download className="w-6 h-6" />
-        </Button>
+          <Download className="w-4 h-4 text-[var(--accent)]" />
+          <span>Export PNG</span>
+        </button>
       </div>
       <div className="h-64 w-full" >
         <ResponsiveContainer width="100%" height="100%">
@@ -342,14 +333,15 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
           <PieIcon className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
           <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] truncate" title={title || 'Pie Chart'}>{title || 'Pie Chart'}</span>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
+        <button
+          type="button"
           onClick={handleDownloadPng}
-          className="h-10 w-10 p-0 text-xs flex items-center justify-center rounded-lg border-[var(--border)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] hover:border-[var(--accent)]/30 transition-all shrink-0 download-button-exclude"
+          title="Download Chart as PNG"
+          className="download-button-exclude flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all shadow-sm shrink-0 cursor-pointer"
         >
-          <Download className="w-6 h-6" />
-        </Button>
+          <Download className="w-4 h-4 text-[var(--accent)]" />
+          <span>Export PNG</span>
+        </button>
       </div>
       <div className="h-64 w-full" >
         <ResponsiveContainer width="100%" height="100%">
@@ -447,14 +439,15 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             <LineChartIcon className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
             <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] truncate" title={title || 'Line Chart'}>{title || 'Line Chart'}</span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={handleDownloadPng}
-            className="h-10 w-10 p-0 text-xs flex items-center justify-center rounded-lg border-[var(--border)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] hover:border-[var(--accent)]/30 transition-all shrink-0 download-button-exclude"
+            title="Download Chart as PNG"
+            className="download-button-exclude flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all shadow-sm shrink-0 cursor-pointer"
           >
-            <Download className="w-6 h-6" />
-          </Button>
+            <Download className="w-4 h-4 text-[var(--accent)]" />
+            <span>Export PNG</span>
+          </button>
         </div>
         <div className={`w-full ${hasLegend ? 'h-72' : 'h-64'}`} >
           <ResponsiveContainer width="100%" height="100%">
