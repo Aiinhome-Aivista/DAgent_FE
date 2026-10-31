@@ -6,6 +6,7 @@ import {
   Cell,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 import { COLORS } from "./mockData";
 import {FilterSelect, useDashboardFilters, useSessionId, queuedFetch } from "./dashboardHooks";
@@ -164,15 +165,19 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
               <Pie
                 data={zoneData}
                 cx="50%"
-                cy="50%"
-                outerRadius={120}
+                cy="48%"
+                outerRadius={110}
                 fill="#8884d8"
                 dataKey="value"
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(1)}%`
-                }
+                minAngle={4}
+                label={({ name, percent }) => {
+                  const pctVal = percent * 100;
+                  const displayPct = pctVal < 0.1 && pctVal > 0 ? "<0.1%" : `${pctVal.toFixed(1)}%`;
+                  return `${name}: ${displayPct}`;
+                }}
                 labelLine={true}
-                stroke="none"
+                stroke="#ffffff"
+                strokeWidth={1}
               >
                 {zoneData.map((entry, index) => (
                   <Cell
@@ -181,6 +186,12 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
                   />
                 ))}
               </Pie>
+              <Legend
+                verticalAlign="bottom"
+                height={36}
+                iconType="circle"
+                wrapperStyle={{ paddingTop: "8px", fontSize: "12px" }}
+              />
               <RechartsTooltip
                 wrapperStyle={{ zIndex: 1000 }}
                 contentStyle={{
@@ -194,6 +205,7 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
                   const pct = props?.payload?.percentage !== undefined
                     ? Number(props.payload.percentage).toFixed(1)
                     : (props?.payload?.percent ? (props.payload.percent * 100).toFixed(1) : "0.0");
+                  const displayPct = Number(pct) < 0.1 && Number(pct) > 0 ? "<0.1%" : `${pct}%`;
                   if (salesValue !== undefined && salesValue !== null) {
                     let val = Number(salesValue);
                     let formatted = val >= 10000000
@@ -202,11 +214,11 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
                         ? `₹${(val / 100000).toFixed(2)} L`
                         : `₹${val.toLocaleString()}`;
                     return [
-                      `${pct}% | ${zoneAxisLabels.y.replace(" (₹)", "")}: ${formatted}`,
+                      `${displayPct} | ${zoneAxisLabels.y.replace(" (₹)", "")}: ${formatted}`,
                       name,
                     ];
                   }
-                  return [`${pct}%`, name];
+                  return [displayPct, name];
                 }}
               />
             </PieChart>
