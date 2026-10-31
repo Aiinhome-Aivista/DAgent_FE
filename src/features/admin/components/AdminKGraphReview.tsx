@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Network, Search, X, Loader2, ExternalLink, 
-  Database, RotateCcw, Trash2, Plus, CheckCircle2, 
-  Clock, Layers, ShieldCheck, AlertTriangle 
+import {
+  Network, Search, X, Loader2, ExternalLink,
+  Database, RotateCcw, Trash2, Plus, CheckCircle2,
+  Clock, Layers, ShieldCheck, AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiService } from '../../../services/api.service';
-import { API_ENDPOINTS } from '../../../services/api.config';
+import { defaultConfig, API_ENDPOINTS } from '../../../services/api.config';
 
 interface KGraph {
   id: number;
@@ -30,7 +30,7 @@ interface KGraphBackup {
 
 export const AdminKGraphReview: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'backups' | 'visualizer'>('backups');
-  
+
   // Backups State
   const [backups, setBackups] = useState<KGraphBackup[]>([]);
   const [loadingBackups, setLoadingBackups] = useState<boolean>(true);
@@ -141,7 +141,7 @@ export const AdminKGraphReview: React.FC = () => {
     }
   };
 
-  const filteredGraphs = graphs.filter(g => 
+  const filteredGraphs = graphs.filter(g =>
     g.session_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -158,6 +158,14 @@ export const AdminKGraphReview: React.FC = () => {
     } catch (e) {
       return dateString || 'N/A';
     }
+  };
+
+  const getFullGraphUrl = (url?: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const base = (defaultConfig.baseUrl || '').replace(/\/+$/, '');
+    const path = url.startsWith('/') ? url : `/${url}`;
+    return `${base}${path}`;
   };
 
   return (
@@ -179,22 +187,20 @@ export const AdminKGraphReview: React.FC = () => {
         <div className="flex items-center gap-2 bg-[var(--surface)] p-1 rounded-xl border border-[var(--border)]">
           <button
             onClick={() => setActiveTab('backups')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'backups'
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'backups'
                 ? 'bg-[var(--accent)] text-white shadow-sm'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
-            }`}
+              }`}
           >
             <Database className="w-3.5 h-3.5" />
             Backups & Restore ({backups.length})
           </button>
           <button
             onClick={() => setActiveTab('visualizer')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'visualizer'
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'visualizer'
                 ? 'bg-[var(--accent)] text-white shadow-sm'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
-            }`}
+              }`}
           >
             <Network className="w-3.5 h-3.5" />
             Visual Explorer
@@ -301,7 +307,7 @@ export const AdminKGraphReview: React.FC = () => {
                 </div>
               ) : (
                 backups.map((bkp, idx) => (
-                  <div 
+                  <div
                     key={bkp._key || bkp.backup_name || idx}
                     className="grid grid-cols-[1.5fr_1fr_1fr_1.5fr_auto] gap-4 p-3.5 items-center hover:bg-[var(--bg)]/30 transition-colors"
                   >
@@ -384,7 +390,7 @@ export const AdminKGraphReview: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
               {loadingGraphs ? (
                 <div className="flex flex-col items-center justify-center h-32 gap-2 text-[var(--text-secondary)]">
@@ -401,14 +407,13 @@ export const AdminKGraphReview: React.FC = () => {
                 </div>
               ) : (
                 filteredGraphs.map(graph => (
-                  <div 
+                  <div
                     key={graph.id}
                     onClick={() => setSelectedGraph(graph)}
-                    className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                      selectedGraph?.id === graph.id 
-                        ? 'border-[var(--accent)] bg-[var(--accent)]/5 shadow-xs' 
+                    className={`p-3 rounded-xl border cursor-pointer transition-all ${selectedGraph?.id === graph.id
+                        ? 'border-[var(--accent)] bg-[var(--accent)]/5 shadow-xs'
                         : 'border-[var(--border)] hover:border-[var(--text-secondary)] hover:bg-[var(--bg)]'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Network className={`w-4 h-4 ${selectedGraph?.id === graph.id ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'}`} />
@@ -437,16 +442,16 @@ export const AdminKGraphReview: React.FC = () => {
                     {selectedGraph.session_name}
                   </h3>
                   <div className="flex items-center gap-2">
-                    <a 
-                      href={selectedGraph.graph_url} 
-                      target="_blank" 
+                    <a
+                      href={getFullGraphUrl(selectedGraph.graph_url)}
+                      target="_blank"
                       rel="noreferrer"
                       className="p-1.5 rounded-lg hover:bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
                       title="Open in new tab"
                     >
                       <ExternalLink className="w-4 h-4" />
                     </a>
-                    <button 
+                    <button
                       onClick={() => setSelectedGraph(null)}
                       className="p-1.5 rounded-lg hover:bg-[var(--surface)] text-[var(--text-secondary)] hover:text-red-500 transition-colors cursor-pointer"
                     >
@@ -454,12 +459,12 @@ export const AdminKGraphReview: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="flex-1 bg-white relative">
                   {selectedGraph.graph_url ? (
-                    <iframe 
-                      src={selectedGraph.graph_url} 
-                      className="w-full h-full border-0 absolute inset-0" 
+                    <iframe
+                      src={getFullGraphUrl(selectedGraph.graph_url)}
+                      className="w-full h-full border-0 absolute inset-0"
                       title={`K-Graph for ${selectedGraph.session_name}`}
                     />
                   ) : (
