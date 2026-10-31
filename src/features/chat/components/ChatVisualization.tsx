@@ -647,77 +647,31 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
 
 
   const handleDownload = () => {
-
-
-
     if (!data || data.length === 0) return;
 
+    const tableColumns = (columns && columns.length > 0) ? columns : Object.keys(data[0]).map(key => ({ key, label: key }));
+    const escapeCsv = (val: any) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
 
+    const headerRow = tableColumns.map(c => escapeCsv(c.label || c.key)).join(",");
+    const dataRows = data.map(row =>
+      tableColumns.map(c => escapeCsv(row[c.key] ?? '')).join(",")
+    ).join("\r\n");
 
-
-
-
-
-    const headers = columns ? columns.map(c => c.label) : Object.keys(data[0]);
-
-
-
-    const keys = columns ? columns.map(c => c.key) : Object.keys(data[0]);
-
-
-
-
-
-
-
-    const csvContent = "data:text/csv;charset=utf-8,"
-
-
-
-      + (title ? `"${title}"\n\n` : "")
-
-
-
-      + headers.join(",") + "\n"
-
-
-
-      + data.map(row => keys.map(key => `"${row[key] || ''}"`).join(",")).join("\n");
-
-
-
-
-
-
-
-    const encodedUri = encodeURI(csvContent);
-
-
-
+    const csvContent = "\uFEFF" + headerRow + "\r\n" + dataRows;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-
-
-
-    link.setAttribute("href", encodedUri);
-
-
-
-    link.setAttribute("download", `${title || 'export'}.csv`);
-
-
-
+    link.href = url;
+    const baseName = (title || 'export').replace(/[^a-zA-Z0-9_-]+/g, '_');
+    link.download = `${cleanFilename(baseName)}.csv`;
     document.body.appendChild(link);
-
-
-
     link.click();
-
-
-
     document.body.removeChild(link);
-
-
-
+    URL.revokeObjectURL(url);
   };
 
 
