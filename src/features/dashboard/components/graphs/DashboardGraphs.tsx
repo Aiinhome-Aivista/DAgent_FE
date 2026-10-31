@@ -1,3 +1,4 @@
+import { queuedFetch } from "./dashboardHooks";
 import React, { useState, useEffect } from "react";
 import { chatHistoryService } from "../../../../services/chatHistory.service";
 import toast from "react-hot-toast";
@@ -548,7 +549,7 @@ const SummaryRevisedDownloadCard = () => {
       if (retryCount === 0) setIsFetching(true);
       setError(null);
       try {
-        const res = await fetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.REPORTS.EXPORT_DOMESTIC_SALES_PREVIEW}`, {
+        const res = await queuedFetch(`${defaultConfig.baseUrl}${API_ENDPOINTS.REPORTS.EXPORT_DOMESTIC_SALES_PREVIEW}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ session_id: getSessionId() }),

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
-import { useSessionId } from "./dashboardHooks";
+import {useSessionId, queuedFetch } from "./dashboardHooks";
 import {
   ComposedChart,
   Line,
@@ -35,7 +35,7 @@ export const PlanVsSaleChartDynamic: React.FC<PlanVsSaleChartProps> = ({ onZoneC
           return;
         }
         const url = `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.SALES_REVENUE}?session_id=${sessionId}${currentZone ? `&zone=${encodeURIComponent(currentZone)}` : ''}`;
-        const response = await fetch(url);
+        const response = await queuedFetch(url);
         const json = await response.json();
         if (json.status === "success" && json.data) {
           const getFullName = (shortName: string) => {

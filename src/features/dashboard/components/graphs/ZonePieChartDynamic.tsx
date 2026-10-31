@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { COLORS } from "./mockData";
-import { FilterSelect, useDashboardFilters, useSessionId } from "./dashboardHooks";
+import {FilterSelect, useDashboardFilters, useSessionId, queuedFetch } from "./dashboardHooks";
 import { defaultConfig, API_ENDPOINTS } from "@/src/services/api.config";
 
 export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
@@ -36,7 +36,7 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
           setIsZoneLoading(false);
           return;
         }
-        const response = await fetch(
+        const response = await queuedFetch(
           `${defaultConfig.baseUrl}${API_ENDPOINTS.DASHBOARD.SALES_BY_ZONE}`,
           {
             method: "POST",
