@@ -122,9 +122,12 @@ function AppContent() {
                   }
                   if (defaultSession && defaultSession.querySessionHistory) {
                     localStorage.setItem('default_workspace_analysis', JSON.stringify(defaultSession.querySessionHistory));
+                    const createdAt = defaultSession.querySessionHistory[0]?.created_at || (defaultSession as any).createdAt;
+                    if (createdAt) localStorage.setItem('default_workspace_analysis_time', createdAt);
                     window.dispatchEvent(new Event('default-workspace-updated'));
                   } else {
                     localStorage.removeItem('default_workspace_analysis');
+                    localStorage.removeItem('default_workspace_analysis_time');
                     window.dispatchEvent(new Event('default-workspace-updated'));
                   }
                   if (activeWS.id === selectedWorkspace?.id) {
@@ -221,9 +224,12 @@ function AppContent() {
           }
           if (defaultSession && defaultSession.querySessionHistory) {
             localStorage.setItem('default_workspace_analysis', JSON.stringify(defaultSession.querySessionHistory));
+            const createdAt = defaultSession.querySessionHistory[0]?.created_at || (defaultSession as any).createdAt;
+            if (createdAt) localStorage.setItem('default_workspace_analysis_time', createdAt);
             window.dispatchEvent(new Event('default-workspace-updated'));
           } else {
             localStorage.removeItem('default_workspace_analysis');
+            localStorage.removeItem('default_workspace_analysis_time');
             window.dispatchEvent(new Event('default-workspace-updated'));
           }
         } else {
