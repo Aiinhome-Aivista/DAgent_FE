@@ -622,8 +622,13 @@ const SummaryRevisedDownloadCard = () => {
       }
     };
 
-    fetchPreview();
-    return () => { isMounted = false; };
+    // Defer preview table call so visual charts load first in the queue
+    const timer = setTimeout(() => {
+      fetchPreview();
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer); isMounted = false; };
   }, []);
 
   const handleDownload = async (e: React.MouseEvent) => {
