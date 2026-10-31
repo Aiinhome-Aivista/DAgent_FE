@@ -6,7 +6,6 @@ import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { ChatWindow } from './features/chat';
 import { AgentWorkflow } from './features/workflow';
 import { LandingPage } from './features/marketing/components/LandingPage';
-import { PricingPage } from './features/marketing/components/PricingPage';
 import { PrivacyPolicyPage } from './features/marketing/components/PrivacyPolicyPage';
 import { TermsConditionsPage } from './features/marketing/components/TermsConditionsPage';
 import { HelpCenterPage } from './features/marketing/components/HelpCenterPage';
@@ -122,9 +121,12 @@ function AppContent() {
                   }
                   if (defaultSession && defaultSession.querySessionHistory) {
                     localStorage.setItem('default_workspace_analysis', JSON.stringify(defaultSession.querySessionHistory));
+                    const createdAt = defaultSession.querySessionHistory[0]?.created_at || (defaultSession as any).createdAt;
+                    if (createdAt) localStorage.setItem('default_workspace_analysis_time', createdAt);
                     window.dispatchEvent(new Event('default-workspace-updated'));
                   } else {
                     localStorage.removeItem('default_workspace_analysis');
+                    localStorage.removeItem('default_workspace_analysis_time');
                     window.dispatchEvent(new Event('default-workspace-updated'));
                   }
                   if (activeWS.id === selectedWorkspace?.id) {
@@ -221,9 +223,12 @@ function AppContent() {
           }
           if (defaultSession && defaultSession.querySessionHistory) {
             localStorage.setItem('default_workspace_analysis', JSON.stringify(defaultSession.querySessionHistory));
+            const createdAt = defaultSession.querySessionHistory[0]?.created_at || (defaultSession as any).createdAt;
+            if (createdAt) localStorage.setItem('default_workspace_analysis_time', createdAt);
             window.dispatchEvent(new Event('default-workspace-updated'));
           } else {
             localStorage.removeItem('default_workspace_analysis');
+            localStorage.removeItem('default_workspace_analysis_time');
             window.dispatchEvent(new Event('default-workspace-updated'));
           }
         } else {
@@ -491,23 +496,23 @@ function AppContent() {
   };
 
   if (viewMode === 'landing') {
-    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')} onPricingClick={navigateToPricing} />;
+    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')}  />;
   }
 
   if (viewMode === 'pricing') {
-    return <PricingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} />;
+    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')} />;
   }
 
   if (viewMode === 'privacy-policy') {
-    return <PrivacyPolicyPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} onPricingClick={navigateToPricing} />;
+    return <PrivacyPolicyPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding}  />;
   }
 
   if (viewMode === 'terms-and-conditions') {
-    return <TermsConditionsPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} onPricingClick={navigateToPricing} />;
+    return <TermsConditionsPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding}  />;
   }
 
   if (viewMode === 'help-center') {
-    return <HelpCenterPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} onPricingClick={navigateToPricing} />;
+    return <HelpCenterPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding}  />;
   }
 
 

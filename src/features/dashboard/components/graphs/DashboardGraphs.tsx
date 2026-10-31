@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { formatChatMessage } from "../../../../utils/format";
@@ -65,6 +66,31 @@ const cleanParagraphText = (text: string) => {
     cleaned += ".";
   }
   return cleaned.trim();
+};
+
+
+const getRelativeTimeString = (dateStr?: string | null): string => {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "";
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diffInSeconds < 0) return "just now";
+    if (diffInSeconds < 60) return "just now";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return "yesterday";
+    if (diffInDays < 30) return `${diffInDays}d ago`;
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths}mo ago`;
+    return `${Math.floor(diffInMonths / 12)}y ago`;
+  } catch {
+    return "";
+  }
 };
 
 const parseSessionData = (session: any) => {
@@ -241,6 +267,7 @@ const parseSessionData = (session: any) => {
       sectionTitles,
       badge: displayBadge,
       timeBadge,
+      createdAt: firstTurn.created_at || session.created_at || null,
     };
   } catch (e) {
     console.error("Error parsing query session data:", e);
@@ -398,7 +425,8 @@ const SummaryCard = ({ isWorkspacesLoading }: { isWorkspacesLoading?: boolean })
 
   if (!parsedData) return null;
 
-  const { title, sections, sectionTitles, badge, timeBadge } = parsedData;
+  const { title, sections, sectionTitles, badge, timeBadge, createdAt } = parsedData;
+  const relativeTime = getRelativeTimeString(createdAt || localStorage.getItem("default_workspace_analysis_time"));
   const execSummary = sections["Executive Summary"] || [];
   const keyInsights = sections["Key Insights"] || [];
   const recommendations = sections["Actionable Recommendations"] || [];
@@ -410,9 +438,19 @@ const SummaryCard = ({ isWorkspacesLoading }: { isWorkspacesLoading?: boolean })
           <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
             <Sparkles className="w-4 h-4" />
           </div>
-          <h3 className="font-bold text-slate-800 text-base leading-snug">
-            {title}
-          </h3>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h3 className="font-bold text-slate-800 text-base leading-snug">
+              {title}
+            </h3>
+            {relativeTime && (
+              <span
+                className="inline-flex items-center text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full cursor-default select-none ml-1.5"
+                title={createdAt ? new Date(createdAt).toLocaleString() : ""}
+              >
+                {relativeTime}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
