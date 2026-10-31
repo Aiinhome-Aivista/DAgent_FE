@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { Edit2, Trash2, Save, X, Loader2, Database, Terminal, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { Edit2, Trash2, Save, X, Loader2, Database, Terminal, Settings, ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import { SchedulerConfigCard } from "./SchedulerConfigCard";
 import { adminService } from "../../../services/admin.service";
 import { promptService } from "../../../services/prompt.service";
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 
 export const ManageMasterData = ({ searchQuery = "" }: { searchQuery?: string }) => {
-  const [activeTab, setActiveTab] = useState<"dataCategories" | "promptTypes" | "systemConfigs">("dataCategories");
+  const [activeTab, setActiveTab] = useState<"dataCategories" | "promptTypes" | "systemConfigs" | "scheduler">("dataCategories");
   const [systemConfigs, setSystemConfigs] = useState<any[]>([]);
 
   // Data State
@@ -183,9 +184,23 @@ export const ManageMasterData = ({ searchQuery = "" }: { searchQuery?: string })
         >
           <Settings size={16} /> System Configurations
         </button>
+        <button
+          className={`px-4 py-2 flex items-center gap-2 border-b-2 font-medium transition-colors ${
+            activeTab === "scheduler"
+              ? "border-[var(--accent)] text-[var(--accent)]"
+              : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          }`}
+          onClick={() => { setActiveTab("scheduler"); handleCancel(); }}
+        >
+          <Clock size={16} /> Analytics Scheduler
+        </button>
       </div>
 
       <div className="flex-1 overflow-auto flex flex-col gap-4 px-2 pb-4">
+        {activeTab === "scheduler" ? (
+          <SchedulerConfigCard />
+        ) : (
+          <>
         {/* Form Section */}
         <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-sm">
           <h3 className="text-lg font-semibold mb-4">
@@ -353,6 +368,8 @@ export const ManageMasterData = ({ searchQuery = "" }: { searchQuery?: string })
             </div>
           )}
         </div>
+          </>
+        )}
       </div>
     </div>
   );
