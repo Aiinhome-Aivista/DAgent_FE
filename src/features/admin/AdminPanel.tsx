@@ -28,7 +28,6 @@ import { AdminChats } from "./components/AdminChats";
 import { AdminPendingKnowledge } from "./components/AdminPendingKnowledge";
 import { CustomPrompts } from "./components/CustomPrompts";
 import { ScheduledReports } from "./components/ScheduledReports";
-import { ManagePricing } from "./components/ManagePricing";
 import { ManageLLM } from "./components/ManageLLM";
 import { ManageMasterData } from "./components/ManageMasterData";
 import { AdminKGraphReview } from "./components/AdminKGraphReview";
@@ -62,7 +61,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
-  const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
   const [isCreatingLLM, setIsCreatingLLM] = useState(false);
   const [isCreatingCompanyConfig, setIsCreatingCompanyConfig] = useState(false);
