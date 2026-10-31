@@ -569,7 +569,7 @@ export const AdminKGraphReview: React.FC = () => {
             )}
 
             {/* Right Main Area: Large Visual Graph Viewer */}
-            <div className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden relative shadow-xs">
+            <div className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden relative shadow-xs" style={{ minHeight: "700px", height: "100%" }}>
               {selectedGraph ? (
                 <>
                   {/* Viewer Header Bar */}
