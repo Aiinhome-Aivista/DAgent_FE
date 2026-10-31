@@ -387,7 +387,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
         {/* Scrollable Content */}
         <div
-          className={`flex-1 py-3 pr-3 flex flex-col min-h-0 ${adminSubTab === "customPrompts" || adminSubTab === "kGraphReview"
+          className={`flex-1 py-2 ${adminSubTab === "kGraphReview" ? "pr-0" : "pr-3"} flex flex-col min-h-0 ${adminSubTab === "customPrompts" || adminSubTab === "kGraphReview"
             ? "h-full"
             : "overflow-y-auto custom-scrollbar"
             }`}

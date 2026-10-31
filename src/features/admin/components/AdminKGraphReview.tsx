@@ -458,7 +458,7 @@ export const AdminKGraphReview: React.FC = () => {
           <div className="flex-1 flex gap-4 w-full" style={{ minHeight: "750px", height: "calc(100vh - 180px)" }}>
             {/* Left Sidebar: List of Available Graphs */}
             {showSidebar && (
-              <div className="w-72 lg:w-80 shrink-0 flex flex-col bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs" style={{ height: "100%" }}>
+              <div className="w-60 lg:w-64 shrink-0 flex flex-col bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs" style={{ height: "100%" }}>
               <div className="p-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex items-center justify-between gap-2">
                 <div>
                   <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
@@ -614,7 +614,7 @@ export const AdminKGraphReview: React.FC = () => {
                         title={showSidebar ? "Hide graphs sidebar for wider view" : "Show graphs sidebar"}
                       >
                         {showSidebar ? <PanelLeftClose className="w-3.5 h-3.5" /> : <PanelLeft className="w-3.5 h-3.5 text-[var(--accent)]" />}
-                        <span className="hidden md:inline">{showSidebar ? "Hide List" : "Show List"}</span>
+                        <span className="hidden md:inline">{showSidebar ? "Expand Width (Hide List)" : "Show List"}</span>
                       </button>
 
                       {/* Fullscreen Button */}
