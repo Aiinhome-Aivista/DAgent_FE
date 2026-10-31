@@ -162,3 +162,52 @@ export const useAvailableYears = () => {
     isAvailableYearsLoading,
   };
 };
+
+
+// ─── Dashboard Sequential Request Queue (Prevents DB Spikes on Initial Load) ──
+class DashboardRequestQueue {
+  private queue: Array<() => Promise<any>> = [];
+  private isProcessing = false;
+
+  async enqueue<T>(fn: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          const result = await fn();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      this.processNext();
+    });
+  }
+
+  private async processNext() {
+    if (this.isProcessing || this.queue.length === 0) return;
+    this.isProcessing = true;
+    const task = this.queue.shift();
+    if (task) {
+      try {
+        await task();
+      } catch (e) {
+        console.error("[Dashboard Queue Error]", e);
+      } finally {
+        this.isProcessing = false;
+        this.processNext();
+      }
+    }
+  }
+}
+
+export const dashboardQueue = new DashboardRequestQueue();
+
+/**
+ * Sequential fetch wrapper for dashboard chart APIs.
+ * On initial page mount, requests execute one after another in order so the database
+ * is never hit with 10+ heavy concurrent analytical queries.
+ * Once the queue drains, individual filter updates execute immediately.
+ */
+export const queuedFetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  return dashboardQueue.enqueue(() => fetch(input, init));
+};

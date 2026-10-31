@@ -1,3 +1,4 @@
+import { queuedFetch } from "./dashboardHooks";
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { RefreshCw } from "lucide-react";
@@ -37,7 +38,7 @@ export const DashboardKPIs = () => {
   const fetchMetrics = async (question: string, answer: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${defaultConfig.baseUrl}/graph-metrics`, {
+      const response = await queuedFetch(`${defaultConfig.baseUrl}/graph-metrics`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +84,7 @@ export const DashboardKPIs = () => {
     setIsLoading(true);
     try {
       const url = `${defaultConfig.baseUrl}/default-dashboard-metrics`;
-      const response = await fetch(url, {
+      const response = await queuedFetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
