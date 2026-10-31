@@ -342,93 +342,75 @@ export const useAvailableYears = () => {
 
 // ─── Dashboard Sequential Request Queue (Prevents DB Spikes on Initial Load) ──
 
-class DashboardRequestQueue {
 
-  private queue: Array<() => Promise<any>> = [];
-
-  private isProcessing = false;
-
-
+// --- Controlled Concurrency Async Queue (Max 2 DB analytical queries in parallel) ---
+class ControlledAsyncQueue {
+  private queue: Array<() => Promise<void>> = [];
+  private activeCount = 0;
+  private maxConcurrency = 2;
 
   async enqueue<T>(fn: () => Promise<T>): Promise<T> {
-
     return new Promise<T>((resolve, reject) => {
-
       this.queue.push(async () => {
-
         try {
-
-          const result = await fn();
-
-          resolve(result);
-
-        } catch (error) {
-
-          reject(error);
-
+          const res = await fn();
+          resolve(res);
+        } catch (err) {
+          reject(err);
         }
-
       });
-
-      this.processNext();
-
+      this.pump();
     });
-
   }
 
-
-
-  private async processNext() {
-
-    if (this.isProcessing || this.queue.length === 0) return;
-
-    this.isProcessing = true;
-
-    const task = this.queue.shift();
-
-    if (task) {
-
-      try {
-
-        await task();
-
-      } catch (e) {
-
-        console.error("[Dashboard Queue Error]", e);
-
-      } finally {
-
-        this.isProcessing = false;
-
-        this.processNext();
-
-      }
-
+  private pump() {
+    while (this.activeCount < this.maxConcurrency && this.queue.length > 0) {
+      const task = this.queue.shift();
+      if (!task) break;
+      this.activeCount++;
+      task().finally(() => {
+        this.activeCount--;
+        this.pump();
+      });
     }
-
   }
-
 }
 
-
-
-export const dashboardQueue = new DashboardRequestQueue();
-
-
+export const chartFetchQueue = new ControlledAsyncQueue();
 
 /**
-
- * Sequential fetch wrapper for dashboard chart APIs.
-
- * On initial page mount, requests execute one after another in order so the database
-
- * is never hit with 10+ heavy concurrent analytical queries.
-
- * Once the queue drains, individual filter updates execute immediately.
-
+ * Controlled async fetch: Runs at most 2 queries in parallel.
+ * As soon as each query returns, its promise resolves, its chart binds, and renders immediately.
+ * The next query starts immediately, preventing database overload while delivering fast waterfall rendering.
  */
+const inFlightRequests = new Map<string, Promise<Response>>();
 
+/**
+ * Controlled async fetch: Runs at most 2 queries in parallel with in-flight deduplication.
+ * - Prevents duplicate network requests if components remount or share data.
+ * - Max 2 queries run in parallel, avoiding HANA / DB thread locks.
+ * - As soon as each query returns, its promise resolves, its chart binds, and renders immediately.
+ */
 export const queuedFetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  return fetch(input, init);
-};
+  const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : (input as Request).url;
+  const method = init?.method?.toUpperCase() || "GET";
 
+  if (method === "GET") {
+    if (inFlightRequests.has(url)) {
+      return inFlightRequests.get(url)!.then(res => res.clone());
+    }
+    const promise = chartFetchQueue.enqueue(() => fetch(input, init))
+      .then(res => {
+        setTimeout(() => inFlightRequests.delete(url), 5000);
+        return res;
+      })
+      .catch(err => {
+        inFlightRequests.delete(url);
+        throw err;
+      });
+    inFlightRequests.set(url, promise);
+    return promise.then(res => res.clone());
+  }
+
+  return chartFetchQueue.enqueue(() => fetch(input, init));
+};
