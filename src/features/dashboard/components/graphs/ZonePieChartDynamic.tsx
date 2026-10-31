@@ -75,11 +75,18 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
           setZoneAxisLabels({ x: xLabel, y: yLabel });
           if (viz.title) setZoneChartTitle(viz.title);
 
-          const mappedData = data.visualizations[0].data.map((item: any) => ({
-            name: item.name || item.zone,
-            value: Number(item.percentage || item.value),
-            sales_value: item.sales_value,
-          }));
+          const mappedData = data.visualizations[0].data.map((item: any) => {
+            const rawSales = Number(item.sales_value ?? item.value ?? 0);
+            const pct = item.percentage !== undefined && item.percentage !== null && !isNaN(Number(item.percentage))
+              ? Number(item.percentage)
+              : undefined;
+            return {
+              name: item.name || item.zone || item.zone_name,
+              value: rawSales,
+              percentage: pct,
+              sales_value: rawSales,
+            };
+          });
           setZoneData(mappedData);
         }
       } catch (err) {
@@ -183,16 +190,23 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
                   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                 }}
                 formatter={(value: any, name: any, props: any) => {
-                  const salesValue = props.payload.sales_value;
-                  if (salesValue) {
+                  const salesValue = props?.payload?.sales_value ?? value;
+                  const pct = props?.payload?.percentage !== undefined
+                    ? Number(props.payload.percentage).toFixed(1)
+                    : (props?.payload?.percent ? (props.payload.percent * 100).toFixed(1) : "0.0");
+                  if (salesValue !== undefined && salesValue !== null) {
                     let val = Number(salesValue);
-                    let formatted = `₹${(val / 10000000).toFixed(2)} Cr`;
+                    let formatted = val >= 10000000
+                      ? `₹${(val / 10000000).toFixed(2)} Cr`
+                      : val >= 100000
+                        ? `₹${(val / 100000).toFixed(2)} L`
+                        : `₹${val.toLocaleString()}`;
                     return [
-                      `${value}% | ${zoneAxisLabels.y.replace(" (₹)", "")}: ${formatted}`,
+                      `${pct}% | ${zoneAxisLabels.y.replace(" (₹)", "")}: ${formatted}`,
                       name,
                     ];
                   }
-                  return [`${value}%`, name];
+                  return [`${pct}%`, name];
                 }}
               />
             </PieChart>
