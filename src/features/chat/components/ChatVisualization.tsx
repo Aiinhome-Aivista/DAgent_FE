@@ -114,24 +114,25 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
 
       const finalName = cleanFilename(viz.filename || 'export.csv');
 
+      const rawSql = (viz.sql_query || '').trim();
+      let queryB64 = '';
+      try {
+        queryB64 = rawSql ? btoa(unescape(encodeURIComponent(rawSql))) : '';
+      } catch (e) {
+        queryB64 = '';
+      }
+
       await apiService.download(
-
         '/api/export-query-csv',
-
         {
-
           session_id: viz.session_id || localStorage.getItem('DAgent_session_id'),
-
           user_id: userId ? parseInt(userId, 10) : undefined,
-
-          sql_query: viz.sql_query,
-
+          query_b64: queryB64,
+          sql_query_b64: queryB64,
+          ...(queryB64 ? {} : { sql_query: rawSql }),
           filename: finalName,
-
         },
-
         finalName
-
       );
 
 
