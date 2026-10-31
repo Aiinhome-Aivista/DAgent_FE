@@ -6,6 +6,7 @@ import { defaultConfig } from "@/src/services/api.config";
 
 export const DashboardKPIs = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null);
   const [lastQuery, setLastQuery] = useState({ question: "", answer: "" });
   const [metrics, setMetrics] = useState([
     {
@@ -29,6 +30,18 @@ export const DashboardKPIs = () => {
       subtext: "",
     },
   ]);
+
+  
+  const formatSyncTime = (timeStr: string | null) => {
+    if (!timeStr) return "";
+    try {
+      const d = new Date(timeStr);
+      if (isNaN(d.getTime())) return timeStr.split(" ")[1] || timeStr;
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return timeStr;
+    }
+  };
 
   const getSessionId = () =>
     localStorage.getItem("DAgent_session_id") ||
@@ -80,19 +93,23 @@ export const DashboardKPIs = () => {
     }
   };
 
-  const fetchDefaultMetrics = async (sessionId: string) => {
+  const fetchDefaultMetrics = async (sessionId: string, forceRefresh: boolean = false) => {
     setIsLoading(true);
     try {
       const url = `${defaultConfig.baseUrl}/default-dashboard-metrics`;
-      const response = await queuedFetch(url, {
+      // Call first and directly with fetch so cache loads in <5ms without waiting
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ session_id: sessionId }),
+        body: JSON.stringify({ session_id: sessionId, force_refresh: forceRefresh }),
       });
       const data = await response.json();
       if (data.status === "success" && data.data) {
+        if (data._last_synced_at) {
+          setLastSyncedTime(data._last_synced_at);
+        }
         if (Object.keys(data.data).length > 0) {
           const sortedKeys = Object.keys(data.data).sort((a, b) => {
             const numA = parseInt(a.replace(/\D/g, "")) || 0;
@@ -130,14 +147,12 @@ export const DashboardKPIs = () => {
 
   useEffect(() => {
     const sessionId = getSessionId();
-    if (sessionId) {
-      fetchDefaultMetrics(sessionId);
-    }
+    fetchDefaultMetrics(sessionId, false);
 
     const handleSessionIdUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.sessionId) {
-        fetchDefaultMetrics(customEvent.detail.sessionId);
+        fetchDefaultMetrics(customEvent.detail.sessionId, false);
       }
     };
 
@@ -169,7 +184,7 @@ export const DashboardKPIs = () => {
   const handleRefresh = () => {
     const sessionId = getSessionId();
     if (sessionId) {
-      fetchDefaultMetrics(sessionId);
+      fetchDefaultMetrics(sessionId, true);
     } else {
       toast.error("No active session ID found.");
     }
@@ -195,9 +210,16 @@ export const DashboardKPIs = () => {
   return (
     <div className="flex flex-col gap-3 w-full h-full">
       <div className="flex justify-between items-center px-1 shrink-0">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          Key Metrics
-        </h3>
+        <div className="flex flex-col">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Key Metrics
+          </h3>
+          {lastSyncedTime && (
+            <span className="text-[9px] font-medium text-slate-400 mt-0.5" title={`Synced: ${lastSyncedTime}`}>
+              Synced: {formatSyncTime(lastSyncedTime)}
+            </span>
+          )}
+        </div>
         <button
           onClick={handleRefresh}
           disabled={isLoading}
