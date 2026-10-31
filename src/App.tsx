@@ -31,12 +31,12 @@ function AppContent() {
   const { userId, roleId, roleName, logout } = useAuthContext();
   const [viewMode, setViewMode] = useState<ViewMode>(
     userId ? 'app' :
-    window.location.pathname.startsWith('/admin/login') ? 'admin-login' : 
-    window.location.pathname.startsWith('/pricing') ? 'pricing' : 
-    window.location.pathname.startsWith('/privacy-policy') ? 'privacy-policy' : 
-    window.location.pathname.startsWith('/terms-and-conditions') ? 'terms-and-conditions' : 
-    window.location.pathname.startsWith('/help-center') ? 'help-center' : 
-    'landing'
+      window.location.pathname.startsWith('/admin/login') ? 'admin-login' :
+        window.location.pathname.startsWith('/pricing') ? 'pricing' :
+          window.location.pathname.startsWith('/privacy-policy') ? 'privacy-policy' :
+            window.location.pathname.startsWith('/terms-and-conditions') ? 'terms-and-conditions' :
+              window.location.pathname.startsWith('/help-center') ? 'help-center' :
+                'landing'
   );
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>(roleName === 'Admin' ? 'admin' : 'chat');
@@ -86,6 +86,7 @@ function AppContent() {
         const fetchedWorkspaces: Workspace[] = response.workspaces;
         setWorkspaces(fetchedWorkspaces);
 
+
         // Always sync selection with the active workspace from API
         const activeWS = fetchedWorkspaces.find(w => w.is_active === 1) || fetchedWorkspaces[0];
         if (activeWS) {
@@ -99,9 +100,9 @@ function AppContent() {
               const queryResponse = await chatHistoryService.getSessionChatHistory(activeWS.session_id, userId);
               if (queryResponse && queryResponse.status === 'success' && queryResponse.querySessions) {
                 setQueryHistories(prev => ({ ...prev, [activeWS.id]: queryResponse.querySessions }));
-                
+
                 const sessions = queryResponse.querySessions;
-                
+
                 const currentVisit = localStorage.getItem('current_visit_number');
                 const hasSelectedSession = localStorage.getItem('selected_query_session');
 
@@ -143,7 +144,7 @@ function AppContent() {
                       }
                       setChatKey(prev => prev + 1);
                     }
-                  } 
+                  }
                   // Fresh auto-select for initial load
                   else if (!hasSelectedSession && !currentVisit) {
                     let sessionToSelect = sessions[sessions.length - 1]; // fallback to latest
@@ -252,7 +253,7 @@ function AppContent() {
       localStorage.removeItem('current_visit_number');
       localStorage.removeItem('selected_query_session');
       localStorage.removeItem('selected_query_session_name');
-      
+
       fetchWorkspaces(true);
     }
   }, [userId, viewMode]);
@@ -496,7 +497,7 @@ function AppContent() {
   };
 
   if (viewMode === 'landing') {
-    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')}  />;
+    return <LandingPage onGetStarted={handleGetStarted} onLogin={handleLogin} onDashboardClick={() => setViewMode('dashboard')} />;
   }
 
   if (viewMode === 'pricing') {
@@ -504,15 +505,15 @@ function AppContent() {
   }
 
   if (viewMode === 'privacy-policy') {
-    return <PrivacyPolicyPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding}  />;
+    return <PrivacyPolicyPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} />;
   }
 
   if (viewMode === 'terms-and-conditions') {
-    return <TermsConditionsPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding}  />;
+    return <TermsConditionsPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} />;
   }
 
   if (viewMode === 'help-center') {
-    return <HelpCenterPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding}  />;
+    return <HelpCenterPage onGetStarted={handleGetStarted} onLogin={handleLogin} onBackToLanding={navigateToLanding} />;
   }
 
 
