@@ -3,7 +3,7 @@ import {
   Network, Search, X, Loader2, ExternalLink,
   Database, RotateCcw, Trash2, Plus, CheckCircle2,
   Clock, Layers, ShieldCheck, AlertTriangle,
-  Maximize2, Minimize2, Eye, Activity, Sparkles
+  Maximize2, Minimize2, Eye, Activity, Sparkles, PanelLeftClose, PanelLeft
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiService } from '../../../services/api.service';
@@ -57,6 +57,7 @@ export const AdminKGraphReview: React.FC = () => {
   const [activeGraphInfo, setActiveGraphInfo] = useState<KGraph | null>(null);
   const [activeDbName, setActiveDbName] = useState<string>('');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [showSidebar, setShowSidebar] = useState<boolean>(true);
 
   useEffect(() => {
     fetchBackups();
@@ -183,9 +184,24 @@ export const AdminKGraphReview: React.FC = () => {
     g.badge?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Active Now';
+    const s = String(dateString).trim();
+    if (
+      s === 'Live Graph' ||
+      s.toLowerCase().includes('live') ||
+      s.toLowerCase().includes('active') ||
+      s.toLowerCase().includes('legacy') ||
+      s.toLowerCase().includes('historical') ||
+      s.toLowerCase().includes('snapshot')
+    ) {
+      return s;
+    }
     try {
-      const date = new Date(dateString);
+      const date = new Date(s);
+      if (isNaN(date.getTime())) {
+        return s;
+      }
       return date.toLocaleString(undefined, {
         month: 'short',
         day: '2-digit',
@@ -194,7 +210,7 @@ export const AdminKGraphReview: React.FC = () => {
         minute: '2-digit'
       });
     } catch (e) {
-      return dateString || 'N/A';
+      return s;
     }
   };
 
@@ -380,7 +396,7 @@ export const AdminKGraphReview: React.FC = () => {
             {selectedGraph.graph_url ? (
               <iframe
                 src={getFullGraphUrl(selectedGraph.graph_url)}
-                className="w-full h-full border-0 absolute inset-0"
+                className="w-full h-full border-0 absolute inset-0" style={{ width: "100%", height: "100%", minHeight: "600px", border: "none" }}
                 title={`Full K-Graph for ${selectedGraph.session_name}`}
               />
             ) : (
@@ -439,9 +455,10 @@ export const AdminKGraphReview: React.FC = () => {
           </div>
 
           {/* Main Visualizer Columns */}
-          <div className="flex-1 flex gap-4 min-h-[620px] h-[calc(100vh-250px)]">
+          <div className="flex-1 flex gap-4 w-full" style={{ minHeight: "750px", height: "calc(100vh - 180px)" }}>
             {/* Left Sidebar: List of Available Graphs */}
-            <div className="w-80 lg:w-96 shrink-0 flex flex-col bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs">
+            {showSidebar && (
+              <div className="w-72 lg:w-80 shrink-0 flex flex-col bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs" style={{ height: "100%" }}>
               <div className="p-3 border-b border-[var(--border)] bg-[var(--bg)]/50 flex items-center justify-between gap-2">
                 <div>
                   <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
@@ -548,7 +565,8 @@ export const AdminKGraphReview: React.FC = () => {
                   })
                 )}
               </div>
-            </div>
+              </div>
+            )}
 
             {/* Right Main Area: Large Visual Graph Viewer */}
             <div className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden relative shadow-xs">
@@ -589,6 +607,16 @@ export const AdminKGraphReview: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {/* Toggle Sidebar Button */}
+                      <button
+                        onClick={() => setShowSidebar(!showSidebar)}
+                        className="px-2.5 py-1.5 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        title={showSidebar ? "Hide graphs sidebar for wider view" : "Show graphs sidebar"}
+                      >
+                        {showSidebar ? <PanelLeftClose className="w-3.5 h-3.5" /> : <PanelLeft className="w-3.5 h-3.5 text-[var(--accent)]" />}
+                        <span className="hidden md:inline">{showSidebar ? "Hide List" : "Show List"}</span>
+                      </button>
+
                       {/* Fullscreen Button */}
                       <button
                         onClick={() => setIsFullscreen(true)}
@@ -622,11 +650,11 @@ export const AdminKGraphReview: React.FC = () => {
                   </div>
 
                   {/* Viewer Body (Iframe) */}
-                  <div className="flex-1 bg-[#0f172a] relative">
+                  <div className="flex-1 bg-[#0f172a] relative w-full" style={{ minHeight: "600px", height: "100%" }}>
                     {selectedGraph.graph_url ? (
                       <iframe
                         src={getFullGraphUrl(selectedGraph.graph_url)}
-                        className="w-full h-full border-0 absolute inset-0"
+                        className="w-full h-full border-0 absolute inset-0" style={{ width: "100%", height: "100%", minHeight: "600px", border: "none" }}
                         title={`K-Graph for ${selectedGraph.session_name}`}
                       />
                     ) : (

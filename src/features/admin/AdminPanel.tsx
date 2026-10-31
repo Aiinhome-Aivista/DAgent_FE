@@ -303,7 +303,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
 
         <div className="flex items-center gap-4 w-full sm:w-auto">
-          {adminSubTab !== "company" && (
+          {adminSubTab !== "company" && adminSubTab !== "kGraphReview" && (
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
               <input
