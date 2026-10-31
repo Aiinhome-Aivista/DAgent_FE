@@ -26,7 +26,7 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
     setIsDownloading(true);
     try {
       await apiService.download(
-        '/export-query-csv',
+        '/api/export-query-csv',
         {
           session_id: viz.session_id,
           sql_query: viz.sql_query,
@@ -67,15 +67,15 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             </div>
           </div>
         </div>
-        <Button
-          variant="outline"
+        <button
+          type="button"
           onClick={() => handleDownloadCsv(visualization)}
           disabled={isDownloading}
-          className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg flex items-center gap-2 text-xs shrink-0 shadow-sm transition-all border-none cursor-pointer"
+          className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs shrink-0 shadow-md transition-all border-none cursor-pointer disabled:opacity-50"
         >
           {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           <span>{isDownloading ? "Exporting..." : "Download CSV"}</span>
-        </Button>
+        </button>
       </div>
     );
   }
@@ -225,10 +225,9 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
             type="button"
             onClick={handleDownload}
             title="Download CSV"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all shadow-sm shrink-0 cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors shrink-0 cursor-pointer shadow-sm"
           >
-            <Download className="w-4 h-4 text-[var(--accent)]" />
-            <span>Download CSV</span>
+            <Download className="w-4 h-4" />
           </button>
         </div>
         <div className="overflow-x-auto max-h-64 custom-scrollbar">
@@ -279,11 +278,10 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
         <button
           type="button"
           onClick={handleDownloadPng}
-          title="Download Chart as PNG"
-          className="download-button-exclude flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all shadow-sm shrink-0 cursor-pointer"
+          title="Download PNG"
+          className="download-button-exclude w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors shrink-0 cursor-pointer shadow-sm"
         >
-          <Download className="w-4 h-4 text-[var(--accent)]" />
-          <span>Export PNG</span>
+          <Download className="w-4 h-4" />
         </button>
       </div>
       <div className="h-64 w-full" >
@@ -336,11 +334,10 @@ export const ChatVisualization = React.memo(({ visualization }: ChatVisualizatio
         <button
           type="button"
           onClick={handleDownloadPng}
-          title="Download Chart as PNG"
-          className="download-button-exclude flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all shadow-sm shrink-0 cursor-pointer"
+          title="Download PNG"
+          className="download-button-exclude w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors shrink-0 cursor-pointer shadow-sm"
         >
-          <Download className="w-4 h-4 text-[var(--accent)]" />
-          <span>Export PNG</span>
+          <Download className="w-4 h-4" />
         </button>
       </div>
       <div className="h-64 w-full" >

@@ -44,12 +44,22 @@ export const ManageMasterData = ({ searchQuery = "" }: { searchQuery?: string })
       } else if (activeTab === "systemConfigs") {
         const res = await adminService.getSystemConfigs();
         if (res?.status === "success" && res?.data) {
-          const list = Object.entries(res.data).map(([k, v], idx) => ({
-            id: idx + 1,
-            setting_key: k,
-            setting_value: v,
-            description: k === 'csv_export_threshold' ? 'RAG Chat CSV Export Row Threshold' : ''
-          }));
+          let list: any[] = [];
+          if (Array.isArray(res.data)) {
+            list = res.data.map((item: any, idx: number) => ({
+              id: item.id || idx + 1,
+              setting_key: item.setting_key || item.key,
+              setting_value: item.setting_value ?? item.value,
+              description: item.description || ''
+            }));
+          } else if (typeof res.data === 'object' && res.data !== null) {
+            list = Object.entries(res.data).map(([k, v]: [string, any], idx: number) => ({
+              id: idx + 1,
+              setting_key: k,
+              setting_value: typeof v === 'object' && v !== null ? (v.setting_value ?? v.value ?? JSON.stringify(v)) : v,
+              description: typeof v === 'object' && v !== null ? (v.description || '') : (k === 'csv_export_threshold' ? 'Threshold for RAG Chat table view (exceeding rows show CSV export button)' : '')
+            }));
+          }
           setSystemConfigs(list);
         }
       }
@@ -297,10 +307,22 @@ export const ManageMasterData = ({ searchQuery = "" }: { searchQuery?: string })
                       }
                     }}
                   >
-                    <Column field="id" header="ID" headerClassName="p-4 font-semibold text-sm" className="p-4 text-sm" />
-                    <Column field={activeTab === "dataCategories" ? "category_code" : "type_code"} header="Code" headerClassName="p-4 font-semibold text-sm" className="p-4 text-sm" />
-                    <Column field={activeTab === "dataCategories" ? "category_name" : "display_name"} header="Display Name" headerClassName="p-4 font-semibold text-sm" className="p-4 text-sm font-medium" />
-                    {activeTab === "promptTypes" && <Column field="description" header="Description" headerClassName="p-4 font-semibold text-sm" className="p-4 text-sm text-[var(--text-secondary)]" />}
+                    <Column field="id" header="ID" headerClassName="p-4 font-semibold text-sm" className="p-4 text-sm" style={{ width: '60px' }} />
+                    <Column 
+                      field={activeTab === "dataCategories" ? "category_code" : activeTab === "systemConfigs" ? "setting_key" : "type_code"} 
+                      header={activeTab === "systemConfigs" ? "Setting Key" : "Code"} 
+                      headerClassName="p-4 font-semibold text-sm" 
+                      className="p-4 text-sm font-mono" 
+                    />
+                    <Column 
+                      field={activeTab === "dataCategories" ? "category_name" : activeTab === "systemConfigs" ? "setting_value" : "display_name"} 
+                      header={activeTab === "systemConfigs" ? "Setting Value" : "Display Name"} 
+                      headerClassName="p-4 font-semibold text-sm" 
+                      className="p-4 text-sm font-medium" 
+                    />
+                    {(activeTab === "promptTypes" || activeTab === "systemConfigs") && (
+                      <Column field="description" header="Description" headerClassName="p-4 font-semibold text-sm" className="p-4 text-sm text-[var(--text-secondary)]" />
+                    )}
                     <Column
                       header="Actions"
                       headerClassName="p-4 font-semibold text-sm !text-center"
