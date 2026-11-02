@@ -10,6 +10,7 @@ export const SchedulerConfigCard = () => {
   const [statusInfo, setStatusInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
 
   useEffect(() => {
@@ -31,6 +32,26 @@ export const SchedulerConfigCard = () => {
       console.error("Failed to load scheduler config", err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleTriggerSyncNow = async () => {
+    setIsSyncing(true);
+    const toastId = toast.loading("Triggering live data synchronization in background...");
+    try {
+      const res = await adminService.runSchedulerNow();
+      if (res?.status === "success") {
+        toast.success("Live data sync triggered! Refreshing status...", { id: toastId });
+        setTimeout(() => {
+          fetchConfig();
+        }, 2000);
+      } else {
+        toast.error(res?.message || "Failed to trigger sync", { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to trigger live sync", { id: toastId });
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -148,8 +169,18 @@ export const SchedulerConfigCard = () => {
           </div>
         </div>
 
-          {/* Save Button (Sync Now removed per user preference) */}
-          <div className="flex items-center justify-end pt-2 border-t border-[var(--border)]">
+          {/* Actions: Manual Trigger & Save Schedule */}
+          <div className="flex items-center justify-between pt-2 border-t border-[var(--border)]">
+            <button
+              onClick={handleTriggerSyncNow}
+              disabled={isSyncing}
+              title="Trigger live data calculations immediately and refresh MySQL cache"
+              className="px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/20 text-xs font-semibold transition-all flex items-center gap-2 shadow-xs disabled:opacity-50"
+            >
+              {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Sync Live Data Now
+            </button>
+
             <button
               onClick={handleSave}
               disabled={isSaving}

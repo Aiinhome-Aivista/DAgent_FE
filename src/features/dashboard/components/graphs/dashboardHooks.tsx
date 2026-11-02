@@ -347,7 +347,7 @@ export const useAvailableYears = () => {
 class ControlledAsyncQueue {
   private queue: Array<() => Promise<void>> = [];
   private activeCount = 0;
-  private maxConcurrency = 2;
+  private maxConcurrency = 4;
 
   async enqueue<T>(fn: () => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {

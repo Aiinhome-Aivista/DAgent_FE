@@ -800,14 +800,10 @@ export const DashboardGraphs = ({ isWorkspacesLoading }: { isWorkspacesLoading?:
         {/* Actual Sales by Account Category */}
         <AccountCategorySalesCardDynamic />
 
-        {/* Non Billed Accounts % */}
-        <NonBilledAccountsCardDynamic />
-
-        {/* Overdue% (as on Date) */}
-        <OverduePieChartDynamic />
-
-        {/* Exposure % */}
-        <ExposureCardDynamic />
+        {/* Non Billed Accounts %, Overdue%, and Exposure % hidden per requirement */}
+        {/* <NonBilledAccountsCardDynamic /> */}
+        {/* <OverduePieChartDynamic /> */}
+        {/* <ExposureCardDynamic /> */}
       </div>
     </div>
   );

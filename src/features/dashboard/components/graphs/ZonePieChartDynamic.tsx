@@ -16,7 +16,6 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
   const filters = useDashboardFilters();
   const sessionId = useSessionId();
 
-  const [zoneProductType, setZoneProductType] = useState("All");
   const [zoneConstructionType, setZoneConstructionType] = useState("All");
   const [zoneTyreType, setZoneTyreType] = useState("All");
   const [zoneYear, setZoneYear] = useState("All");
@@ -44,7 +43,6 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               session_id: sessionId,
-              product_type: zoneProductType,
               construction_type: zoneConstructionType,
               tyre_type: zoneTyreType,
               years: zoneYear === "All" ? "All" : [Number(zoneYear)],
@@ -99,7 +97,6 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
     fetchZoneData();
   }, [
     sessionId,
-    zoneProductType,
     zoneConstructionType,
     zoneTyreType,
     zoneYear,
@@ -132,12 +129,7 @@ export const ZonePieChartDynamic = ({ zone }: { zone?: string | null }) => {
             onChange={(e) => setZoneMonth(e.target.value)}
             options={filters.months}
           />
-          <FilterSelect
-            label="Product Type"
-            value={zoneProductType}
-            onChange={(e) => setZoneProductType(e.target.value)}
-            options={filters.categories}
-          />
+
           <FilterSelect
             label="Construction Type"
             value={zoneConstructionType}
