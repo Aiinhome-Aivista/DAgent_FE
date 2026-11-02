@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { Clock, Play, Save, Loader2, CheckCircle2, AlertCircle, RefreshCw, Calendar, Sparkles } from "lucide-react";
+import { Clock, Save, Loader2, RefreshCw, AlertCircle, X } from "lucide-react";
 import { adminService } from "../../../services/admin.service";
 
 export const SchedulerConfigCard = () => {
@@ -10,7 +10,7 @@ export const SchedulerConfigCard = () => {
   const [statusInfo, setStatusInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isRunningNow, setIsRunningNow] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   useEffect(() => {
     fetchConfig();
@@ -60,25 +60,6 @@ export const SchedulerConfigCard = () => {
     }
   };
 
-  const handleRunNow = async () => {
-    setIsRunningNow(true);
-    const toastId = toast.loading("Triggering background analytics sync...");
-    try {
-      const res = await adminService.runSchedulerNow();
-      if (res?.status === "success") {
-        toast.success("Background sync started! Updating cache in background.", { id: toastId });
-        setTimeout(() => fetchConfig(), 3000);
-      } else {
-        toast.error(res?.message || "Failed to trigger sync", { id: toastId });
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error triggering sync", { id: toastId });
-    } finally {
-      setIsRunningNow(false);
-    }
-  };
-
   return (
     <div className="flex flex-col gap-6">
       {/* Configuration Card */}
@@ -112,7 +93,7 @@ export const SchedulerConfigCard = () => {
           {/* Schedule Time */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-              Daily Scheduled Time (24h)
+              Daily Scheduled Time (24H)
             </label>
             <input
               type="time"
@@ -167,72 +148,103 @@ export const SchedulerConfigCard = () => {
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="flex items-center justify-between pt-2 border-t border-[var(--border)]">
-          <div className="flex items-center gap-2">
+          {/* Save Button (Sync Now removed per user preference) */}
+          <div className="flex items-center justify-end pt-2 border-t border-[var(--border)]">
             <button
-              onClick={handleRunNow}
-              disabled={isRunningNow}
-              className="px-4 py-2 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] text-xs font-semibold transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
             >
-              {isRunningNow ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-              Sync Now (Run Immediately)
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Save Schedule
             </button>
           </div>
-
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] text-xs font-semibold transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
-          >
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save Schedule
-          </button>
         </div>
-      </div>
 
-      {/* Live Status Summary Card */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-sm flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-            Job Status
-          </span>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`w-2.5 h-2.5 rounded-full ${statusInfo?.last_run_status === "success" ? "bg-emerald-500" : statusInfo?.last_run_status === "failed" ? "bg-red-500" : "bg-amber-400"}`}></span>
-            <span className="text-sm font-bold text-[var(--text-primary)] capitalize">
-              {statusInfo?.last_run_status || "Idle"}
+        {/* Live Status Summary Card */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Job Status with clickable error view */}
+          <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-sm flex flex-col gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+              Job Status
             </span>
+              <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${statusInfo?.last_run_status === "success" ? "bg-emerald-500" : statusInfo?.last_run_status === "failed" ? "bg-red-500" : "bg-amber-400"}`}></span>
+                  <span className="text-sm font-bold text-[var(--text-primary)] capitalize">
+                    {statusInfo?.last_run_status || "Idle"}
+                  </span>
+                </div>
+                {statusInfo?.last_run_status === "failed" && (
+                  <button
+                    onClick={() => setShowErrorModal(true)}
+                    className="text-[11px] text-red-600 hover:text-red-700 underline font-semibold flex items-center gap-1 cursor-pointer"
+                    title="Click to view detailed error message"
+                  >
+                    <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                    View Log
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-sm flex flex-col gap-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                Last Synced At
+              </span>
+              <span className="text-sm font-medium text-[var(--text-primary)] mt-1">
+                {statusInfo?.last_run_at || "Never synced"}
+              </span>
+            </div>
+
+            <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-sm flex flex-col gap-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                Execution Duration
+              </span>
+              <span className="text-sm font-medium text-[var(--text-primary)] mt-1">
+                {statusInfo?.last_run_duration_sec ? `${statusInfo.last_run_duration_sec}s` : "0.0s"}
+              </span>
+            </div>
+
+            <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-sm flex flex-col gap-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                Next Scheduled Run
+              </span>
+              <span className="text-sm font-medium text-[var(--accent)] mt-1">
+                {statusInfo?.next_run_at || `Today at ${scheduleTime}`}
+              </span>
+            </div>
           </div>
-        </div>
 
-        <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-sm flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-            Last Synced At
-          </span>
-          <span className="text-sm font-medium text-[var(--text-primary)] mt-1">
-            {statusInfo?.last_run_at || "Never synced"}
-          </span>
+          {/* Error Details Card / Modal when Failed */}
+          {showErrorModal && (
+            <div className="bg-red-50/80 border border-red-200 rounded-2xl p-5 flex flex-col gap-3 shadow-sm animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-red-800 font-bold text-sm">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  Scheduler Sync Error Log
+                </div>
+                <button
+                  onClick={() => setShowErrorModal(false)}
+                  className="p-1 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-100 transition-colors"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="bg-white/90 p-4 rounded-xl border border-red-100 font-mono text-xs text-red-950 overflow-x-auto max-h-60 whitespace-pre-wrap leading-relaxed">
+                {statusInfo?.error_message || "Execution encountered an error during sync. Please verify server PM2 logs."}
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowErrorModal(false)}
+                  className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-
-        <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-sm flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-            Execution Duration
-          </span>
-          <span className="text-sm font-medium text-[var(--text-primary)] mt-1">
-            {statusInfo?.last_run_duration_sec ? `${statusInfo.last_run_duration_sec}s` : "0.0s"}
-          </span>
-        </div>
-
-        <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-sm flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-            Next Scheduled Run
-          </span>
-          <span className="text-sm font-medium text-[var(--accent)] mt-1">
-            {statusInfo?.next_run_at || `Today at ${scheduleTime}`}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
+        );
 };
-
