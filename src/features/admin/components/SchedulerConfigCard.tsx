@@ -17,6 +17,16 @@ export const SchedulerConfigCard = () => {
     fetchConfig();
   }, []);
 
+  // Auto-refresh status if sync is currently running in background
+  useEffect(() => {
+    if (statusInfo?.last_run_status === "running") {
+      const interval = setInterval(() => {
+        fetchConfig();
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [statusInfo?.last_run_status]);
+
   const fetchConfig = async () => {
     setIsLoading(true);
     try {
@@ -122,9 +132,7 @@ export const SchedulerConfigCard = () => {
               onChange={(e) => setScheduleTime(e.target.value)}
               className="px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm font-mono text-[var(--text-primary)] focus:border-[var(--accent)] outline-none"
             />
-            <span className="text-[11px] text-[var(--text-secondary)]">
-              Default: <b>19:00</b> (Evening 7:00 PM IST)
-            </span>
+
           </div>
 
           {/* Frequency */}
@@ -201,9 +209,16 @@ export const SchedulerConfigCard = () => {
             </span>
               <div className="flex items-center justify-between mt-1">
                 <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${statusInfo?.last_run_status === "success" ? "bg-emerald-500" : statusInfo?.last_run_status === "failed" ? "bg-red-500" : "bg-amber-400"}`}></span>
-                  <span className="text-sm font-bold text-[var(--text-primary)] capitalize">
-                    {statusInfo?.last_run_status || "Idle"}
+                  <span className={`w-2.5 h-2.5 rounded-full ${statusInfo?.last_run_status === "success" ? "bg-emerald-500" : statusInfo?.last_run_status === "failed" ? "bg-red-500" : statusInfo?.last_run_status === "running" ? "bg-blue-500 animate-pulse" : "bg-amber-400"}`}></span>
+                  <span className="text-sm font-bold text-[var(--text-primary)] capitalize flex items-center gap-1.5">
+                    {statusInfo?.last_run_status === "running" ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
+                        <span>Syncing (In Progress)...</span>
+                      </>
+                    ) : (
+                      statusInfo?.last_run_status || "Idle"
+                    )}
                   </span>
                 </div>
                 {statusInfo?.last_run_status === "failed" && (
