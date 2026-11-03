@@ -154,7 +154,7 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
   }, [sessionId]);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 2. Zone Change Handler (Zone -> Region -> CustType -> Periods)
+  // 2. Zone Change Handler (Zone -> Dependent Region & Customer Type)
   // ─────────────────────────────────────────────────────────────────────────
   const handleZoneChange = useCallback(
     async (newZone: string) => {
@@ -170,31 +170,17 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
         const baseUrl = defaultConfig.baseUrl;
         const regEp = (API_ENDPOINTS.DASHBOARD as any).REGIONS || "/api/dashboard/filters/regions";
         const custEp = (API_ENDPOINTS.DASHBOARD as any).CUSTOMER_TYPES || "/api/dashboard/filters/customer-types";
-        const perEp = (API_ENDPOINTS.DASHBOARD as any).AVAILABLE_PERIODS || "/api/dashboard/filters/available-periods";
 
-        const [regRes, custRes, perRes] = await Promise.all([
+        const [regRes, custRes] = await Promise.all([
           fetch(`${baseUrl}${regEp}?session_id=${sessionId}&zone=${encodeURIComponent(newZone)}`),
           fetch(`${baseUrl}${custEp}?session_id=${sessionId}&zone=${encodeURIComponent(newZone)}&region=ALL`),
-          fetch(`${baseUrl}${perEp}?session_id=${sessionId}&zone=${encodeURIComponent(newZone)}&region=ALL&customer_type=ALL&month=ALL&years=ALL`),
         ]);
 
         const regData = await regRes.json();
         const custData = await custRes.json();
-        const perData = await perRes.json();
 
         if (regData?.regions) setRegionsList(regData.regions);
         if (custData?.customer_types) setCustomerTypesList(custData.customer_types);
-        if (perData?.months) setMonthsList(perData.months);
-        if (perData?.years) {
-          setYearsList(perData.years);
-          const numYears = perData.years
-            .filter((y: any) => String(y.value).toUpperCase() !== "ALL")
-            .map((y: any) => Number(y.value))
-            .filter((y: number) => !isNaN(y));
-          if (numYears.length > 0) {
-            setSelectedYears(numYears);
-          }
-        }
       } catch (err) {
         console.error("Error updating dependent filters for Zone:", err);
       } finally {
@@ -205,7 +191,7 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
   );
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 3. Region Change Handler (Region -> CustType -> Periods)
+  // 3. Region Change Handler (Region -> Dependent Customer Type)
   // ─────────────────────────────────────────────────────────────────────────
   const handleRegionChange = useCallback(
     async (newRegion: string) => {
@@ -219,28 +205,13 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
       try {
         const baseUrl = defaultConfig.baseUrl;
         const custEp = (API_ENDPOINTS.DASHBOARD as any).CUSTOMER_TYPES || "/api/dashboard/filters/customer-types";
-        const perEp = (API_ENDPOINTS.DASHBOARD as any).AVAILABLE_PERIODS || "/api/dashboard/filters/available-periods";
 
-        const [custRes, perRes] = await Promise.all([
-          fetch(`${baseUrl}${custEp}?session_id=${sessionId}&zone=${encodeURIComponent(effectiveZone)}&region=${encodeURIComponent(newRegion)}`),
-          fetch(`${baseUrl}${perEp}?session_id=${sessionId}&zone=${encodeURIComponent(effectiveZone)}&region=${encodeURIComponent(newRegion)}&customer_type=ALL&month=ALL&years=ALL`),
-        ]);
-
+        const custRes = await fetch(
+          `${baseUrl}${custEp}?session_id=${sessionId}&zone=${encodeURIComponent(effectiveZone)}&region=${encodeURIComponent(newRegion)}`
+        );
         const custData = await custRes.json();
-        const perData = await perRes.json();
 
         if (custData?.customer_types) setCustomerTypesList(custData.customer_types);
-        if (perData?.months) setMonthsList(perData.months);
-        if (perData?.years) {
-          setYearsList(perData.years);
-          const numYears = perData.years
-            .filter((y: any) => String(y.value).toUpperCase() !== "ALL")
-            .map((y: any) => Number(y.value))
-            .filter((y: number) => !isNaN(y));
-          if (numYears.length > 0) {
-            setSelectedYears(numYears);
-          }
-        }
       } catch (err) {
         console.error("Error updating dependent filters for Region:", err);
       } finally {
@@ -251,124 +222,38 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
   );
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 4. Customer Type Change Handler (CustType -> Periods)
+  // 4. Customer Type Change Handler
   // ─────────────────────────────────────────────────────────────────────────
-  const handleCustomerTypeChange = useCallback(
-    async (newCustType: string) => {
-      setSelectedCustomerType(newCustType);
-      setSelectedMonth("ALL");
-
-      if (!sessionId || sessionId === "null") return;
-      setIsFilterUpdating(true);
-
-      try {
-        const baseUrl = defaultConfig.baseUrl;
-        const perEp = (API_ENDPOINTS.DASHBOARD as any).AVAILABLE_PERIODS || "/api/dashboard/filters/available-periods";
-
-        const perRes = await fetch(
-          `${baseUrl}${perEp}?session_id=${sessionId}&zone=${encodeURIComponent(effectiveZone)}&region=${encodeURIComponent(selectedRegion)}&customer_type=${encodeURIComponent(newCustType)}&month=ALL&years=ALL`
-        );
-        const perData = await perRes.json();
-
-        if (perData?.months) setMonthsList(perData.months);
-        if (perData?.years) {
-          setYearsList(perData.years);
-          const numYears = perData.years
-            .filter((y: any) => String(y.value).toUpperCase() !== "ALL")
-            .map((y: any) => Number(y.value))
-            .filter((y: number) => !isNaN(y));
-          if (numYears.length > 0) {
-            setSelectedYears(numYears);
-          }
-        }
-      } catch (err) {
-        console.error("Error updating available periods for Customer Type:", err);
-      } finally {
-        setIsFilterUpdating(false);
-      }
-    },
-    [sessionId, effectiveZone, selectedRegion]
-  );
+  const handleCustomerTypeChange = useCallback((newCustType: string) => {
+    setSelectedCustomerType(newCustType);
+    setSelectedMonth("ALL");
+  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 5. Month Change Handler (Month -> Available Years)
+  // 5. Month Change Handler
   // ─────────────────────────────────────────────────────────────────────────
-  const handleMonthChange = useCallback(
-    async (newMonth: string) => {
-      setSelectedMonth(newMonth);
-
-      if (!sessionId || sessionId === "null") return;
-      setIsFilterUpdating(true);
-
-      try {
-        const baseUrl = defaultConfig.baseUrl;
-        const perEp = (API_ENDPOINTS.DASHBOARD as any).AVAILABLE_PERIODS || "/api/dashboard/filters/available-periods";
-
-        const perRes = await fetch(
-          `${baseUrl}${perEp}?session_id=${sessionId}&zone=${encodeURIComponent(effectiveZone)}&region=${encodeURIComponent(selectedRegion)}&customer_type=${encodeURIComponent(selectedCustomerType)}&month=${encodeURIComponent(newMonth)}&years=ALL`
-        );
-        const perData = await perRes.json();
-
-        if (perData?.years) {
-          setYearsList(perData.years);
-          const numYears = perData.years
-            .filter((y: any) => String(y.value).toUpperCase() !== "ALL")
-            .map((y: any) => Number(y.value))
-            .filter((y: number) => !isNaN(y));
-          // If previous selection has invalid year, reset to all available
-          const validSelected = selectedYears.filter((y) => numYears.includes(y));
-          setSelectedYears(validSelected.length > 0 ? validSelected : numYears);
-        }
-      } catch (err) {
-        console.error("Error updating available years for Month:", err);
-      } finally {
-        setIsFilterUpdating(false);
-      }
-    },
-    [sessionId, effectiveZone, selectedRegion, selectedCustomerType, selectedYears]
-  );
+  const handleMonthChange = useCallback((newMonth: string) => {
+    setSelectedMonth(newMonth);
+  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 6. Year Toggle Handler (Years -> Available Months)
+  // 6. Year Toggle Handler (Pill toggle with instant render)
   // ─────────────────────────────────────────────────────────────────────────
   const toggleYear = useCallback(
-    async (year: number) => {
-      let updatedYears: number[];
-      if (selectedYears.includes(year)) {
-        if (selectedYears.length === 1) {
-          // If only 1 was selected, don't leave empty: select all
-          updatedYears = numericAvailableYears;
-        } else {
-          updatedYears = selectedYears.filter((y) => y !== year);
-        }
-      } else {
-        updatedYears = [...selectedYears, year].sort((a, b) => b - a);
-      }
-      setSelectedYears(updatedYears);
-
-      // Faceted update for available months
-      if (!sessionId || sessionId === "null") return;
-      try {
-        const baseUrl = defaultConfig.baseUrl;
-        const perEp = (API_ENDPOINTS.DASHBOARD as any).AVAILABLE_PERIODS || "/api/dashboard/filters/available-periods";
-        const yrParam = updatedYears.join(",");
-        const res = await fetch(
-          `${baseUrl}${perEp}?session_id=${sessionId}&zone=${encodeURIComponent(effectiveZone)}&region=${encodeURIComponent(selectedRegion)}&customer_type=${encodeURIComponent(selectedCustomerType)}&month=ALL&years=${encodeURIComponent(yrParam)}`
-        );
-        const perData = await res.json();
-        if (perData?.months) {
-          setMonthsList(perData.months);
-          // Auto-reset invalid month if needed
-          const validMonthValues = perData.months.map((m: any) => String(m.value).toUpperCase());
-          if (selectedMonth !== "ALL" && !validMonthValues.includes(String(selectedMonth).toUpperCase())) {
-            setSelectedMonth("ALL");
+    (year: number) => {
+      setSelectedYears((prev) => {
+        if (prev.includes(year)) {
+          if (prev.length === 1) {
+            // Keep at least one selected, or revert to all
+            return numericAvailableYears;
           }
+          return prev.filter((y) => y !== year);
+        } else {
+          return [...prev, year].sort((a, b) => b - a);
         }
-      } catch (err) {
-        console.error("Error updating available months for Year:", err);
-      }
+      });
     },
-    [selectedYears, numericAvailableYears, sessionId, effectiveZone, selectedRegion, selectedCustomerType, selectedMonth]
+    [numericAvailableYears]
   );
 
   const selectAllYears = useCallback(() => {
@@ -627,8 +512,8 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
           )}
         </div>
 
-        {/* Filters and Controls Bar */}
-        <div className="flex flex-wrap items-center gap-2.5 overflow-x-auto pb-1 max-w-full custom-h-scrollbar">
+        {/* Filters and Controls Bar: Single horizontal scrollable row without wrap */}
+        <div className="flex flex-nowrap items-center gap-2.5 overflow-x-auto pb-2 w-full lg:w-auto custom-h-scrollbar">
           {/* 1. Zone Dropdown */}
           <FilterSelect
             label="Zone"
@@ -665,28 +550,12 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
             defaultLabel="ALL"
           />
 
-          {/* 5. Year Selector Pills */}
+          {/* 5. Year Selector Pills (No ALL button - all available years active by default) */}
           <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shrink-0">
             <span className="text-xs text-slate-400 font-medium whitespace-nowrap">
               Years:
             </span>
             <div className="flex items-center gap-1 shrink-0">
-              {/* ALL Years Toggle */}
-              {numericAvailableYears.length > 0 && (
-                <button
-                  type="button"
-                  onClick={selectAllYears}
-                  className={`px-2 py-1 text-xs font-semibold rounded transition-all border shrink-0 ${
-                    isAllYearsSelected
-                      ? "border-yellow-300 bg-yellow-50 text-yellow-800 shadow-xs"
-                      : "border-transparent text-slate-500 hover:bg-slate-100"
-                  }`}
-                >
-                  ALL
-                </button>
-              )}
-
-              {/* Individual Year Pills */}
               {numericAvailableYears.map((year) => {
                 const isSelected = selectedYears.includes(year);
                 return (
@@ -694,11 +563,9 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
                     key={year}
                     type="button"
                     onClick={() => toggleYear(year)}
-                    className={`px-2 py-1 text-xs font-semibold rounded transition-all border shrink-0 ${
-                      isSelected && !isAllYearsSelected
-                        ? "border-yellow-300 bg-yellow-50 text-yellow-800 shadow-xs"
-                        : isSelected
-                        ? "border-slate-200 bg-slate-50 text-slate-700 font-medium"
+                    className={`px-2.5 py-1 text-xs font-semibold rounded transition-all border shrink-0 ${
+                      isSelected
+                        ? "border-amber-400 bg-amber-50 text-amber-900 shadow-xs"
                         : "border-transparent text-slate-400 hover:bg-slate-100"
                     }`}
                   >
@@ -717,7 +584,7 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
               onClick={() => setChartType("column")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
                 chartType === "column"
-                  ? "bg-yellow-100 text-yellow-800 shadow-xs"
+                  ? "bg-amber-100 text-amber-900 shadow-xs"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -728,7 +595,7 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
               onClick={() => setChartType("line")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
                 chartType === "line"
-                  ? "bg-yellow-100 text-yellow-800 shadow-xs"
+                  ? "bg-amber-100 text-amber-900 shadow-xs"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -739,7 +606,7 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
               onClick={() => setChartType("area")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
                 chartType === "area"
-                  ? "bg-yellow-100 text-yellow-800 shadow-xs"
+                  ? "bg-amber-100 text-amber-900 shadow-xs"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
