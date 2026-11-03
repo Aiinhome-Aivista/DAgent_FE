@@ -771,16 +771,30 @@ const SummaryRevisedDownloadCard = () => {
 
 
 export const DashboardGraphs = ({ isWorkspacesLoading }: { isWorkspacesLoading?: boolean }) => {
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+
   return (
     <div className="flex flex-col gap-6 overflow-x-hidden p-2">
       {/* 1. Summary Revised Download Table Card */}
       <SummaryRevisedDownloadCard />
 
       {/* 2. Chart 1: Sales Revenue (Plan vs Sale & Achievement) */}
-      <PlanVsSaleChartDynamic />
+      <PlanVsSaleChartDynamic onZoneClick={(zone) => setSelectedZone(zone)} />
 
       {/* 3. Chart 2: Year-wise Sales Comparison */}
-      <YearComparisonChartDynamic />
+      <YearComparisonChartDynamic zone={selectedZone} />
+
+      {/* 4. Sales by Zone & Top 10 Tyre Types by Sales */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ZonePieChartDynamic zone={selectedZone} />
+        <TyreSalesChartDynamic zone={selectedZone} />
+      </div>
+
+      {/* 5. Category Sales & Actual Sales by Account Category */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CategorySalesCardDynamic zone={selectedZone} />
+        <AccountCategorySalesCardDynamic zone={selectedZone} />
+      </div>
     </div>
   );
 };
