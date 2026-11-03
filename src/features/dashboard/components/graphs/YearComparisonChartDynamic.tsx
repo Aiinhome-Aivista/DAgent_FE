@@ -67,7 +67,8 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
 
   // Chart and loading states
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
-  const [isFilterUpdating, setIsFilterUpdating] = useState<boolean>(false);
+  const [isRegionLoading, setIsRegionLoading] = useState<boolean>(false);
+  const [isCustomerTypeLoading, setIsCustomerTypeLoading] = useState<boolean>(false);
   const [isYearComparisonLoading, setIsYearComparisonLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -164,7 +165,8 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
       setSelectedMonth("ALL");
 
       if (!sessionId || sessionId === "null") return;
-      setIsFilterUpdating(true);
+      setIsRegionLoading(true);
+      setIsCustomerTypeLoading(true);
 
       try {
         const baseUrl = defaultConfig.baseUrl;
@@ -184,7 +186,8 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
       } catch (err) {
         console.error("Error updating dependent filters for Zone:", err);
       } finally {
-        setIsFilterUpdating(false);
+        setIsRegionLoading(false);
+        setIsCustomerTypeLoading(false);
       }
     },
     [sessionId]
@@ -200,7 +203,7 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
       setSelectedMonth("ALL");
 
       if (!sessionId || sessionId === "null") return;
-      setIsFilterUpdating(true);
+      setIsCustomerTypeLoading(true);
 
       try {
         const baseUrl = defaultConfig.baseUrl;
@@ -215,7 +218,7 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
       } catch (err) {
         console.error("Error updating dependent filters for Region:", err);
       } finally {
-        setIsFilterUpdating(false);
+        setIsCustomerTypeLoading(false);
       }
     },
     [sessionId, effectiveZone]
@@ -499,6 +502,45 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
     );
   };
 
+  const renderFilterSelect = (
+    label: string,
+    value: string | number,
+    onChange: (e: any) => void,
+    options: FilterOptionItem[],
+    defaultLabel = "ALL",
+    isLoading = false
+  ) => (
+    <div
+      className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 hover:bg-slate-50 transition-colors focus-within:border-slate-300 focus-within:shadow-sm"
+      style={{ minWidth: "130px", flexShrink: 0 }}
+    >
+      <span className="text-xs text-slate-400 font-medium whitespace-nowrap">
+        {label}:
+      </span>
+      {isLoading ? (
+        <div className="flex items-center gap-1 w-full py-0.5">
+          <span className="text-xs text-slate-400">Loading...</span>
+          <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin shrink-0 ml-auto" />
+        </div>
+      ) : (
+        <select
+          value={value}
+          onChange={onChange}
+          className="text-xs font-medium text-slate-700 bg-transparent outline-none cursor-pointer w-full"
+        >
+          <option value="ALL">{defaultLabel}</option>
+          {options
+            .filter((opt) => String(opt.value).trim().toUpperCase() !== "ALL")
+            .map((opt, idx) => (
+              <option key={`${String(opt.value)}_${idx}`} value={opt.value}>
+                {opt.label || opt.value}
+              </option>
+            ))}
+        </select>
+      )}
+    </div>
+  );
+
   return (
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[480px]">
       {/* Top Header & Dynamic Filters Row */}
@@ -507,48 +549,21 @@ export const YearComparisonChartDynamic = ({ zone }: { zone?: string | null }) =
           <h3 className="text-base font-bold text-slate-800 whitespace-nowrap">
             {yearComparisonTitle}
           </h3>
-          {isFilterUpdating && (
-            <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
-          )}
         </div>
 
         {/* Filters and Controls Bar: Single horizontal scrollable row without wrap */}
         <div className="flex flex-nowrap items-center gap-2.5 overflow-x-auto pb-2 w-full lg:w-auto custom-h-scrollbar">
           {/* 1. Zone Dropdown */}
-          <FilterSelect
-            label="Zone"
-            value={selectedZone}
-            onChange={(e) => handleZoneChange(e.target.value)}
-            options={zonesList}
-            defaultLabel="ALL"
-          />
+          {renderFilterSelect("Zone", selectedZone, (e) => handleZoneChange(e.target.value), zonesList, "ALL", false)}
 
           {/* 2. Region Dropdown */}
-          <FilterSelect
-            label="Region"
-            value={selectedRegion}
-            onChange={(e) => handleRegionChange(e.target.value)}
-            options={regionsList}
-            defaultLabel="ALL"
-          />
+          {renderFilterSelect("Region", selectedRegion, (e) => handleRegionChange(e.target.value), regionsList, "ALL", isRegionLoading)}
 
           {/* 3. Customer Type Dropdown */}
-          <FilterSelect
-            label="Customer Type"
-            value={selectedCustomerType}
-            onChange={(e) => handleCustomerTypeChange(e.target.value)}
-            options={customerTypesList}
-            defaultLabel="ALL"
-          />
+          {renderFilterSelect("Customer Type", selectedCustomerType, (e) => handleCustomerTypeChange(e.target.value), customerTypesList, "ALL", isCustomerTypeLoading)}
 
           {/* 4. Month Dropdown */}
-          <FilterSelect
-            label="Month"
-            value={selectedMonth}
-            onChange={(e) => handleMonthChange(e.target.value)}
-            options={monthsList}
-            defaultLabel="ALL"
-          />
+          {renderFilterSelect("Month", selectedMonth, (e) => handleMonthChange(e.target.value), monthsList, "ALL", false)}
 
           {/* 5. Year Selector Pills (No ALL button - all available years active by default) */}
           <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 shrink-0">
